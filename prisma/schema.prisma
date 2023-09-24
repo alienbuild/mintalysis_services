@@ -1295,63 +1295,27 @@ model veve_watchlist {
   @@index([user_id], map: "veve_watchlist_user_id_fkey")
 }
 
-// schemas/projects/veve/x.prisma
-// X Stats (Formely Twitter)
-
-model x_account {
-  id         Int                  @id @default(autoincrement())
-  handle     String               @unique
-  avatar     String?
-  followers  Int                  @default(0)
-  following  Int                  @default(0)
-  project_id String?
-  project    projects?            @relation(fields: [project_id], references: [id])
-  x_posts    x_posts[]
-  createdAt  DateTime?            @default(now())
-  snapshots  x_account_snapshot[]
-}
-
-model x_account_snapshot {
-  id        Int       @id @default(autoincrement())
-  handle    String
-  followers Int
-  following Int
-  createdAt DateTime  @default(now())
-  x_account x_account @relation(fields: [handle], references: [handle])
-}
-
-model x_posts {
-  id            Int       @id @default(autoincrement())
-  createdAt     DateTime? @default(now())
-  link          String?
-  text          String?   @db.Text
-  image         String?
-  like_count    Int?
-  comment_count Int?
-  repost_count  Int?
-  handle        String
-  account       x_account @relation(fields: [handle], references: [handle])
-}
-
 // schemas/projects.prisma
 // Projects
 
 model projects {
-  id            String             @id @default(uuid())
-  name          String?            @unique
-  abbr          String?            @unique
-  active        Boolean            @default(false)
-  icon          String?
-  slug          String?            @unique
-  sort          Int                @default(10)
-  tile          String?
-  motiff_url    String?
-  article       article[]
-  communities   communities[]
-  notifications notifications[]
-  price_alerts  price_alerts[]
-  metrics       projects_metrics[]
-  x_account     x_account[]
+  id                String              @id @default(uuid())
+  name              String?             @unique
+  abbr              String?             @unique
+  active            Boolean             @default(false)
+  icon              String?
+  slug              String?             @unique
+  sort              Int                 @default(10)
+  tile              String?
+  motiff_url        String?
+  article           article[]
+  communities       communities[]
+  notifications     notifications[]
+  price_alerts      price_alerts[]
+  metrics           projects_metrics[]
+  x_account         x_account[]
+  youtube_account   youtube_account[]
+  instagram_account instagram_account[]
 }
 
 model projects_metrics {
@@ -1430,6 +1394,84 @@ model Account {
   @@unique([provider, providerAccountId])
   @@index([userId], map: "accounts_user_id_fkey")
   @@map("accounts")
+}
+
+// schemas/socialmedia.prisma
+// Social Media Stats (X - Formely Twitter, YouTube, Instagram)
+
+model x_account {
+  id         Int                  @id @default(autoincrement())
+  handle     String               @unique
+  avatar     String?
+  followers  Int                  @default(0)
+  following  Int                  @default(0)
+  project_id String?
+  project    projects?            @relation(fields: [project_id], references: [id])
+  x_posts    x_posts[]
+  createdAt  DateTime?            @default(now())
+  snapshots  x_account_snapshot[]
+}
+
+model x_account_snapshot {
+  id        Int       @id @default(autoincrement())
+  handle    String
+  followers Int
+  following Int
+  createdAt DateTime  @default(now())
+  x_account x_account @relation(fields: [handle], references: [handle])
+}
+
+model x_posts {
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime? @default(now())
+  link          String?
+  text          String?   @db.Text
+  image         String?
+  like_count    Int?
+  comment_count Int?
+  repost_count  Int?
+  handle        String
+  account       x_account @relation(fields: [handle], references: [handle])
+}
+
+model youtube_account {
+  id          Int                        @id @default(autoincrement())
+  channel_id  String                     @unique
+  subscribers Int                        @default(0)
+  videos      Int                        @default(0)
+  views       Int                        @default(0)
+  createdAt   DateTime                   @default(now())
+  project_id  String?
+  project     projects?                  @relation(fields: [project_id], references: [id])
+  snapshots   youtube_account_snapshot[]
+}
+
+model youtube_account_snapshot {
+  id          Int             @id @default(autoincrement())
+  channel_id  String
+  subscribers Int             @default(0)
+  videos      Int             @default(0)
+  views       Int             @default(0)
+  createdAt   DateTime        @default(now())
+  youtube     youtube_account @relation(fields: [channel_id], references: [channel_id])
+}
+
+model instagram_account {
+  id           Int                          @id @default(autoincrement())
+  instagram_id String                       @unique
+  followers    Int                          @default(0)
+  createdAt    DateTime                     @default(now())
+  project_id   String?
+  project      projects?                    @relation(fields: [project_id], references: [id])
+  snapshots    instagram_account_snapshot[]
+}
+
+model instagram_account_snapshot {
+  id           Int               @id @default(autoincrement())
+  instagram_id String
+  followers    Int
+  createdAt    DateTime          @default(now())
+  instagram    instagram_account @relation(fields: [instagram_id], references: [instagram_id])
 }
 
 // schemas/tags.prisma
