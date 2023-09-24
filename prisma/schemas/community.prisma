@@ -1,0 +1,179 @@
+// schemas/community.prisma
+// Community
+
+model communities {
+  id                        String                      @id @default(uuid())
+  name                      String                      @unique
+  type                      CommunityPrivacy            @default(PUBLIC)
+  creator_id                String
+  member_count              Int?
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  cover_image               String?
+  image                     String?
+  slug                      String                      @unique
+  project_id                String?
+  veve_collectible_id       String?
+  veve_comic_id             String?
+  gate_key                  String?
+  member                    member[]
+  users_communities_invites users_communities_invites[]
+  comments                  comments[]
+  creator                   User                        @relation("creator", fields: [creator_id], references: [id])
+  project                   projects?                   @relation(fields: [project_id], references: [id])
+  veve_collectible          veve_collectibles?          @relation(fields: [veve_collectible_id], references: [collectible_id])
+  veve_comic                veve_comics?                @relation(fields: [veve_comic_id], references: [unique_cover_id])
+  community_posts           community_posts[]
+  posts                     posts[]
+  utilities                 utilities[]
+
+  @@index([creator_id], map: "communities_creator_id_fkey")
+  @@index([project_id], map: "communities_project_id_fkey")
+  @@index([veve_collectible_id], map: "communities_veve_collectible_id_fkey")
+  @@index([veve_comic_id], map: "communities_veve_comic_id_fkey")
+}
+
+model member {
+  A           String
+  B           String
+  users       User        @relation(fields: [A], references: [id], onDelete: Cascade)
+  communities communities @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_member_AB_unique")
+  @@index([B], map: "_member_B_index")
+  @@map("_member")
+}
+
+model users_communities_invites {
+  A           String
+  B           String
+  users       User        @relation(fields: [A], references: [id], onDelete: Cascade)
+  communities communities @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_users_communities_invites_AB_unique")
+  @@index([B], map: "_users_communities_invites_B_index")
+  @@map("_users_communities_invites")
+}
+
+model utilities {
+  id           String       @id
+  title        String?
+  body         String?
+  value        Int?
+  community_id String?
+  communities  communities? @relation(fields: [community_id], references: [id])
+
+  @@index([community_id], map: "utilities_community_id_fkey")
+}
+
+model community_posts {
+  id                           String                  @id
+  author_id                    String
+  community_id                 String
+  content                      String?
+  image_url                    String?
+  community_image_url          String?
+  comment_count                Int?
+  like_count                   Int?
+  createdAt                    DateTime                @default(now())
+  updatedAt                    DateTime
+  likes_community_posts        likes_community_posts[]
+  comments                     comments[]
+  users_community_postsTousers User                    @relation(fields: [author_id], references: [id])
+  communities                  communities             @relation(fields: [community_id], references: [id])
+
+  @@index([author_id], map: "community_posts_author_id_fkey")
+  @@index([community_id], map: "community_posts_community_id_fkey")
+}
+
+model likes_community_posts {
+  A               String
+  B               String
+  users           User            @relation(fields: [A], references: [id], onDelete: Cascade)
+  community_posts community_posts @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_likes_community_posts_AB_unique")
+  @@index([B], map: "_likes_community_posts_B_index")
+  @@map("_likes_community_posts")
+}
+
+// Post and Comment Management
+model posts {
+  id                  String            @id
+  author_id           String?
+  community_id        String?
+  body                String?
+  image_url           String?
+  community_image_url String?
+  comment_count       Int?
+  like_count          Int?
+  createdAt           DateTime          @default(now())
+  audience            posts_audience    @default(PUBLIC)
+  likes_posts         likes_posts[]
+  users_posts_tag     users_posts_tag[]
+  comments            comments[]
+  users_postsTousers  User?             @relation(fields: [author_id], references: [id])
+  communities         communities?      @relation(fields: [community_id], references: [id])
+
+  @@index([author_id], map: "posts_author_id_fkey")
+  @@index([community_id], map: "posts_community_id_fkey")
+}
+
+model comments {
+  id                    String           @id
+  author_id             String
+  post_id               String
+  community_id          String
+  body                  String?
+  like_count            Int?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime
+  parent_id             String?
+  community_postsId     String?
+  likes_comments        likes_comments[]
+  users_commentsTousers User             @relation(fields: [author_id], references: [id])
+  communities           communities      @relation(fields: [community_id], references: [id])
+  community_posts       community_posts? @relation(fields: [community_postsId], references: [id])
+  comments              comments?        @relation("commentsTocomments", fields: [parent_id], references: [id])
+  other_comments        comments[]       @relation("commentsTocomments")
+  posts                 posts            @relation(fields: [post_id], references: [id])
+
+  @@index([author_id], map: "comments_author_id_fkey")
+  @@index([community_id], map: "comments_community_id_fkey")
+  @@index([community_postsId], map: "comments_community_postsId_fkey")
+  @@index([parent_id], map: "comments_parent_id_fkey")
+  @@index([post_id], map: "comments_post_id_fkey")
+}
+
+model likes_comments {
+  A        String
+  B        String
+  users    User     @relation(fields: [A], references: [id], onDelete: Cascade)
+  comments comments @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_likes_comments_AB_unique")
+  @@index([B], map: "_likes_comments_B_index")
+  @@map("_likes_comments")
+}
+
+model likes_posts {
+  A     String
+  B     String
+  users User   @relation(fields: [A], references: [id], onDelete: Cascade)
+  posts posts  @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_likes_posts_AB_unique")
+  @@index([B], map: "_likes_posts_B_index")
+  @@map("_likes_posts")
+}
+
+model users_posts_tag {
+  A     String
+  B     String
+  users User   @relation(fields: [A], references: [id], onDelete: Cascade)
+  posts posts  @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_users_posts_tag_AB_unique")
+  @@index([B], map: "_users_posts_tag_B_index")
+  @@map("_users_posts_tag")
+}

@@ -1,0 +1,9 @@
+// schemas/writers.prisma
+// Writers
+
+model writers {
+  author_id   String        @id
+  name        String
+  slug        String?       @unique
+  veve_comics veve_comics[] @relation("veve_comicsTowriters")
+}

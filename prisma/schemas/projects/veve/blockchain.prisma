@@ -1,0 +1,117 @@
+// schemas/projects/veve/blockchain.prisma
+// Blockchain (Tokens, Transfers and Mints)
+
+model veve_wallets {
+  id                      String                    @id
+  user_id                 String?                   @unique
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime?
+  veve_username           String?                   @unique
+  veve_id                 String?
+  merged_to               String?
+  tagsId                  Int?
+  first_activity_date     DateTime?
+  last_activity_date      DateTime?
+  token_count             Int?
+  lgcy_veve_id            String?
+  lgcy_veve_username      String?
+  active                  Boolean?                  @default(false)
+  has_kyc                 Boolean?                  @default(false)
+  veve_leaderboard        veve_leaderboard[]
+  veve_tokens             veve_tokens[]
+  wallet_tags             wallet_tags?              @relation(fields: [tagsId], references: [id])
+  veve_wallets_valuations veve_wallets_valuations[]
+
+  @@index([tagsId], map: "veve_wallets_tagsId_fkey")
+  @@index([id, user_id, veve_username])
+}
+
+model veve_wallets_valuations {
+  id                     Int                 @id @default(autoincrement())
+  wallet_id              String
+  wallet                 veve_wallets?       @relation(fields: [wallet_id], references: [id])
+  timestamp              DateTime            @default(now())
+  total_valuation        Decimal?            @db.Decimal(10, 2)
+  collectibles_valuation Decimal?            @db.Decimal(10, 2)
+  comics_valuation       Decimal?            @db.Decimal(10, 2)
+  total_count            Int?
+  total_collectibles     Int?
+  total_comics           Int?
+  type                   WalletValuationType @default(TOTAL)
+}
+
+model veve_tokens {
+  token_id           Int                 @id
+  edition            Int?
+  mint_date          DateTime?
+  rarity             String?
+  collectible_id     String?
+  unique_cover_id    String?
+  type               String?             @db.Text
+  last_updated       DateTime?           @default(now()) @db.Timestamp(0)
+  brand_id           String?
+  licensor_id        String?
+  series_id          String?
+  wallet_id          String?
+  element_id         String?
+  comic_image_url_id String?             @db.VarChar(50)
+  mint_order         Int?
+  mcp_ed_bonus       Boolean?            @default(false)
+  to_process         Boolean?            @default(false)
+  is_invalid         Boolean?            @default(false)
+  is_burned          Boolean?            @default(false)
+  veve_brands        veve_brands?        @relation(fields: [brand_id], references: [brand_id])
+  veve_wallets       veve_wallets?       @relation(fields: [wallet_id], references: [id], map: "veve_tokens_ibfk_1")
+  veve_licensors     veve_licensors?     @relation(fields: [licensor_id], references: [licensor_id])
+  veve_series        veve_series?        @relation(fields: [series_id], references: [series_id])
+  veve_collectibles  veve_collectibles[] @relation("veve_collectiblesToveve_tokens")
+
+  @@index([brand_id], map: "veve_tokens_brand_id_fkey")
+  @@index([licensor_id], map: "veve_tokens_licensor_id_fkey")
+  @@index([series_id], map: "veve_tokens_series_id_fkey")
+  @@index([wallet_id], map: "veve_tokens_ibfk_1")
+  @@index([collectible_id])
+  @@index([comic_image_url_id])
+  @@index([unique_cover_id])
+  @@index([edition])
+}
+
+model veve_transfers {
+  id              Int       @id
+  from_wallet     String
+  to_wallet       String
+  timestamp       String?   @db.Text
+  token_id        Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  break_even      Float?
+  entry_price     Float?
+  break_even_new  Float?
+  entry_price_new Float?
+  timestamp_new   DateTime? @db.DateTime(6)
+  is_transfer     Boolean?  @default(false)
+  is_burn         Boolean?  @default(false)
+  is_craft        Boolean?  @default(false)
+  is_auction      Boolean?  @default(false)
+  is_redemption   Boolean?  @default(false)
+  is_mkt_action   Boolean?  @default(false)
+  is_mkt_fixed    Boolean?  @default(false)
+
+  @@index([token_id, from_wallet, to_wallet])
+}
+
+model veve_mints {
+  id            Int       @id
+  wallet_id     String?
+  timestamp     String?   @db.Text
+  token_id      Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime?
+  timestamp_new DateTime? @db.DateTime(6)
+  is_burn       Boolean?  @default(false)
+  is_redemption Boolean?  @default(false)
+
+  @@index([wallet_id, token_id])
+  @@index([token_id])
+  @@index([wallet_id])
+}

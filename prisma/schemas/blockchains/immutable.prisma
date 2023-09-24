@@ -1,0 +1,111 @@
+// schemas/blockchains/immutable.prisma
+// Immutable
+
+model imx_deposits {
+  txn_id             Int       @id
+  status             String?
+  wallet_id          String?
+  token_type         String?
+  token_id           String?
+  id                 String?
+  token_address      String?
+  decimals           Int?
+  quantity           String?
+  quantity_with_fees String?
+  timestamp          String?   @db.Text
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime? @updatedAt
+  timestamp_d        DateTime? @db.DateTime(6)
+
+  @@index([wallet_id])
+}
+
+model imx_orders {
+  order_id                 Int       @id
+  wallet_id                String?
+  type                     String?
+  token_id                 String?
+  token_address            String?
+  quantity                 String?
+  quantity_with_fees       String?
+  name                     String?
+  image_url                String?
+  collection_name          String?
+  collection_icon_url      String?
+  decimals                 Int?
+  amount_sold              Int?
+  expiration_timestamp     DateTime?
+  timestamp                DateTime?
+  updated_timestamp        DateTime?
+  maker_taker_type         String
+  maker_fees_qty_with_fees String?
+  maker_fees_token_type    String?
+  maker_fees_token_address String?
+  maker_fees_decimals      Int?
+  maker_fees_symbol        String?
+  taker_fees_qty_with_fees String?
+  taker_fees_token_type    String?
+  taker_fees_token_address String?
+  taker_fees_decimals      Int?
+  taker_fees_symbol        String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime? @updatedAt
+  status                   String?
+
+  @@index([wallet_id])
+}
+
+model imx_trades {
+  txn_id          Int       @id
+  status          String?
+  a_order_id      Int?
+  a_token_type    String?
+  a_sold_quantity String?
+  token_id        Int?
+  b_order_id      Int?
+  b_token_type    String?
+  b_token_id      String?   @db.VarChar(100)
+  b_token_address String?
+  b_sold          Int?
+  timestamp       String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime? @updatedAt
+  a_token_address String?   @db.Text
+}
+
+model imx_withdrawals {
+  txn_id              Int       @id
+  status              String?
+  rollup_status       String?
+  withdrawn_to_wallet Boolean?
+  sender              String?
+  token_type          String?
+  token_id            String?
+  imx_id              String?
+  token_address       String?
+  token_decimals      Int?
+  token_qty           String?
+  token_qty_with_fees String?
+  timestamp           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime? @updatedAt
+
+  @@index([txn_id])
+}
+
+model imx_stats {
+  project_id                   String   @unique
+  token_count                  Int
+  wallet_count                 Int
+  transaction_count            Int
+  unique_owners_count          Int
+  last_updated_mint_txn_id     Int?
+  last_updated_transfer_txn_id Int?
+  veve_metadata_missing_count  Int?
+  max_mints_timestamp          String?
+  max_transfers_timestamp      String?
+  createdAt                    DateTime @default(now())
+  mint_count                   Int
+  transfer_count               Int
+  updatedAt                    DateTime @updatedAt
+}

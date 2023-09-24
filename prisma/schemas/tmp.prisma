@@ -1,0 +1,136 @@
+// schemas/tmp.prisma
+// Temporal and Staging
+
+model tmp_wallet_owner {
+  wallet_id      String  @id
+  owner_id       String? @db.VarChar(191)
+  owner_username String? @db.VarChar(191)
+}
+
+model tmp_tokens_wallets {
+  token_id  Int     @id
+  wallet_id String? @db.VarChar(191)
+}
+
+model tmp_veve_tokens_collectibles {
+  id                  Int                @id @default(autoincrement())
+  blockchain_id       String?            @unique
+  owner_id            String?
+  owner_username      String?
+  collectible_type_id String?
+  transaction_id      String?
+  connector_id        String?            @unique
+  txn_cursor          String?
+  veve_collectibles   veve_collectibles? @relation(fields: [collectible_type_id], references: [collectible_id])
+
+  @@index([collectible_type_id], map: "tmp_veve_tokens_collectibles_collectible_type_id_fkey")
+}
+
+model tmp_veve_transactions {
+  transaction_id           String?
+  transfer_id              String?
+  createdAt                DateTime?
+  amount_usd               Float?
+  buyer_id                 String?
+  buyer_username           String?
+  seller_id                String?
+  seller_username          String?
+  collectible_type_id      String?
+  id                       Int       @id @default(autoincrement())
+  connector_id             String?
+  fee_gem                  Float?
+  fee_rate                 Float?
+  status                   String?
+  type                     String?
+  tmp_veve_tokens_comicsId Int?
+}
+
+model tmp_veve_tokens_comics {
+  id                          Int                           @id @default(autoincrement())
+  connector_id                String?                       @unique
+  blockchain_id               String?
+  owner_id                    String?
+  owner_username              String?
+  comic_id                    String?
+  transaction_id              String?
+  txn_cursor                  String?
+  tmp_veve_comic_transactions tmp_veve_comic_transactions[]
+}
+
+model tmp_veve_comic_transactions {
+  id              Int                     @id @default(autoincrement())
+  transaction_id  String?
+  transfer_id     String?
+  connector_id    String?
+  createdAt       DateTime?
+  status          String?
+  type            String?
+  fee_rate        Float?
+  fee_gem         Float?
+  amount_usd      Float?
+  buyer_id        String?
+  buyer_username  String?
+  seller_id       String?
+  seller_username String?
+  transactions    tmp_veve_tokens_comics? @relation(fields: [connector_id], references: [connector_id])
+
+  @@index([connector_id], map: "tmp_veve_comic_transactions_connector_id_fkey")
+}
+
+model tmp_medium_article_ids {
+  id         Int    @id @default(autoincrement())
+  article_id String
+}
+
+model tmp_medium_article_html {
+  id            Int     @id @default(autoincrement())
+  article_id    String  @unique
+  html          String  @db.Text
+  date          String?
+  image         String?
+  subtitle      String? @db.Text
+  title         String? @db.Text
+  updated_html  String? @db.Text
+  semantic_html String? @db.Text
+}
+
+model tmp_cursors {
+  id             Int      @id @default(autoincrement())
+  collectible_id String?
+  cursor         String
+  date           DateTime @default(now())
+  brand_id       String?
+  rarity         String?
+  comic_id       String?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model tmp_wallet_merges {
+  date        DateTime @db.DateTime(0)
+  from_wallet String   @db.VarChar(255)
+  to_wallet   String   @db.VarChar(255)
+
+  @@map("_tmp_wallet_merges")
+  @@ignore
+}
+
+model tmp_veve_transfers {
+  id        BigInt?
+  from_user String? @db.Text
+  to_user   String? @db.Text
+  timestamp String? @db.Text
+  token_id  BigInt?
+
+  @@index([token_id], map: "token_id")
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model tmp_veve_mints {
+  id        BigInt?
+  user      String? @db.Text
+  timestamp String? @db.Text
+  token_id  BigInt?
+
+  @@ignore
+}

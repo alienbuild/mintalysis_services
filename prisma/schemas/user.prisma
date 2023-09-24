@@ -1,0 +1,105 @@
+// schemas/user.prisma
+// User and Role Management
+
+model User {
+  id                              String                           @id @default(uuid())
+  email                           String?                          @unique
+  emailVerified                   DateTime?                        @map("email_verified")
+  createdAt                       DateTime                         @default(now())
+  updatedAt                       DateTime                         @updatedAt
+  role                            Role                             @default(BASIC)
+  username                        String?                          @unique
+  avatar                          String?
+  last_seen                       DateTime?                        @default(now())
+  activated                       Boolean                          @default(false)
+  stripe_customer_id              String?
+  ecomiwiki_user                  Boolean?                         @default(false)
+  onboarded                       Boolean                          @default(false)
+  name                            String?
+  impressions                     Int?
+  viewed_profile                  Int?
+  cover_image                     String?
+  status                          UserStatus                       @default(ACTIVE)
+  notification_count              Int                              @default(0)
+  message_count                   Int                              @default(0)
+  poker_table_potsId              String?
+  likes_comments                  likes_comments[]
+  likes_community_posts           likes_community_posts[]
+  likes_posts                     likes_posts[]
+  member                          member[]
+  users_communities_invites       users_communities_invites[]
+  users_posts_tag                 users_posts_tag[]
+  accounts                        Account[]
+  article                         article[]
+  comments                        comments[]
+  communities_created             communities[]                    @relation("creator")
+  community_posts                 community_posts[]
+  conversation                    conversation[]
+  conversations                   conversation_participant[]
+  following                       follows[]                        @relation("follower")
+  followers                       follows[]                        @relation("following")
+  login_history                   login_history[]                  @relation("user_login_history")
+  marketplace_product             marketplace_product[]
+  messages                        message[]
+  from_notifications              notifications[]                  @relation("from_notifications")
+  to_notifications                notifications[]                  @relation("to_notifications")
+  poker_table                     poker_table[]
+  poker_table_message             poker_table_message[]
+  poker_table_participant         poker_table_participant[]
+  posts                           posts[]
+  price_alerts                    price_alerts[]                   @relation("price_alerts")
+  profile                         profile?
+  sessions                        Session[]
+  poker_table_pots                poker_table_pots?                @relation(fields: [poker_table_potsId], references: [id])
+  users_preferences_accessibility users_preferences_accessibility?
+  veve_watchlist                  veve_watchlist[]
+
+  @@index([email], map: "email")
+  @@index([username], map: "username")
+  @@index([stripe_customer_id], map: "stripe_customer_id")
+  @@index([poker_table_potsId], map: "users_poker_table_potsId_fkey")
+  @@map("users")
+}
+
+model users_preferences_accessibility {
+  id                Int          @id @default(autoincrement())
+  screen_reader     Boolean      @default(false)
+  magnifier         Boolean      @default(false)
+  readable_font     Boolean      @default(false)
+  dyslexia_font     Boolean      @default(false)
+  img_descriptions  Boolean      @default(false)
+  highlight_links   Boolean      @default(false)
+  highlight_headers Boolean      @default(false)
+  text_magnifier    Boolean      @default(false)
+  virtual_keyboard  Boolean      @default(false)
+  monochrome        Boolean      @default(false)
+  dark_contrast     Boolean      @default(false)
+  light_contrast    Boolean      @default(true)
+  cursor_option     CursorOption @default(DEFAULT)
+  font_size         Float        @default(1)
+  user_id           String       @unique
+  user              User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model follows {
+  followerId  String
+  followingId String
+  follower    User   @relation("follower", fields: [followerId], references: [id])
+  following   User   @relation("following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+  @@index([followingId], map: "follows_followingId_fkey")
+}
+
+model profile {
+  id                   Int                @id @default(autoincrement())
+  bio                  String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime
+  user_id              String             @unique
+  onboarded            Boolean            @default(false)
+  veve_wallet_imported Boolean            @default(false)
+  veve_wallet_address  String?
+  mcfarlane_wallets    mcfarlane_wallets?
+  users                User               @relation(fields: [user_id], references: [id])
+}

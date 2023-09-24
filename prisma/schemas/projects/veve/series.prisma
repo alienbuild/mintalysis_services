@@ -1,0 +1,77 @@
+// schemas/projects/veve/series.prisma
+// Veve Series
+
+model veve_series {
+  series_id                                  String                @id
+  name                                       String?
+  description                                String?               @db.Text
+  season                                     Int?
+  is_blindbox                                Boolean?              @default(false)
+  theme_logo_image_url                       String?
+  theme_logo_image_thumbnail_url             String?
+  theme_logo_image_low_resolution_url        String?
+  theme_logo_image_med_resolution_url        String?
+  theme_logo_image_full_resolution_url       String?
+  theme_logo_image_high_resolution_url       String?
+  theme_logo_image_direction                 String?
+  theme_background_image_url                 String?
+  theme_background_image_thumbnail_url       String?
+  theme_background_image_low_resolution_url  String?
+  theme_background_image_med_resolution_url  String?
+  theme_background_image_full_resolution_url String?
+  theme_background_image_high_resolution_url String?
+  theme_background_image_direction           String?
+  theme_footer_image_url                     String?
+  theme_footer_image_thumbnail_url           String?
+  theme_footer_image_low_resolution_url      String?
+  theme_footer_image_med_resolution_url      String?
+  theme_footer_image_full_resolution_url     String?
+  theme_footer_image_high_resolution_url     String?
+  theme_footer_image_direction               String?
+  landscape_image_url                        String?
+  landscape_image_thumbnail_url              String?
+  landscape_image_low_resolution_url         String?
+  landscape_image_med_resolution_url         String?
+  landscape_image_full_resolution_url        String?
+  landscape_image_high_resolution_url        String?
+  landscape_image_direction                  String?
+  square_image_url                           String?
+  square_image_thumbnail_url                 String?
+  square_image_low_resolution_url            String?
+  square_image_med_resolution_url            String?
+  square_image_full_resolution_url           String?
+  square_image_high_resolution_url           String?
+  square_image_direction                     String?
+  licensor_id                                String
+  brand_id                                   String
+  slug                                       String?               @unique
+  nbr_of_items                               Int?
+  mcp_series_value                           Int?
+  veve_collectibles                          veve_collectibles[]
+  veve_tokens                                veve_tokens[]
+  createdAt                                  DateTime              @default(now())
+  updatedAt                                  DateTime?             @updatedAt
+  metrics                                    veve_series_metrics[]
+
+  @@index([brand_id], map: "series_brand_id_fkey")
+  @@index([licensor_id], map: "series_licensor_id_fkey")
+}
+
+model veve_series_metrics {
+  series_id          String      @id
+  all_time_high      Decimal?    @db.Decimal(10, 2)
+  all_time_low       Decimal?    @db.Decimal(10, 2)
+  floor_price        Decimal?    @db.Decimal(10, 2)
+  market_cap         Decimal?    @db.Decimal(10, 2)
+  one_day_change     Decimal?    @db.Decimal(10, 2)
+  one_mo_change      Decimal?    @db.Decimal(10, 2)
+  one_wk_change      Decimal?    @db.Decimal(10, 2)
+  one_year_change    Decimal?    @db.Decimal(10, 2)
+  six_mo_change      Decimal?    @db.Decimal(10, 2)
+  three_mo_change    Decimal?    @db.Decimal(10, 2)
+  total_listings     Int?
+  all_time_change    Decimal?    @db.Decimal(10, 2)
+  volume             Decimal?    @db.Decimal(10, 2)
+  circulating_supply Decimal?    @db.Decimal(10, 2)
+  series             veve_series @relation(fields: [series_id], references: [series_id])
+}

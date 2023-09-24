@@ -1,0 +1,16 @@
+// schemas/projects/veve/watchlist.prisma
+// Watchlist
+
+model veve_watchlist {
+  id                String             @id
+  user_id           String
+  collectible_id    String?
+  unique_cover_id   String?
+  veve_collectibles veve_collectibles? @relation(fields: [collectible_id], references: [collectible_id])
+  veve_comics       veve_comics?       @relation(fields: [unique_cover_id], references: [unique_cover_id])
+  users             User               @relation(fields: [user_id], references: [id])
+
+  @@index([collectible_id], map: "veve_watchlist_collectible_id_fkey")
+  @@index([unique_cover_id], map: "veve_watchlist_unique_cover_id_fkey")
+  @@index([user_id], map: "veve_watchlist_user_id_fkey")
+}

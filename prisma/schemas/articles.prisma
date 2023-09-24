@@ -1,0 +1,33 @@
+// schemas/articles.prisma
+// Articles and News
+
+model article {
+  id           Int                    @id @default(autoincrement())
+  image        String?
+  author_id    String?
+  publishedAt  DateTime               @default(now())
+  published    Boolean                @default(false)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  slug         String                 @unique
+  project_id   String?
+  author       User?                  @relation(fields: [author_id], references: [id])
+  project      projects?              @relation(fields: [project_id], references: [id])
+  translations article_translations[]
+
+  @@index([author_id], map: "article_author_id_fkey")
+  @@index([project_id], map: "article_project_id_fkey")
+}
+
+model article_translations {
+  article_id Int
+  language   Language
+  title      String
+  content    String   @db.Text
+  subtitle   String?  @db.Text
+  article    article  @relation(fields: [article_id], references: [id])
+
+  @@id([language, article_id])
+  @@index([language])
+  @@index([article_id], map: "article_translations_article_id_fkey")
+}

@@ -1,0 +1,30 @@
+// schemas/projects/mcfarlane/blockchain.prisma
+// Blockchain (Tokens, Transfers and Mints)
+
+model mcfarlane_wallets {
+  id                  String       @id
+  user_id             String?      @unique
+  mcfarlane_username  String?      @unique
+  mcfarlane_id        String?
+  tagsId              Int?
+  first_activity_date DateTime?
+  last_activity_date  DateTime?
+  tags                wallet_tags? @relation(fields: [tagsId], references: [id])
+  user                profile?     @relation(fields: [user_id], references: [user_id])
+
+  @@index([tagsId], map: "mcfarlane_wallets_tagsId_fkey")
+}
+
+model mcfarlane_transfers {
+  id          Int       @id
+  from_wallet String
+  to_wallet   String
+  timestamp   String?   @db.Text
+  token_id    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+  break_even  Float?
+  entry_price Float?
+
+  @@index([token_id, from_wallet, to_wallet])
+}

@@ -1,0 +1,36 @@
+// schemas/notifications.prisma
+// Notifications and Alerts
+
+model notifications {
+  id           String               @id @default(uuid())
+  type         NotificationType     @default(DEFAULT)
+  category     NotificationCategory @default(DEFAULT)
+  content      String
+  createdAt    DateTime             @default(now())
+  from_user_id String?
+  to_user_id   String?
+  read         Boolean              @default(false)
+  reference    String?
+  project_id   String?
+  from_user    User?                @relation("from_notifications", fields: [from_user_id], references: [id], onDelete: Cascade)
+  project      projects?            @relation(fields: [project_id], references: [id])
+  to_user      User?                @relation("to_notifications", fields: [to_user_id], references: [id], onDelete: Cascade)
+
+  @@index([from_user_id], map: "notifications_from_user_id_fkey")
+  @@index([to_user_id], map: "notifications_to_user_id_fkey")
+  @@index([project_id], map: "notifications_project_id_fkey")
+}
+
+model price_alerts {
+  id         Int                 @id @default(autoincrement())
+  value      Float
+  direction  PriceAlertDirection
+  user_id    String?
+  project_id String?
+  type       CollectibleType     @default(COLLECTIBLE)
+  project    projects?           @relation(fields: [project_id], references: [id])
+  user       User?               @relation("price_alerts", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id], map: "price_alerts_project_id_fkey")
+  @@index([user_id], map: "price_alerts_user_id_fkey")
+}

@@ -1,0 +1,74 @@
+// schemas/games/poker/poker.prisma
+// Poker
+
+model poker_table {
+  id                                                                     String                    @id
+  host_id                                                                String?
+  createdAt                                                              DateTime                  @default(now())
+  updatedAt                                                              DateTime
+  latest_message_id                                                      String?                   @unique
+  community_cards                                                        String?                   @db.LongText
+  status                                                                 poker_table_status        @default(WAITING)
+  buy_in                                                                 Int                       @default(1000)
+  current_round                                                          String?
+  hand_number                                                            Int                       @default(0)
+  deck                                                                   String?                   @db.LongText
+  current_bet                                                            Int?
+  current_position                                                       Int?
+  last_position                                                          Int?
+  users                                                                  User?                     @relation(fields: [host_id], references: [id])
+  poker_table_message_poker_table_latest_message_idTopoker_table_message poker_table_message?      @relation("poker_table_latest_message_idTopoker_table_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  poker_table_message_poker_tableTopoker_table_message_poker_table_id    poker_table_message[]     @relation("poker_tableTopoker_table_message_poker_table_id")
+  poker_table_participant                                                poker_table_participant[]
+  poker_table_pots                                                       poker_table_pots[]
+
+  @@index([host_id], map: "poker_table_host_id_fkey")
+}
+
+model poker_table_message {
+  id                                                             String                     @id
+  poker_table_id                                                 String
+  senderId                                                       String
+  body                                                           String                     @db.Text
+  createdAt                                                      DateTime                   @default(now())
+  updatedAt                                                      DateTime
+  type                                                           poker_table_message_type   @default(TEXT)
+  status                                                         poker_table_message_status @default(SENT)
+  poker_table_poker_table_latest_message_idTopoker_table_message poker_table?               @relation("poker_table_latest_message_idTopoker_table_message")
+  poker_table_poker_tableTopoker_table_message_poker_table_id    poker_table                @relation("poker_tableTopoker_table_message_poker_table_id", fields: [poker_table_id], references: [id])
+  users                                                          User                       @relation(fields: [senderId], references: [id])
+
+  @@index([poker_table_id], map: "message_conversationId_fkey")
+  @@index([senderId], map: "message_senderId_fkey")
+}
+
+model poker_table_participant {
+  id                      String      @id
+  seat                    Int         @default(1)
+  action                  String?
+  poker_table_id          String
+  updatedAt               DateTime
+  user_id                 String
+  has_seen_latest_message Boolean
+  bet                     Int?        @default(0)
+  folded                  Boolean     @default(false)
+  hole_cards              String?     @db.LongText
+  show_cards              Boolean     @default(false)
+  stack_size              Int?        @default(1000)
+  left                    Boolean     @default(false)
+  poker_table             poker_table @relation(fields: [poker_table_id], references: [id])
+  users                   User        @relation(fields: [user_id], references: [id])
+
+  @@index([poker_table_id], map: "poker_table_participant_poker_table_id_fkey")
+  @@index([user_id], map: "poker_table_participant_user_id_fkey")
+}
+
+model poker_table_pots {
+  id             String      @id
+  poker_table_id String
+  amount         Int         @default(0)
+  poker_table    poker_table @relation(fields: [poker_table_id], references: [id])
+  users          User[]
+
+  @@index([poker_table_id], map: "poker_table_pots_poker_table_id_fkey")
+}

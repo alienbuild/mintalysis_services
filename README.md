@@ -1,1 +1,0 @@
-# mintalysis_services

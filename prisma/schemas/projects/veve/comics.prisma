@@ -1,0 +1,72 @@
+// schemas/projects/veve/comics.prisma
+// Veve Comics
+
+model veve_comics {
+  unique_cover_id           String                     @id
+  name                      String
+  rarity                    String?
+  description               String?                    @db.Text
+  comic_series_id           String?
+  drop_date                 DateTime?
+  store_price               Decimal?                   @db.Decimal(10, 2)
+  publisher_id              String?
+  market_fee                Decimal?                   @db.Decimal(10, 3)
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime
+  all_time_high             Decimal?                   @db.Decimal(10, 2)
+  all_time_low              Decimal?                   @db.Decimal(10, 2)
+  comic_number              Int?
+  drop_method               String?
+  floor_price               Decimal?                   @db.Decimal(10, 2)
+  is_free                   Boolean?                   @default(false)
+  is_unlimited              Boolean?                   @default(false)
+  market_cap                Decimal?                   @db.Decimal(10, 2)
+  one_day_change            Decimal?                   @db.Decimal(10, 2)
+  one_mo_change             Decimal?                   @db.Decimal(10, 2)
+  one_wk_change             Decimal?                   @db.Decimal(10, 2)
+  one_year_change           Decimal?                   @db.Decimal(10, 2)
+  page_count                Int?
+  six_mo_change             Decimal?                   @db.Decimal(10, 2)
+  start_year                Int?
+  three_mo_change           Decimal?                   @db.Decimal(10, 2)
+  total_available           Int?
+  total_issued              Int?
+  total_listings            Int?
+  image_direction           String?
+  image_full_resolution_url String?
+  image_high_resolution_url String?
+  image_low_resolution_url  String?
+  image_med_resolution_url  String?
+  image_thumbnail           String?
+  all_time_change           Decimal?                   @db.Decimal(10, 2)
+  slug                      String?                    @unique
+  comic_id                  String?
+  unique_holders            BigInt?
+  first_public_mint         Int?
+  mcp_low_ed_limit          Int?
+  mcp_rarity_value          Decimal?                   @db.Decimal(10, 2)
+  comic_image_url_id        String?                    @db.VarChar(50)
+  communities               communities[]
+  translations              veve_comics_translations[]
+  veve_watchlist            veve_watchlist[]
+  artists                   artists[]                  @relation("artistsToveve_comics")
+  characters                characters[]               @relation("charactersToveve_comics")
+  writers                   writers[]                  @relation("veve_comicsTowriters")
+
+  @@index([unique_cover_id], map: "unique_cover_id")
+  @@index([comic_image_url_id], map: "comic_image_url_id")
+}
+
+model veve_comics_translations {
+  unique_cover_id        String
+  name                   String?
+  description            String?     @db.Text
+  rarity_formatted       String?
+  edition_type_formatted String?
+  language               Language
+  comic                  veve_comics @relation(fields: [unique_cover_id], references: [unique_cover_id])
+
+  @@id([language, unique_cover_id])
+  @@index([language])
+  @@index([unique_cover_id], map: "veve_comics_translations_unique_cover_id_fkey")
+}

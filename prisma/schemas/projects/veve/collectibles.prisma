@@ -1,0 +1,96 @@
+// schemas/projects/veve/collectibles.prisma
+// Veve Collectibles
+
+model veve_collectibles {
+  collectible_id                       String                           @id
+  name                                 String?
+  rarity                               String?
+  description                          String?                          @db.Text
+  edition_type                         String?
+  store_price                          Decimal?                         @db.Decimal(10, 2)
+  drop_date                            DateTime?
+  market_fee                           Decimal?                         @db.Decimal(10, 3)
+  createdAt                            DateTime                         @default(now())
+  updatedAt                            DateTime?
+  background_image_direction           String?
+  background_image_full_resolution_url String?
+  background_image_high_resolution_url String?
+  background_image_low_resolution_url  String?
+  background_image_med_resolution_url  String?
+  background_image_thumbnail_url       String?
+  background_image_url                 String?
+  image_direction                      String?
+  image_full_resolution_url            String?
+  image_high_resolution_url            String?
+  image_low_resolution_url             String?
+  image_med_resolution_url             String?
+  image_thumbnail_url                  String?
+  image_url                            String?
+  is_unlimited                         Boolean?                         @default(false)
+  total_available                      Int?
+  total_issued                         Int?
+  total_likes                          Int?
+  variety                              String?
+  brand_id                             String?
+  licensor_id                          String?
+  series_id                            String?
+  drop_method                          String?
+  minimum_age                          Int?
+  is_free                              Boolean?                         @default(false)
+  total_store_allocation               Int?
+  slug                                 String?                          @unique
+  unique_holders                       BigInt?
+  first_public_mint                    Int?
+  mcp_low_ed_limit                     Int?
+  mcp_base_value                       Int?
+  mcp_rarity_value                     Decimal?                         @db.Decimal(4, 2)
+  mcp_total_value                      Decimal?                         @db.Decimal(5, 2)
+  communities                          communities[]
+  tmp_veve_tokens_collectibles         tmp_veve_tokens_collectibles[]
+  brand                                veve_brands?                     @relation(fields: [brand_id], references: [brand_id])
+  licensor                             veve_licensors?                  @relation(fields: [licensor_id], references: [licensor_id])
+  series                               veve_series?                     @relation(fields: [series_id], references: [series_id])
+  metrics                              veve_collectibles_metrics?
+  translations                         veve_collectibles_translations[]
+  veve_watchlist                       veve_watchlist[]
+  veve_tokens                          veve_tokens[]                    @relation("veve_collectiblesToveve_tokens")
+
+  @@index([brand_id], map: "collectibles_brand_id_fkey")
+  @@index([licensor_id], map: "collectibles_licensor_id_fkey")
+  @@index([name], map: "collectibles_name_idx")
+  @@index([series_id], map: "collectibles_series_id_fkey")
+}
+
+model veve_collectibles_translations {
+  collectible_id String
+  name           String?
+  description    String?           @db.Text
+  language       Language
+  edition_type   String?
+  rarity         String?
+  collectible    veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+
+  @@id([language, collectible_id])
+  @@index([language])
+  @@index([collectible_id], map: "veve_collectibles_translations_collectible_id_fkey")
+}
+
+model veve_collectibles_metrics {
+  collectible_id     String            @id
+  all_time_high      Decimal?          @db.Decimal(10, 2)
+  all_time_low       Decimal?          @db.Decimal(10, 2)
+  floor_price        Decimal?          @db.Decimal(10, 2)
+  market_cap         Decimal?          @db.Decimal(10, 2)
+  one_day_change     Decimal?          @db.Decimal(10, 2)
+  one_mo_change      Decimal?          @db.Decimal(10, 2)
+  one_wk_change      Decimal?          @db.Decimal(10, 2)
+  one_year_change    Decimal?          @db.Decimal(10, 2)
+  six_mo_change      Decimal?          @db.Decimal(10, 2)
+  three_mo_change    Decimal?          @db.Decimal(10, 2)
+  total_listings     Int?
+  total_issued       Int?
+  all_time_change    Decimal?          @db.Decimal(10, 2)
+  volume             Decimal?          @db.Decimal(10, 2)
+  circulating_supply Decimal?          @db.Decimal(10, 2)
+  collectible        veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+}

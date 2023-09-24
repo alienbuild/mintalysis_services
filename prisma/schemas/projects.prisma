@@ -1,0 +1,48 @@
+// schemas/projects.prisma
+// Projects
+
+model projects {
+  id            String             @id @default(uuid())
+  name          String?            @unique
+  abbr          String?            @unique
+  active        Boolean            @default(false)
+  icon          String?
+  slug          String?            @unique
+  sort          Int                @default(10)
+  tile          String?
+  motiff_url    String?
+  article       article[]
+  communities   communities[]
+  notifications notifications[]
+  price_alerts  price_alerts[]
+  metrics       projects_metrics[]
+}
+
+model projects_metrics {
+  project_id      String   @id
+  market_cap      Decimal? @db.Decimal(20, 2)
+  one_day_change  Decimal? @db.Decimal(10, 2)
+  one_mo_change   Decimal? @db.Decimal(10, 2)
+  one_wk_change   Decimal? @db.Decimal(10, 2)
+  one_year_change Decimal? @db.Decimal(10, 2)
+  six_mo_change   Decimal? @db.Decimal(10, 2)
+  three_mo_change Decimal? @db.Decimal(10, 2)
+  total_listings  Int?
+  token_count     Int?
+  mint_count      Int?
+  transfer_count  Int?
+  unique_holders  Int?
+  total_wallets   Int?
+  all_time_change Decimal? @db.Decimal(10, 2)
+  volume          Decimal? @db.Decimal(10, 2)
+  project         projects @relation(fields: [project_id], references: [id])
+}
+
+model UserToprojects {
+  A String
+  B String
+
+  @@unique([A, B], map: "_UserToprojects_AB_unique")
+  @@index([B], map: "_UserToprojects_B_index")
+  @@map("_UserToprojects")
+}

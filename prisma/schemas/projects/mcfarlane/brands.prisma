@@ -1,0 +1,9 @@
+// schemas/projects/mcfarlane/brands.prisma
+// Brands
+
+model mcfarlane_brands {
+  brand_id    String  @id
+  name        String?
+  description String? @db.Text
+  slug        String? @unique
+}

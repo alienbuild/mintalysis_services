@@ -1,0 +1,103 @@
+// schemas/misc.prisma
+// Misc TODO: Sort this out?
+
+model odb_tokens {
+  token_id           BigInt    @id
+  unique_cover_id    String?   @db.VarChar(255)
+  type               String?   @db.VarChar(255)
+  collectible_id     String?   @db.VarChar(255)
+  name               String?   @db.VarChar(255)
+  description        String?   @db.Text
+  rarity             String?   @db.VarChar(255)
+  edition_type       String?   @db.VarChar(10)
+  edition            Int?
+  total_editions     Int?
+  mint_date          DateTime
+  drop_date          DateTime? @db.DateTime(0)
+  comic_number       Int?
+  image_url          String?   @db.Text
+  start_year         Int?
+  cover_artists      String?   @db.Text
+  artists            String?   @db.Text
+  writers            String?   @db.Text
+  characters         String?   @db.Text
+  publisher_name     String?   @db.Text
+  series_name        String?   @db.Text
+  brand_name         String?   @db.Text
+  licensor_name      String?   @db.Text
+  last_updated       DateTime? @db.DateTime(0)
+  created_at         DateTime? @db.DateTime(0)
+  licensor_id        String?   @db.VarChar(255)
+  brand_id           String?   @db.VarChar(255)
+  series_id          String?   @db.VarChar(255)
+  wallet_id          String?   @db.VarChar(255)
+  comic_image_url_id String?   @db.VarChar(50)
+  mint_order         Int?
+  to_process         Boolean?  @default(false)
+  is_invalid         Boolean?  @default(false)
+  is_burned          Boolean?  @default(false)
+  mcp_ed_bonus       Boolean?  @default(false)
+
+  @@index([token_id])
+  @@index([comic_image_url_id])
+  @@index([collectible_id])
+  @@index([wallet_id])
+}
+
+model omi_transfers {
+  id             Int       @id @default(autoincrement())
+  transaction_id Int
+  status         String
+  user           String
+  receiver       String
+  token_address  String
+  decimals       Int
+  quantity       String
+  timestamp      DateTime
+  createdAt      DateTime?
+
+  @@index([transaction_id])
+}
+
+model veve_imx_status {
+  id             Int       @id @default(autoincrement())
+  last_timestamp String?
+  last_txn_id    Int?
+  table_name     String?
+  updatedAt      DateTime? @updatedAt
+}
+
+model veve_mcp_staging {
+  token_id           Int
+  from_wallet        String
+  to_wallet          String
+  timestamp          DateTime
+  type               String?
+  edition            Int?
+  rarity             String?
+  collectible_id     String?
+  unique_cover_id    String?
+  comic_image_url_id String?
+  series_id          String?
+  nbr_of_items       Int?
+  comic_low_ed_limit Int?
+  comic_rarity_value Decimal?  @db.Decimal(10, 2)
+  coll_base_value    Int?
+  coll_dup_value     Decimal?  @db.Decimal(10, 2)
+  coll_rarity_value  Decimal?  @db.Decimal(10, 2)
+  coll_low_ed_limit  Int?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime? @updatedAt
+  transaction_id     Int       @id
+}
+
+// TODO: Might not be needed anymore...
+model offers {
+  id            String   @id
+  offer         Decimal? @db.Decimal(10, 2)
+  offerAccepted Boolean? @default(false)
+  messageId     String?
+  message       message? @relation(fields: [messageId], references: [id])
+
+  @@index([messageId], map: "offers_messageId_fkey")
+}

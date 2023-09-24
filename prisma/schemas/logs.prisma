@@ -1,0 +1,28 @@
+// schemas/logs.prisma
+// Logging and Errors
+
+model login_history {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  browser    String?
+  user_id    String
+  ip_address String?
+  user       User     @relation("user_login_history", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "login_history_user_id_fkey")
+}
+
+model error_log {
+  id           Int      @id @default(autoincrement())
+  type         String?
+  function     String?
+  missing_data Boolean?
+  table_name   String?
+  error_msg    String?
+  createdAt    DateTime @default(now())
+}
+
+model veve_metadata_missing {
+  token_id  Int     @id
+  wallet_id String?
+}

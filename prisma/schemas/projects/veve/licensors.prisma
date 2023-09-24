@@ -1,0 +1,69 @@
+// schemas/projects/veve/licensors.prisma
+// Veve Licensors
+
+model veve_licensors {
+  licensor_id                                String                   @id
+  name                                       String?
+  description                                String?                  @db.Text
+  landscape_image_direction                  String?
+  landscape_image_full_resolution_url        String?
+  landscape_image_high_resolution_url        String?
+  landscape_image_low_resolution_url         String?
+  landscape_image_med_resolution_url         String?
+  landscape_image_thumbnail_url              String?
+  landscape_image_url                        String?
+  market_fee                                 Decimal?                 @db.Decimal(10, 3)
+  square_image_direction                     String?
+  square_image_full_resolution_url           String?
+  square_image_high_resolution_url           String?
+  square_image_low_resolution_url            String?
+  square_image_med_resolution_url            String?
+  square_image_thumbnail_url                 String?
+  square_image_url                           String?
+  theme_background_image_direction           String?
+  theme_background_image_full_resolution_url String?
+  theme_background_image_high_resolution_url String?
+  theme_background_image_low_resolution_url  String?
+  theme_background_image_med_resolution_url  String?
+  theme_background_image_thumbnail_url       String?
+  theme_background_image_url                 String?
+  theme_footer_image_direction               String?
+  theme_footer_image_full_resolution_url     String?
+  theme_footer_image_high_resolution_url     String?
+  theme_footer_image_low_resolution_url      String?
+  theme_footer_image_med_resolution_url      String?
+  theme_footer_image_thumbnail_url           String?
+  theme_footer_image_url                     String?
+  theme_logo_image_direction                 String?
+  theme_logo_image_full_resolution_url       String?
+  theme_logo_image_high_resolution_url       String?
+  theme_logo_image_low_resolution_url        String?
+  theme_logo_image_med_resolution_url        String?
+  theme_logo_image_thumbnail_url             String?
+  theme_logo_image_url                       String?
+  slug                                       String?                  @unique
+  veve_collectibles                          veve_collectibles[]
+  veve_tokens                                veve_tokens[]
+  createdAt                                  DateTime                 @default(now())
+  updatedAt                                  DateTime?                @updatedAt
+  metrics                                    veve_licensors_metrics[]
+}
+
+model veve_licensors_metrics {
+  licensor_id        String         @id
+  all_time_high      Decimal?       @db.Decimal(10, 2)
+  all_time_low       Decimal?       @db.Decimal(10, 2)
+  floor_price        Decimal?       @db.Decimal(10, 2)
+  market_cap         Decimal?       @db.Decimal(10, 2)
+  one_day_change     Decimal?       @db.Decimal(10, 2)
+  one_mo_change      Decimal?       @db.Decimal(10, 2)
+  one_wk_change      Decimal?       @db.Decimal(10, 2)
+  one_year_change    Decimal?       @db.Decimal(10, 2)
+  six_mo_change      Decimal?       @db.Decimal(10, 2)
+  three_mo_change    Decimal?       @db.Decimal(10, 2)
+  total_listings     Int?
+  all_time_change    Decimal?       @db.Decimal(10, 2)
+  volume             Decimal?       @db.Decimal(10, 2)
+  circulating_supply Decimal?       @db.Decimal(10, 2)
+  licensor           veve_licensors @relation(fields: [licensor_id], references: [licensor_id])
+}

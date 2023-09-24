@@ -1,0 +1,59 @@
+// schemas/marketplace.prisma
+// Marketplace
+
+model marketplace_category {
+  id                    Int                  @id @default(autoincrement())
+  name                  String
+  marketplace_productId String?
+  marketplace_product   marketplace_product? @relation(fields: [marketplace_productId], references: [id])
+
+  @@index([marketplace_productId], map: "marketplace_category_marketplace_productId_fkey")
+}
+
+model marketplace_product {
+  id                         String                       @id @default(uuid())
+  title                      String
+  description                String?
+  age                        Int?
+  price                      Float
+  receipt_available          Boolean?                     @default(false)
+  warranty_available         Boolean?                     @default(false)
+  accessories_available      Boolean?                     @default(false)
+  box_available              Boolean?                     @default(false)
+  user_id                    String
+  status                     MarketProductStatus          @default(PENDING)
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  condition                  String?
+  type                       MarketProductType            @default(PHYSICAL_PRODUCT)
+  category                   marketplace_category[]
+  seller                     User                         @relation(fields: [user_id], references: [id])
+  images                     marketplace_product_images[]
+  marketplace_product_offers marketplace_product_offers[]
+
+  @@index([user_id], map: "marketplace_product_user_id_fkey")
+}
+
+model marketplace_product_images {
+  url        String
+  product_id String
+  product    marketplace_product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@id([url, product_id])
+  @@index([product_id])
+}
+
+model marketplace_product_offers {
+  offer      Float
+  product_id String
+  product    marketplace_product? @relation(fields: [product_id], references: [id])
+  message    String?              @db.Text
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  id         String               @id @default(uuid())
+  buyer_id   String
+  seller_id  String
+  expires    DateTime?
+
+  @@index([product_id])
+}

@@ -1,0 +1,52 @@
+// schemas/messaging.prisma
+// Messaging and Conversations
+
+model message {
+  id                   String         @id @default(uuid())
+  conversationId       String
+  senderId             String
+  body                 String         @db.Text
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  type                 message_type   @default(TEXT)
+  status               message_status @default(SENT)
+  marketplace_offer_id String?
+  is_latest_in         conversation?  @relation("latest_conversation_message")
+  conversation         conversation   @relation(fields: [conversationId], references: [id])
+  sender               User           @relation(fields: [senderId], references: [id])
+  offer                offers[]
+
+  @@index([conversationId], map: "message_conversationId_fkey")
+  @@index([senderId], map: "message_senderId_fkey")
+}
+
+model conversation {
+  id                String                     @id @default(uuid())
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  latest_message_id String?                    @unique
+  owner_id          String?
+  latest_message    message?                   @relation("latest_conversation_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  owner             User?                      @relation(fields: [owner_id], references: [id])
+  participants      conversation_participant[]
+  messages          message[]
+
+  @@index([latest_message_id], map: "latest_message_id")
+  @@index([owner_id], map: "conversation_owner_id_fkey")
+}
+
+model conversation_participant {
+  id                      String       @id @default(uuid())
+  user_id                 String
+  conversation_id         String
+  createdAt               DateTime     @default(now())
+  has_seen_latest_message Boolean
+  updatedAt               DateTime     @updatedAt
+  conversation            conversation @relation(fields: [conversation_id], references: [id])
+  user                    User         @relation(fields: [user_id], references: [id])
+
+  @@index([has_seen_latest_message], map: "has_seen_latest_message")
+  @@index([conversation_id], map: "conversation_participant_conversation_id_fkey")
+  @@index([user_id], map: "conversation_participant_user_id_fkey")
+}
+

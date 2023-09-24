@@ -1,0 +1,9 @@
+// schemas/tags.prisma
+// Tags
+
+model wallet_tags {
+  id                Int                 @id @default(autoincrement())
+  name              String              @unique
+  mcfarlane_wallets mcfarlane_wallets[]
+  veve_wallets      veve_wallets[]
+}

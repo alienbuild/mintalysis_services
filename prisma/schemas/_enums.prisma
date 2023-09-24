@@ -1,0 +1,119 @@
+// schemas/_enums.prisma
+// Enum and Setting Tables
+
+enum Language {
+  EN
+  ES
+  DE
+  FR
+  CN
+  IN
+  IT
+  JP
+}
+
+enum WalletValuationType {
+  COLLECTIBLE
+  COMIC
+  TOTAL
+}
+
+enum MarketProductStatus {
+  PENDING
+  LISTED
+  COMPLETE
+  REJECTED
+}
+
+enum MarketProductType {
+  PHYSICAL_PRODUCT
+  DIGITAL_PRODUCT
+}
+
+enum Role {
+  BASIC
+  SUPREME
+}
+
+enum poker_table_message_type {
+  TEXT
+  IMAGE
+  OFFER
+}
+
+enum poker_table_status {
+  WAITING
+  IN_PROGRESS
+  GAME_OVER
+}
+
+enum message_type {
+  TEXT
+  IMAGE
+  OFFER
+  MARKETPLACE_OFFER
+}
+
+enum poker_table_message_status {
+  SENT
+  RECEIVED
+  SEEN
+}
+
+enum message_status {
+  SENT
+  RECEIVED
+  SEEN
+}
+
+enum posts_audience {
+  PUBLIC
+  ONLY_ME
+  SPECIFIC
+}
+
+enum CommunityPrivacy {
+  PUBLIC
+  PRIVATE
+  HODLERS
+}
+
+enum UserStatus {
+  ACTIVE
+  IDLE
+  LOGOUT
+}
+
+enum NotificationCategory {
+  DEFAULT
+  MARKETPLACE
+  COMMUNITY
+  ALERT
+}
+
+enum PriceAlertDirection {
+  ABOVE
+  BELOW
+}
+
+enum CollectibleType {
+  COLLECTIBLE
+  COMIC
+}
+
+enum NotificationType {
+  DEFAULT
+  POST
+  FOLLOWER
+  COMMUNITY
+  OFFER
+  MARKETPLACE_OFFER
+  PRICE_ALERT
+  WALLET_ACTIVITY
+}
+
+enum CursorOption {
+  DEFAULT
+  BLACK
+  WHITE
+}

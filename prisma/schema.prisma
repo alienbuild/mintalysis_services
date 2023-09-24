@@ -1,0 +1,1758 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// BEGIN_MODELS
+// schemas/articles.prisma
+// Articles and News
+
+model article {
+  id           Int                    @id @default(autoincrement())
+  image        String?
+  author_id    String?
+  publishedAt  DateTime               @default(now())
+  published    Boolean                @default(false)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  slug         String                 @unique
+  project_id   String?
+  author       User?                  @relation(fields: [author_id], references: [id])
+  project      projects?              @relation(fields: [project_id], references: [id])
+  translations article_translations[]
+
+  @@index([author_id], map: "article_author_id_fkey")
+  @@index([project_id], map: "article_project_id_fkey")
+}
+
+model article_translations {
+  article_id Int
+  language   Language
+  title      String
+  content    String   @db.Text
+  subtitle   String?  @db.Text
+  article    article  @relation(fields: [article_id], references: [id])
+
+  @@id([language, article_id])
+  @@index([language])
+  @@index([article_id], map: "article_translations_article_id_fkey")
+}
+// schemas/artists.prisma
+// Artists
+
+model artists {
+  artist_id   String        @id
+  name        String
+  slug        String?       @unique
+  veve_comics veve_comics[] @relation("artistsToveve_comics")
+}
+// schemas/blockchains/immutable.prisma
+// Immutable
+
+model imx_deposits {
+  txn_id             Int       @id
+  status             String?
+  wallet_id          String?
+  token_type         String?
+  token_id           String?
+  id                 String?
+  token_address      String?
+  decimals           Int?
+  quantity           String?
+  quantity_with_fees String?
+  timestamp          String?   @db.Text
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime? @updatedAt
+  timestamp_d        DateTime? @db.DateTime(6)
+
+  @@index([wallet_id])
+}
+
+model imx_orders {
+  order_id                 Int       @id
+  wallet_id                String?
+  type                     String?
+  token_id                 String?
+  token_address            String?
+  quantity                 String?
+  quantity_with_fees       String?
+  name                     String?
+  image_url                String?
+  collection_name          String?
+  collection_icon_url      String?
+  decimals                 Int?
+  amount_sold              Int?
+  expiration_timestamp     DateTime?
+  timestamp                DateTime?
+  updated_timestamp        DateTime?
+  maker_taker_type         String
+  maker_fees_qty_with_fees String?
+  maker_fees_token_type    String?
+  maker_fees_token_address String?
+  maker_fees_decimals      Int?
+  maker_fees_symbol        String?
+  taker_fees_qty_with_fees String?
+  taker_fees_token_type    String?
+  taker_fees_token_address String?
+  taker_fees_decimals      Int?
+  taker_fees_symbol        String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime? @updatedAt
+  status                   String?
+
+  @@index([wallet_id])
+}
+
+model imx_trades {
+  txn_id          Int       @id
+  status          String?
+  a_order_id      Int?
+  a_token_type    String?
+  a_sold_quantity String?
+  token_id        Int?
+  b_order_id      Int?
+  b_token_type    String?
+  b_token_id      String?   @db.VarChar(100)
+  b_token_address String?
+  b_sold          Int?
+  timestamp       String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime? @updatedAt
+  a_token_address String?   @db.Text
+}
+
+model imx_withdrawals {
+  txn_id              Int       @id
+  status              String?
+  rollup_status       String?
+  withdrawn_to_wallet Boolean?
+  sender              String?
+  token_type          String?
+  token_id            String?
+  imx_id              String?
+  token_address       String?
+  token_decimals      Int?
+  token_qty           String?
+  token_qty_with_fees String?
+  timestamp           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime? @updatedAt
+
+  @@index([txn_id])
+}
+
+model imx_stats {
+  project_id                   String   @unique
+  token_count                  Int
+  wallet_count                 Int
+  transaction_count            Int
+  unique_owners_count          Int
+  last_updated_mint_txn_id     Int?
+  last_updated_transfer_txn_id Int?
+  veve_metadata_missing_count  Int?
+  max_mints_timestamp          String?
+  max_transfers_timestamp      String?
+  createdAt                    DateTime @default(now())
+  mint_count                   Int
+  transfer_count               Int
+  updatedAt                    DateTime @updatedAt
+}
+// schemas/characters.prisma
+// Characters
+
+model characters {
+  character_id String        @id
+  name         String
+  slug         String?       @unique
+  veve_comics  veve_comics[] @relation("charactersToveve_comics")
+}
+// schemas/community.prisma
+// Community
+
+model communities {
+  id                        String                      @id @default(uuid())
+  name                      String                      @unique
+  type                      CommunityPrivacy            @default(PUBLIC)
+  creator_id                String
+  member_count              Int?
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  cover_image               String?
+  image                     String?
+  slug                      String                      @unique
+  project_id                String?
+  veve_collectible_id       String?
+  veve_comic_id             String?
+  gate_key                  String?
+  member                    member[]
+  users_communities_invites users_communities_invites[]
+  comments                  comments[]
+  creator                   User                        @relation("creator", fields: [creator_id], references: [id])
+  project                   projects?                   @relation(fields: [project_id], references: [id])
+  veve_collectible          veve_collectibles?          @relation(fields: [veve_collectible_id], references: [collectible_id])
+  veve_comic                veve_comics?                @relation(fields: [veve_comic_id], references: [unique_cover_id])
+  community_posts           community_posts[]
+  posts                     posts[]
+  utilities                 utilities[]
+
+  @@index([creator_id], map: "communities_creator_id_fkey")
+  @@index([project_id], map: "communities_project_id_fkey")
+  @@index([veve_collectible_id], map: "communities_veve_collectible_id_fkey")
+  @@index([veve_comic_id], map: "communities_veve_comic_id_fkey")
+}
+
+model member {
+  A           String
+  B           String
+  users       User        @relation(fields: [A], references: [id], onDelete: Cascade)
+  communities communities @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_member_AB_unique")
+  @@index([B], map: "_member_B_index")
+  @@map("_member")
+}
+
+model users_communities_invites {
+  A           String
+  B           String
+  users       User        @relation(fields: [A], references: [id], onDelete: Cascade)
+  communities communities @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_users_communities_invites_AB_unique")
+  @@index([B], map: "_users_communities_invites_B_index")
+  @@map("_users_communities_invites")
+}
+
+model utilities {
+  id           String       @id
+  title        String?
+  body         String?
+  value        Int?
+  community_id String?
+  communities  communities? @relation(fields: [community_id], references: [id])
+
+  @@index([community_id], map: "utilities_community_id_fkey")
+}
+
+model community_posts {
+  id                           String                  @id
+  author_id                    String
+  community_id                 String
+  content                      String?
+  image_url                    String?
+  community_image_url          String?
+  comment_count                Int?
+  like_count                   Int?
+  createdAt                    DateTime                @default(now())
+  updatedAt                    DateTime
+  likes_community_posts        likes_community_posts[]
+  comments                     comments[]
+  users_community_postsTousers User                    @relation(fields: [author_id], references: [id])
+  communities                  communities             @relation(fields: [community_id], references: [id])
+
+  @@index([author_id], map: "community_posts_author_id_fkey")
+  @@index([community_id], map: "community_posts_community_id_fkey")
+}
+
+model likes_community_posts {
+  A               String
+  B               String
+  users           User            @relation(fields: [A], references: [id], onDelete: Cascade)
+  community_posts community_posts @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_likes_community_posts_AB_unique")
+  @@index([B], map: "_likes_community_posts_B_index")
+  @@map("_likes_community_posts")
+}
+
+// Post and Comment Management
+model posts {
+  id                  String            @id
+  author_id           String?
+  community_id        String?
+  body                String?
+  image_url           String?
+  community_image_url String?
+  comment_count       Int?
+  like_count          Int?
+  createdAt           DateTime          @default(now())
+  audience            posts_audience    @default(PUBLIC)
+  likes_posts         likes_posts[]
+  users_posts_tag     users_posts_tag[]
+  comments            comments[]
+  users_postsTousers  User?             @relation(fields: [author_id], references: [id])
+  communities         communities?      @relation(fields: [community_id], references: [id])
+
+  @@index([author_id], map: "posts_author_id_fkey")
+  @@index([community_id], map: "posts_community_id_fkey")
+}
+
+model comments {
+  id                    String           @id
+  author_id             String
+  post_id               String
+  community_id          String
+  body                  String?
+  like_count            Int?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime
+  parent_id             String?
+  community_postsId     String?
+  likes_comments        likes_comments[]
+  users_commentsTousers User             @relation(fields: [author_id], references: [id])
+  communities           communities      @relation(fields: [community_id], references: [id])
+  community_posts       community_posts? @relation(fields: [community_postsId], references: [id])
+  comments              comments?        @relation("commentsTocomments", fields: [parent_id], references: [id])
+  other_comments        comments[]       @relation("commentsTocomments")
+  posts                 posts            @relation(fields: [post_id], references: [id])
+
+  @@index([author_id], map: "comments_author_id_fkey")
+  @@index([community_id], map: "comments_community_id_fkey")
+  @@index([community_postsId], map: "comments_community_postsId_fkey")
+  @@index([parent_id], map: "comments_parent_id_fkey")
+  @@index([post_id], map: "comments_post_id_fkey")
+}
+
+model likes_comments {
+  A        String
+  B        String
+  users    User     @relation(fields: [A], references: [id], onDelete: Cascade)
+  comments comments @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_likes_comments_AB_unique")
+  @@index([B], map: "_likes_comments_B_index")
+  @@map("_likes_comments")
+}
+
+model likes_posts {
+  A     String
+  B     String
+  users User   @relation(fields: [A], references: [id], onDelete: Cascade)
+  posts posts  @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_likes_posts_AB_unique")
+  @@index([B], map: "_likes_posts_B_index")
+  @@map("_likes_posts")
+}
+
+model users_posts_tag {
+  A     String
+  B     String
+  users User   @relation(fields: [A], references: [id], onDelete: Cascade)
+  posts posts  @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@unique([A, B], map: "_users_posts_tag_AB_unique")
+  @@index([B], map: "_users_posts_tag_B_index")
+  @@map("_users_posts_tag")
+}
+
+// schemas/games/poker/poker.prisma
+// Poker
+
+model poker_table {
+  id                                                                     String                    @id
+  host_id                                                                String?
+  createdAt                                                              DateTime                  @default(now())
+  updatedAt                                                              DateTime
+  latest_message_id                                                      String?                   @unique
+  community_cards                                                        String?                   @db.LongText
+  status                                                                 poker_table_status        @default(WAITING)
+  buy_in                                                                 Int                       @default(1000)
+  current_round                                                          String?
+  hand_number                                                            Int                       @default(0)
+  deck                                                                   String?                   @db.LongText
+  current_bet                                                            Int?
+  current_position                                                       Int?
+  last_position                                                          Int?
+  users                                                                  User?                     @relation(fields: [host_id], references: [id])
+  poker_table_message_poker_table_latest_message_idTopoker_table_message poker_table_message?      @relation("poker_table_latest_message_idTopoker_table_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  poker_table_message_poker_tableTopoker_table_message_poker_table_id    poker_table_message[]     @relation("poker_tableTopoker_table_message_poker_table_id")
+  poker_table_participant                                                poker_table_participant[]
+  poker_table_pots                                                       poker_table_pots[]
+
+  @@index([host_id], map: "poker_table_host_id_fkey")
+}
+
+model poker_table_message {
+  id                                                             String                     @id
+  poker_table_id                                                 String
+  senderId                                                       String
+  body                                                           String                     @db.Text
+  createdAt                                                      DateTime                   @default(now())
+  updatedAt                                                      DateTime
+  type                                                           poker_table_message_type   @default(TEXT)
+  status                                                         poker_table_message_status @default(SENT)
+  poker_table_poker_table_latest_message_idTopoker_table_message poker_table?               @relation("poker_table_latest_message_idTopoker_table_message")
+  poker_table_poker_tableTopoker_table_message_poker_table_id    poker_table                @relation("poker_tableTopoker_table_message_poker_table_id", fields: [poker_table_id], references: [id])
+  users                                                          User                       @relation(fields: [senderId], references: [id])
+
+  @@index([poker_table_id], map: "message_conversationId_fkey")
+  @@index([senderId], map: "message_senderId_fkey")
+}
+
+model poker_table_participant {
+  id                      String      @id
+  seat                    Int         @default(1)
+  action                  String?
+  poker_table_id          String
+  updatedAt               DateTime
+  user_id                 String
+  has_seen_latest_message Boolean
+  bet                     Int?        @default(0)
+  folded                  Boolean     @default(false)
+  hole_cards              String?     @db.LongText
+  show_cards              Boolean     @default(false)
+  stack_size              Int?        @default(1000)
+  left                    Boolean     @default(false)
+  poker_table             poker_table @relation(fields: [poker_table_id], references: [id])
+  users                   User        @relation(fields: [user_id], references: [id])
+
+  @@index([poker_table_id], map: "poker_table_participant_poker_table_id_fkey")
+  @@index([user_id], map: "poker_table_participant_user_id_fkey")
+}
+
+model poker_table_pots {
+  id             String      @id
+  poker_table_id String
+  amount         Int         @default(0)
+  poker_table    poker_table @relation(fields: [poker_table_id], references: [id])
+  users          User[]
+
+  @@index([poker_table_id], map: "poker_table_pots_poker_table_id_fkey")
+}
+
+// schemas/logs.prisma
+// Logging and Errors
+
+model login_history {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  browser    String?
+  user_id    String
+  ip_address String?
+  user       User     @relation("user_login_history", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "login_history_user_id_fkey")
+}
+
+model error_log {
+  id           Int      @id @default(autoincrement())
+  type         String?
+  function     String?
+  missing_data Boolean?
+  table_name   String?
+  error_msg    String?
+  createdAt    DateTime @default(now())
+}
+
+model veve_metadata_missing {
+  token_id  Int     @id
+  wallet_id String?
+}
+// schemas/marketplace.prisma
+// Marketplace
+
+model marketplace_category {
+  id                    Int                  @id @default(autoincrement())
+  name                  String
+  marketplace_productId String?
+  marketplace_product   marketplace_product? @relation(fields: [marketplace_productId], references: [id])
+
+  @@index([marketplace_productId], map: "marketplace_category_marketplace_productId_fkey")
+}
+
+model marketplace_product {
+  id                         String                       @id @default(uuid())
+  title                      String
+  description                String?
+  age                        Int?
+  price                      Float
+  receipt_available          Boolean?                     @default(false)
+  warranty_available         Boolean?                     @default(false)
+  accessories_available      Boolean?                     @default(false)
+  box_available              Boolean?                     @default(false)
+  user_id                    String
+  status                     MarketProductStatus          @default(PENDING)
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  condition                  String?
+  type                       MarketProductType            @default(PHYSICAL_PRODUCT)
+  category                   marketplace_category[]
+  seller                     User                         @relation(fields: [user_id], references: [id])
+  images                     marketplace_product_images[]
+  marketplace_product_offers marketplace_product_offers[]
+
+  @@index([user_id], map: "marketplace_product_user_id_fkey")
+}
+
+model marketplace_product_images {
+  url        String
+  product_id String
+  product    marketplace_product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@id([url, product_id])
+  @@index([product_id])
+}
+
+model marketplace_product_offers {
+  offer      Float
+  product_id String
+  product    marketplace_product? @relation(fields: [product_id], references: [id])
+  message    String?              @db.Text
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  id         String               @id @default(uuid())
+  buyer_id   String
+  seller_id  String
+  expires    DateTime?
+
+  @@index([product_id])
+}
+// schemas/messaging.prisma
+// Messaging and Conversations
+
+model message {
+  id                   String         @id @default(uuid())
+  conversationId       String
+  senderId             String
+  body                 String         @db.Text
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  type                 message_type   @default(TEXT)
+  status               message_status @default(SENT)
+  marketplace_offer_id String?
+  is_latest_in         conversation?  @relation("latest_conversation_message")
+  conversation         conversation   @relation(fields: [conversationId], references: [id])
+  sender               User           @relation(fields: [senderId], references: [id])
+  offer                offers[]
+
+  @@index([conversationId], map: "message_conversationId_fkey")
+  @@index([senderId], map: "message_senderId_fkey")
+}
+
+model conversation {
+  id                String                     @id @default(uuid())
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  latest_message_id String?                    @unique
+  owner_id          String?
+  latest_message    message?                   @relation("latest_conversation_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  owner             User?                      @relation(fields: [owner_id], references: [id])
+  participants      conversation_participant[]
+  messages          message[]
+
+  @@index([latest_message_id], map: "latest_message_id")
+  @@index([owner_id], map: "conversation_owner_id_fkey")
+}
+
+model conversation_participant {
+  id                      String       @id @default(uuid())
+  user_id                 String
+  conversation_id         String
+  createdAt               DateTime     @default(now())
+  has_seen_latest_message Boolean
+  updatedAt               DateTime     @updatedAt
+  conversation            conversation @relation(fields: [conversation_id], references: [id])
+  user                    User         @relation(fields: [user_id], references: [id])
+
+  @@index([has_seen_latest_message], map: "has_seen_latest_message")
+  @@index([conversation_id], map: "conversation_participant_conversation_id_fkey")
+  @@index([user_id], map: "conversation_participant_user_id_fkey")
+}
+
+
+// schemas/misc.prisma
+// Misc TODO: Sort this out?
+
+model odb_tokens {
+  token_id           BigInt    @id
+  unique_cover_id    String?   @db.VarChar(255)
+  type               String?   @db.VarChar(255)
+  collectible_id     String?   @db.VarChar(255)
+  name               String?   @db.VarChar(255)
+  description        String?   @db.Text
+  rarity             String?   @db.VarChar(255)
+  edition_type       String?   @db.VarChar(10)
+  edition            Int?
+  total_editions     Int?
+  mint_date          DateTime
+  drop_date          DateTime? @db.DateTime(0)
+  comic_number       Int?
+  image_url          String?   @db.Text
+  start_year         Int?
+  cover_artists      String?   @db.Text
+  artists            String?   @db.Text
+  writers            String?   @db.Text
+  characters         String?   @db.Text
+  publisher_name     String?   @db.Text
+  series_name        String?   @db.Text
+  brand_name         String?   @db.Text
+  licensor_name      String?   @db.Text
+  last_updated       DateTime? @db.DateTime(0)
+  created_at         DateTime? @db.DateTime(0)
+  licensor_id        String?   @db.VarChar(255)
+  brand_id           String?   @db.VarChar(255)
+  series_id          String?   @db.VarChar(255)
+  wallet_id          String?   @db.VarChar(255)
+  comic_image_url_id String?   @db.VarChar(50)
+  mint_order         Int?
+  to_process         Boolean?  @default(false)
+  is_invalid         Boolean?  @default(false)
+  is_burned          Boolean?  @default(false)
+  mcp_ed_bonus       Boolean?  @default(false)
+
+  @@index([token_id])
+  @@index([comic_image_url_id])
+  @@index([collectible_id])
+  @@index([wallet_id])
+}
+
+model omi_transfers {
+  id             Int       @id @default(autoincrement())
+  transaction_id Int
+  status         String
+  user           String
+  receiver       String
+  token_address  String
+  decimals       Int
+  quantity       String
+  timestamp      DateTime
+  createdAt      DateTime?
+
+  @@index([transaction_id])
+}
+
+model veve_imx_status {
+  id             Int       @id @default(autoincrement())
+  last_timestamp String?
+  last_txn_id    Int?
+  table_name     String?
+  updatedAt      DateTime? @updatedAt
+}
+
+model veve_mcp_staging {
+  token_id           Int
+  from_wallet        String
+  to_wallet          String
+  timestamp          DateTime
+  type               String?
+  edition            Int?
+  rarity             String?
+  collectible_id     String?
+  unique_cover_id    String?
+  comic_image_url_id String?
+  series_id          String?
+  nbr_of_items       Int?
+  comic_low_ed_limit Int?
+  comic_rarity_value Decimal?  @db.Decimal(10, 2)
+  coll_base_value    Int?
+  coll_dup_value     Decimal?  @db.Decimal(10, 2)
+  coll_rarity_value  Decimal?  @db.Decimal(10, 2)
+  coll_low_ed_limit  Int?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime? @updatedAt
+  transaction_id     Int       @id
+}
+
+// TODO: Might not be needed anymore...
+model offers {
+  id            String   @id
+  offer         Decimal? @db.Decimal(10, 2)
+  offerAccepted Boolean? @default(false)
+  messageId     String?
+  message       message? @relation(fields: [messageId], references: [id])
+
+  @@index([messageId], map: "offers_messageId_fkey")
+}
+// schemas/notifications.prisma
+// Notifications and Alerts
+
+model notifications {
+  id           String               @id @default(uuid())
+  type         NotificationType     @default(DEFAULT)
+  category     NotificationCategory @default(DEFAULT)
+  content      String
+  createdAt    DateTime             @default(now())
+  from_user_id String?
+  to_user_id   String?
+  read         Boolean              @default(false)
+  reference    String?
+  project_id   String?
+  from_user    User?                @relation("from_notifications", fields: [from_user_id], references: [id], onDelete: Cascade)
+  project      projects?            @relation(fields: [project_id], references: [id])
+  to_user      User?                @relation("to_notifications", fields: [to_user_id], references: [id], onDelete: Cascade)
+
+  @@index([from_user_id], map: "notifications_from_user_id_fkey")
+  @@index([to_user_id], map: "notifications_to_user_id_fkey")
+  @@index([project_id], map: "notifications_project_id_fkey")
+}
+
+model price_alerts {
+  id         Int                 @id @default(autoincrement())
+  value      Float
+  direction  PriceAlertDirection
+  user_id    String?
+  project_id String?
+  type       CollectibleType     @default(COLLECTIBLE)
+  project    projects?           @relation(fields: [project_id], references: [id])
+  user       User?               @relation("price_alerts", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id], map: "price_alerts_project_id_fkey")
+  @@index([user_id], map: "price_alerts_user_id_fkey")
+}
+// schemas/projects/mcfarlane/blockchain.prisma
+// Blockchain (Tokens, Transfers and Mints)
+
+model mcfarlane_wallets {
+  id                  String       @id
+  user_id             String?      @unique
+  mcfarlane_username  String?      @unique
+  mcfarlane_id        String?
+  tagsId              Int?
+  first_activity_date DateTime?
+  last_activity_date  DateTime?
+  tags                wallet_tags? @relation(fields: [tagsId], references: [id])
+  user                profile?     @relation(fields: [user_id], references: [user_id])
+
+  @@index([tagsId], map: "mcfarlane_wallets_tagsId_fkey")
+}
+
+model mcfarlane_transfers {
+  id          Int       @id
+  from_wallet String
+  to_wallet   String
+  timestamp   String?   @db.Text
+  token_id    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+  break_even  Float?
+  entry_price Float?
+
+  @@index([token_id, from_wallet, to_wallet])
+}
+// schemas/projects/mcfarlane/brands.prisma
+// Brands
+
+model mcfarlane_brands {
+  brand_id    String  @id
+  name        String?
+  description String? @db.Text
+  slug        String? @unique
+}
+// schemas/projects/veve/blockchain.prisma
+// Blockchain (Tokens, Transfers and Mints)
+
+model veve_wallets {
+  id                      String                    @id
+  user_id                 String?                   @unique
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime?
+  veve_username           String?                   @unique
+  veve_id                 String?
+  merged_to               String?
+  tagsId                  Int?
+  first_activity_date     DateTime?
+  last_activity_date      DateTime?
+  token_count             Int?
+  lgcy_veve_id            String?
+  lgcy_veve_username      String?
+  active                  Boolean?                  @default(false)
+  has_kyc                 Boolean?                  @default(false)
+  veve_leaderboard        veve_leaderboard[]
+  veve_tokens             veve_tokens[]
+  wallet_tags             wallet_tags?              @relation(fields: [tagsId], references: [id])
+  veve_wallets_valuations veve_wallets_valuations[]
+
+  @@index([tagsId], map: "veve_wallets_tagsId_fkey")
+  @@index([id, user_id, veve_username])
+}
+
+model veve_wallets_valuations {
+  id                     Int                 @id @default(autoincrement())
+  wallet_id              String
+  wallet                 veve_wallets?       @relation(fields: [wallet_id], references: [id])
+  timestamp              DateTime            @default(now())
+  total_valuation        Decimal?            @db.Decimal(10, 2)
+  collectibles_valuation Decimal?            @db.Decimal(10, 2)
+  comics_valuation       Decimal?            @db.Decimal(10, 2)
+  total_count            Int?
+  total_collectibles     Int?
+  total_comics           Int?
+  type                   WalletValuationType @default(TOTAL)
+}
+
+model veve_tokens {
+  token_id           Int                 @id
+  edition            Int?
+  mint_date          DateTime?
+  rarity             String?
+  collectible_id     String?
+  unique_cover_id    String?
+  type               String?             @db.Text
+  last_updated       DateTime?           @default(now()) @db.Timestamp(0)
+  brand_id           String?
+  licensor_id        String?
+  series_id          String?
+  wallet_id          String?
+  element_id         String?
+  comic_image_url_id String?             @db.VarChar(50)
+  mint_order         Int?
+  mcp_ed_bonus       Boolean?            @default(false)
+  to_process         Boolean?            @default(false)
+  is_invalid         Boolean?            @default(false)
+  is_burned          Boolean?            @default(false)
+  veve_brands        veve_brands?        @relation(fields: [brand_id], references: [brand_id])
+  veve_wallets       veve_wallets?       @relation(fields: [wallet_id], references: [id], map: "veve_tokens_ibfk_1")
+  veve_licensors     veve_licensors?     @relation(fields: [licensor_id], references: [licensor_id])
+  veve_series        veve_series?        @relation(fields: [series_id], references: [series_id])
+  veve_collectibles  veve_collectibles[] @relation("veve_collectiblesToveve_tokens")
+
+  @@index([brand_id], map: "veve_tokens_brand_id_fkey")
+  @@index([licensor_id], map: "veve_tokens_licensor_id_fkey")
+  @@index([series_id], map: "veve_tokens_series_id_fkey")
+  @@index([wallet_id], map: "veve_tokens_ibfk_1")
+  @@index([collectible_id])
+  @@index([comic_image_url_id])
+  @@index([unique_cover_id])
+  @@index([edition])
+}
+
+model veve_transfers {
+  id              Int       @id
+  from_wallet     String
+  to_wallet       String
+  timestamp       String?   @db.Text
+  token_id        Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  break_even      Float?
+  entry_price     Float?
+  break_even_new  Float?
+  entry_price_new Float?
+  timestamp_new   DateTime? @db.DateTime(6)
+  is_transfer     Boolean?  @default(false)
+  is_burn         Boolean?  @default(false)
+  is_craft        Boolean?  @default(false)
+  is_auction      Boolean?  @default(false)
+  is_redemption   Boolean?  @default(false)
+  is_mkt_action   Boolean?  @default(false)
+  is_mkt_fixed    Boolean?  @default(false)
+
+  @@index([token_id, from_wallet, to_wallet])
+}
+
+model veve_mints {
+  id            Int       @id
+  wallet_id     String?
+  timestamp     String?   @db.Text
+  token_id      Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime?
+  timestamp_new DateTime? @db.DateTime(6)
+  is_burn       Boolean?  @default(false)
+  is_redemption Boolean?  @default(false)
+
+  @@index([wallet_id, token_id])
+  @@index([token_id])
+  @@index([wallet_id])
+}
+// schemas/projects/veve/brands.prisma
+// Veve Brands
+
+model veve_brands {
+  brand_id                                   String                @id
+  name                                       String?
+  description                                String?               @db.Text
+  theme_logo_image_url                       String?
+  theme_logo_image_thumbnail_url             String?
+  theme_logo_image_low_resolution_url        String?
+  theme_logo_image_med_resolution_url        String?
+  theme_logo_image_full_resolution_url       String?
+  theme_logo_image_high_resolution_url       String?
+  theme_logo_image_direction                 String?
+  theme_background_image_url                 String?
+  theme_background_image_thumbnail_url       String?
+  theme_background_image_low_resolution_url  String?
+  theme_background_image_med_resolution_url  String?
+  theme_background_image_full_resolution_url String?
+  theme_background_image_high_resolution_url String?
+  theme_background_image_direction           String?
+  theme_footer_image_url                     String?
+  theme_footer_image_thumbnail_url           String?
+  theme_footer_image_low_resolution_url      String?
+  theme_footer_image_med_resolution_url      String?
+  theme_footer_image_full_resolution_url     String?
+  theme_footer_image_high_resolution_url     String?
+  theme_footer_image_direction               String?
+  landscape_image_url                        String?
+  landscape_image_thumbnail_url              String?
+  landscape_image_low_resolution_url         String?
+  landscape_image_med_resolution_url         String?
+  landscape_image_full_resolution_url        String?
+  landscape_image_high_resolution_url        String?
+  landscape_image_direction                  String?
+  square_image_url                           String?
+  square_image_thumbnail_url                 String?
+  square_image_low_resolution_url            String?
+  square_image_med_resolution_url            String?
+  square_image_full_resolution_url           String?
+  square_image_high_resolution_url           String?
+  square_image_direction                     String?
+  licensor_id                                String
+  slug                                       String?               @unique
+  sort                                       Int?
+  veve_collectibles                          veve_collectibles[]
+  veve_tokens                                veve_tokens[]
+  createdAt                                  DateTime              @default(now())
+  updatedAt                                  DateTime?             @updatedAt
+  metrics                                    veve_brands_metrics[]
+
+  @@index([licensor_id], map: "brands_licensor_id_fkey")
+}
+
+model veve_brands_metrics {
+  brand_id           String      @id
+  all_time_high      Decimal?    @db.Decimal(10, 2)
+  all_time_low       Decimal?    @db.Decimal(10, 2)
+  floor_price        Decimal?    @db.Decimal(10, 2)
+  market_cap         Decimal?    @db.Decimal(10, 2)
+  one_day_change     Decimal?    @db.Decimal(10, 2)
+  one_mo_change      Decimal?    @db.Decimal(10, 2)
+  one_wk_change      Decimal?    @db.Decimal(10, 2)
+  one_year_change    Decimal?    @db.Decimal(10, 2)
+  six_mo_change      Decimal?    @db.Decimal(10, 2)
+  three_mo_change    Decimal?    @db.Decimal(10, 2)
+  total_listings     Int?
+  all_time_change    Decimal?    @db.Decimal(10, 2)
+  volume             Decimal?    @db.Decimal(10, 2)
+  circulating_supply Decimal?    @db.Decimal(10, 2)
+  brand              veve_brands @relation(fields: [brand_id], references: [brand_id])
+}
+// schemas/projects/veve/collectibles.prisma
+// Veve Collectibles
+
+model veve_collectibles {
+  collectible_id                       String                           @id
+  name                                 String?
+  rarity                               String?
+  description                          String?                          @db.Text
+  edition_type                         String?
+  store_price                          Decimal?                         @db.Decimal(10, 2)
+  drop_date                            DateTime?
+  market_fee                           Decimal?                         @db.Decimal(10, 3)
+  createdAt                            DateTime                         @default(now())
+  updatedAt                            DateTime?
+  background_image_direction           String?
+  background_image_full_resolution_url String?
+  background_image_high_resolution_url String?
+  background_image_low_resolution_url  String?
+  background_image_med_resolution_url  String?
+  background_image_thumbnail_url       String?
+  background_image_url                 String?
+  image_direction                      String?
+  image_full_resolution_url            String?
+  image_high_resolution_url            String?
+  image_low_resolution_url             String?
+  image_med_resolution_url             String?
+  image_thumbnail_url                  String?
+  image_url                            String?
+  is_unlimited                         Boolean?                         @default(false)
+  total_available                      Int?
+  total_issued                         Int?
+  total_likes                          Int?
+  variety                              String?
+  brand_id                             String?
+  licensor_id                          String?
+  series_id                            String?
+  drop_method                          String?
+  minimum_age                          Int?
+  is_free                              Boolean?                         @default(false)
+  total_store_allocation               Int?
+  slug                                 String?                          @unique
+  unique_holders                       BigInt?
+  first_public_mint                    Int?
+  mcp_low_ed_limit                     Int?
+  mcp_base_value                       Int?
+  mcp_rarity_value                     Decimal?                         @db.Decimal(4, 2)
+  mcp_total_value                      Decimal?                         @db.Decimal(5, 2)
+  communities                          communities[]
+  tmp_veve_tokens_collectibles         tmp_veve_tokens_collectibles[]
+  brand                                veve_brands?                     @relation(fields: [brand_id], references: [brand_id])
+  licensor                             veve_licensors?                  @relation(fields: [licensor_id], references: [licensor_id])
+  series                               veve_series?                     @relation(fields: [series_id], references: [series_id])
+  metrics                              veve_collectibles_metrics?
+  translations                         veve_collectibles_translations[]
+  veve_watchlist                       veve_watchlist[]
+  veve_tokens                          veve_tokens[]                    @relation("veve_collectiblesToveve_tokens")
+
+  @@index([brand_id], map: "collectibles_brand_id_fkey")
+  @@index([licensor_id], map: "collectibles_licensor_id_fkey")
+  @@index([name], map: "collectibles_name_idx")
+  @@index([series_id], map: "collectibles_series_id_fkey")
+}
+
+model veve_collectibles_translations {
+  collectible_id String
+  name           String?
+  description    String?           @db.Text
+  language       Language
+  edition_type   String?
+  rarity         String?
+  collectible    veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+
+  @@id([language, collectible_id])
+  @@index([language])
+  @@index([collectible_id], map: "veve_collectibles_translations_collectible_id_fkey")
+}
+
+model veve_collectibles_metrics {
+  collectible_id     String            @id
+  all_time_high      Decimal?          @db.Decimal(10, 2)
+  all_time_low       Decimal?          @db.Decimal(10, 2)
+  floor_price        Decimal?          @db.Decimal(10, 2)
+  market_cap         Decimal?          @db.Decimal(10, 2)
+  one_day_change     Decimal?          @db.Decimal(10, 2)
+  one_mo_change      Decimal?          @db.Decimal(10, 2)
+  one_wk_change      Decimal?          @db.Decimal(10, 2)
+  one_year_change    Decimal?          @db.Decimal(10, 2)
+  six_mo_change      Decimal?          @db.Decimal(10, 2)
+  three_mo_change    Decimal?          @db.Decimal(10, 2)
+  total_listings     Int?
+  total_issued       Int?
+  all_time_change    Decimal?          @db.Decimal(10, 2)
+  volume             Decimal?          @db.Decimal(10, 2)
+  circulating_supply Decimal?          @db.Decimal(10, 2)
+  collectible        veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+}
+// schemas/projects/veve/comics.prisma
+// Veve Comics
+
+model veve_comics {
+  unique_cover_id           String                     @id
+  name                      String
+  rarity                    String?
+  description               String?                    @db.Text
+  comic_series_id           String?
+  drop_date                 DateTime?
+  store_price               Decimal?                   @db.Decimal(10, 2)
+  publisher_id              String?
+  market_fee                Decimal?                   @db.Decimal(10, 3)
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime
+  all_time_high             Decimal?                   @db.Decimal(10, 2)
+  all_time_low              Decimal?                   @db.Decimal(10, 2)
+  comic_number              Int?
+  drop_method               String?
+  floor_price               Decimal?                   @db.Decimal(10, 2)
+  is_free                   Boolean?                   @default(false)
+  is_unlimited              Boolean?                   @default(false)
+  market_cap                Decimal?                   @db.Decimal(10, 2)
+  one_day_change            Decimal?                   @db.Decimal(10, 2)
+  one_mo_change             Decimal?                   @db.Decimal(10, 2)
+  one_wk_change             Decimal?                   @db.Decimal(10, 2)
+  one_year_change           Decimal?                   @db.Decimal(10, 2)
+  page_count                Int?
+  six_mo_change             Decimal?                   @db.Decimal(10, 2)
+  start_year                Int?
+  three_mo_change           Decimal?                   @db.Decimal(10, 2)
+  total_available           Int?
+  total_issued              Int?
+  total_listings            Int?
+  image_direction           String?
+  image_full_resolution_url String?
+  image_high_resolution_url String?
+  image_low_resolution_url  String?
+  image_med_resolution_url  String?
+  image_thumbnail           String?
+  all_time_change           Decimal?                   @db.Decimal(10, 2)
+  slug                      String?                    @unique
+  comic_id                  String?
+  unique_holders            BigInt?
+  first_public_mint         Int?
+  mcp_low_ed_limit          Int?
+  mcp_rarity_value          Decimal?                   @db.Decimal(10, 2)
+  comic_image_url_id        String?                    @db.VarChar(50)
+  communities               communities[]
+  translations              veve_comics_translations[]
+  veve_watchlist            veve_watchlist[]
+  artists                   artists[]                  @relation("artistsToveve_comics")
+  characters                characters[]               @relation("charactersToveve_comics")
+  writers                   writers[]                  @relation("veve_comicsTowriters")
+
+  @@index([unique_cover_id], map: "unique_cover_id")
+  @@index([comic_image_url_id], map: "comic_image_url_id")
+}
+
+model veve_comics_translations {
+  unique_cover_id        String
+  name                   String?
+  description            String?     @db.Text
+  rarity_formatted       String?
+  edition_type_formatted String?
+  language               Language
+  comic                  veve_comics @relation(fields: [unique_cover_id], references: [unique_cover_id])
+
+  @@id([language, unique_cover_id])
+  @@index([language])
+  @@index([unique_cover_id], map: "veve_comics_translations_unique_cover_id_fkey")
+}
+// schemas/projects/veve/leaderboards.prisma
+// Veve Leaderboards
+
+model veve_leaderboard {
+  id           Int          @id @default(autoincrement())
+  leader_type  String
+  wallet_id    String
+  count        Int
+  datetime     String?
+  createdAt    DateTime     @default(now())
+  last_updated DateTime?    @db.DateTime(0)
+  tag          String?
+  wallet       veve_wallets @relation(fields: [wallet_id], references: [id])
+
+  @@index([wallet_id], map: "veve_leaderboard_wallet_id_fkey")
+}
+// schemas/projects/veve/licensors.prisma
+// Veve Licensors
+
+model veve_licensors {
+  licensor_id                                String                   @id
+  name                                       String?
+  description                                String?                  @db.Text
+  landscape_image_direction                  String?
+  landscape_image_full_resolution_url        String?
+  landscape_image_high_resolution_url        String?
+  landscape_image_low_resolution_url         String?
+  landscape_image_med_resolution_url         String?
+  landscape_image_thumbnail_url              String?
+  landscape_image_url                        String?
+  market_fee                                 Decimal?                 @db.Decimal(10, 3)
+  square_image_direction                     String?
+  square_image_full_resolution_url           String?
+  square_image_high_resolution_url           String?
+  square_image_low_resolution_url            String?
+  square_image_med_resolution_url            String?
+  square_image_thumbnail_url                 String?
+  square_image_url                           String?
+  theme_background_image_direction           String?
+  theme_background_image_full_resolution_url String?
+  theme_background_image_high_resolution_url String?
+  theme_background_image_low_resolution_url  String?
+  theme_background_image_med_resolution_url  String?
+  theme_background_image_thumbnail_url       String?
+  theme_background_image_url                 String?
+  theme_footer_image_direction               String?
+  theme_footer_image_full_resolution_url     String?
+  theme_footer_image_high_resolution_url     String?
+  theme_footer_image_low_resolution_url      String?
+  theme_footer_image_med_resolution_url      String?
+  theme_footer_image_thumbnail_url           String?
+  theme_footer_image_url                     String?
+  theme_logo_image_direction                 String?
+  theme_logo_image_full_resolution_url       String?
+  theme_logo_image_high_resolution_url       String?
+  theme_logo_image_low_resolution_url        String?
+  theme_logo_image_med_resolution_url        String?
+  theme_logo_image_thumbnail_url             String?
+  theme_logo_image_url                       String?
+  slug                                       String?                  @unique
+  veve_collectibles                          veve_collectibles[]
+  veve_tokens                                veve_tokens[]
+  createdAt                                  DateTime                 @default(now())
+  updatedAt                                  DateTime?                @updatedAt
+  metrics                                    veve_licensors_metrics[]
+}
+
+model veve_licensors_metrics {
+  licensor_id        String         @id
+  all_time_high      Decimal?       @db.Decimal(10, 2)
+  all_time_low       Decimal?       @db.Decimal(10, 2)
+  floor_price        Decimal?       @db.Decimal(10, 2)
+  market_cap         Decimal?       @db.Decimal(10, 2)
+  one_day_change     Decimal?       @db.Decimal(10, 2)
+  one_mo_change      Decimal?       @db.Decimal(10, 2)
+  one_wk_change      Decimal?       @db.Decimal(10, 2)
+  one_year_change    Decimal?       @db.Decimal(10, 2)
+  six_mo_change      Decimal?       @db.Decimal(10, 2)
+  three_mo_change    Decimal?       @db.Decimal(10, 2)
+  total_listings     Int?
+  all_time_change    Decimal?       @db.Decimal(10, 2)
+  volume             Decimal?       @db.Decimal(10, 2)
+  circulating_supply Decimal?       @db.Decimal(10, 2)
+  licensor           veve_licensors @relation(fields: [licensor_id], references: [licensor_id])
+}
+// schemas/projects/veve/series.prisma
+// Veve Series
+
+model veve_series {
+  series_id                                  String                @id
+  name                                       String?
+  description                                String?               @db.Text
+  season                                     Int?
+  is_blindbox                                Boolean?              @default(false)
+  theme_logo_image_url                       String?
+  theme_logo_image_thumbnail_url             String?
+  theme_logo_image_low_resolution_url        String?
+  theme_logo_image_med_resolution_url        String?
+  theme_logo_image_full_resolution_url       String?
+  theme_logo_image_high_resolution_url       String?
+  theme_logo_image_direction                 String?
+  theme_background_image_url                 String?
+  theme_background_image_thumbnail_url       String?
+  theme_background_image_low_resolution_url  String?
+  theme_background_image_med_resolution_url  String?
+  theme_background_image_full_resolution_url String?
+  theme_background_image_high_resolution_url String?
+  theme_background_image_direction           String?
+  theme_footer_image_url                     String?
+  theme_footer_image_thumbnail_url           String?
+  theme_footer_image_low_resolution_url      String?
+  theme_footer_image_med_resolution_url      String?
+  theme_footer_image_full_resolution_url     String?
+  theme_footer_image_high_resolution_url     String?
+  theme_footer_image_direction               String?
+  landscape_image_url                        String?
+  landscape_image_thumbnail_url              String?
+  landscape_image_low_resolution_url         String?
+  landscape_image_med_resolution_url         String?
+  landscape_image_full_resolution_url        String?
+  landscape_image_high_resolution_url        String?
+  landscape_image_direction                  String?
+  square_image_url                           String?
+  square_image_thumbnail_url                 String?
+  square_image_low_resolution_url            String?
+  square_image_med_resolution_url            String?
+  square_image_full_resolution_url           String?
+  square_image_high_resolution_url           String?
+  square_image_direction                     String?
+  licensor_id                                String
+  brand_id                                   String
+  slug                                       String?               @unique
+  nbr_of_items                               Int?
+  mcp_series_value                           Int?
+  veve_collectibles                          veve_collectibles[]
+  veve_tokens                                veve_tokens[]
+  createdAt                                  DateTime              @default(now())
+  updatedAt                                  DateTime?             @updatedAt
+  metrics                                    veve_series_metrics[]
+
+  @@index([brand_id], map: "series_brand_id_fkey")
+  @@index([licensor_id], map: "series_licensor_id_fkey")
+}
+
+model veve_series_metrics {
+  series_id          String      @id
+  all_time_high      Decimal?    @db.Decimal(10, 2)
+  all_time_low       Decimal?    @db.Decimal(10, 2)
+  floor_price        Decimal?    @db.Decimal(10, 2)
+  market_cap         Decimal?    @db.Decimal(10, 2)
+  one_day_change     Decimal?    @db.Decimal(10, 2)
+  one_mo_change      Decimal?    @db.Decimal(10, 2)
+  one_wk_change      Decimal?    @db.Decimal(10, 2)
+  one_year_change    Decimal?    @db.Decimal(10, 2)
+  six_mo_change      Decimal?    @db.Decimal(10, 2)
+  three_mo_change    Decimal?    @db.Decimal(10, 2)
+  total_listings     Int?
+  all_time_change    Decimal?    @db.Decimal(10, 2)
+  volume             Decimal?    @db.Decimal(10, 2)
+  circulating_supply Decimal?    @db.Decimal(10, 2)
+  series             veve_series @relation(fields: [series_id], references: [series_id])
+}
+// schemas/projects/veve/watchlist.prisma
+// Watchlist
+
+model veve_watchlist {
+  id                String             @id
+  user_id           String
+  collectible_id    String?
+  unique_cover_id   String?
+  veve_collectibles veve_collectibles? @relation(fields: [collectible_id], references: [collectible_id])
+  veve_comics       veve_comics?       @relation(fields: [unique_cover_id], references: [unique_cover_id])
+  users             User               @relation(fields: [user_id], references: [id])
+
+  @@index([collectible_id], map: "veve_watchlist_collectible_id_fkey")
+  @@index([unique_cover_id], map: "veve_watchlist_unique_cover_id_fkey")
+  @@index([user_id], map: "veve_watchlist_user_id_fkey")
+}
+// schemas/projects.prisma
+// Projects
+
+model projects {
+  id            String             @id @default(uuid())
+  name          String?            @unique
+  abbr          String?            @unique
+  active        Boolean            @default(false)
+  icon          String?
+  slug          String?            @unique
+  sort          Int                @default(10)
+  tile          String?
+  motiff_url    String?
+  article       article[]
+  communities   communities[]
+  notifications notifications[]
+  price_alerts  price_alerts[]
+  metrics       projects_metrics[]
+}
+
+model projects_metrics {
+  project_id      String   @id
+  market_cap      Decimal? @db.Decimal(20, 2)
+  one_day_change  Decimal? @db.Decimal(10, 2)
+  one_mo_change   Decimal? @db.Decimal(10, 2)
+  one_wk_change   Decimal? @db.Decimal(10, 2)
+  one_year_change Decimal? @db.Decimal(10, 2)
+  six_mo_change   Decimal? @db.Decimal(10, 2)
+  three_mo_change Decimal? @db.Decimal(10, 2)
+  total_listings  Int?
+  token_count     Int?
+  mint_count      Int?
+  transfer_count  Int?
+  unique_holders  Int?
+  total_wallets   Int?
+  all_time_change Decimal? @db.Decimal(10, 2)
+  volume          Decimal? @db.Decimal(10, 2)
+  project         projects @relation(fields: [project_id], references: [id])
+}
+
+model UserToprojects {
+  A String
+  B String
+
+  @@unique([A, B], map: "_UserToprojects_AB_unique")
+  @@index([B], map: "_UserToprojects_B_index")
+  @@map("_UserToprojects")
+}
+// schemas/session.prisma
+// Session and Authentication Management
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String?  @map("user_id")
+  expires      DateTime
+  sessionToken String   @unique @map("session_token")
+  accessToken  String?  @map("access_token")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "sessions_user_id_fkey")
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, token])
+}
+
+model Account {
+  userId            String   @map("user_id")
+  providerAccountId String   @map("provider_account_id")
+  access_token      String?  @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  expires_at        Int?
+  id_token          String?  @db.Text
+  provider          String
+  refresh_token     String?  @db.Text
+  scope             String?
+  token_type        String?
+  type              String?
+  id                String   @id @default(cuid())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId], map: "accounts_user_id_fkey")
+  @@map("accounts")
+}
+
+
+// schemas/tags.prisma
+// Tags
+
+model wallet_tags {
+  id                Int                 @id @default(autoincrement())
+  name              String              @unique
+  mcfarlane_wallets mcfarlane_wallets[]
+  veve_wallets      veve_wallets[]
+}
+
+// schemas/tmp.prisma
+// Temporal and Staging
+
+model tmp_wallet_owner {
+  wallet_id      String  @id
+  owner_id       String? @db.VarChar(191)
+  owner_username String? @db.VarChar(191)
+}
+
+model tmp_tokens_wallets {
+  token_id  Int     @id
+  wallet_id String? @db.VarChar(191)
+}
+
+model tmp_veve_tokens_collectibles {
+  id                  Int                @id @default(autoincrement())
+  blockchain_id       String?            @unique
+  owner_id            String?
+  owner_username      String?
+  collectible_type_id String?
+  transaction_id      String?
+  connector_id        String?            @unique
+  txn_cursor          String?
+  veve_collectibles   veve_collectibles? @relation(fields: [collectible_type_id], references: [collectible_id])
+
+  @@index([collectible_type_id], map: "tmp_veve_tokens_collectibles_collectible_type_id_fkey")
+}
+
+model tmp_veve_transactions {
+  transaction_id           String?
+  transfer_id              String?
+  createdAt                DateTime?
+  amount_usd               Float?
+  buyer_id                 String?
+  buyer_username           String?
+  seller_id                String?
+  seller_username          String?
+  collectible_type_id      String?
+  id                       Int       @id @default(autoincrement())
+  connector_id             String?
+  fee_gem                  Float?
+  fee_rate                 Float?
+  status                   String?
+  type                     String?
+  tmp_veve_tokens_comicsId Int?
+}
+
+model tmp_veve_tokens_comics {
+  id                          Int                           @id @default(autoincrement())
+  connector_id                String?                       @unique
+  blockchain_id               String?
+  owner_id                    String?
+  owner_username              String?
+  comic_id                    String?
+  transaction_id              String?
+  txn_cursor                  String?
+  tmp_veve_comic_transactions tmp_veve_comic_transactions[]
+}
+
+model tmp_veve_comic_transactions {
+  id              Int                     @id @default(autoincrement())
+  transaction_id  String?
+  transfer_id     String?
+  connector_id    String?
+  createdAt       DateTime?
+  status          String?
+  type            String?
+  fee_rate        Float?
+  fee_gem         Float?
+  amount_usd      Float?
+  buyer_id        String?
+  buyer_username  String?
+  seller_id       String?
+  seller_username String?
+  transactions    tmp_veve_tokens_comics? @relation(fields: [connector_id], references: [connector_id])
+
+  @@index([connector_id], map: "tmp_veve_comic_transactions_connector_id_fkey")
+}
+
+model tmp_medium_article_ids {
+  id         Int    @id @default(autoincrement())
+  article_id String
+}
+
+model tmp_medium_article_html {
+  id            Int     @id @default(autoincrement())
+  article_id    String  @unique
+  html          String  @db.Text
+  date          String?
+  image         String?
+  subtitle      String? @db.Text
+  title         String? @db.Text
+  updated_html  String? @db.Text
+  semantic_html String? @db.Text
+}
+
+model tmp_cursors {
+  id             Int      @id @default(autoincrement())
+  collectible_id String?
+  cursor         String
+  date           DateTime @default(now())
+  brand_id       String?
+  rarity         String?
+  comic_id       String?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model tmp_wallet_merges {
+  date        DateTime @db.DateTime(0)
+  from_wallet String   @db.VarChar(255)
+  to_wallet   String   @db.VarChar(255)
+
+  @@map("_tmp_wallet_merges")
+  @@ignore
+}
+
+model tmp_veve_transfers {
+  id        BigInt?
+  from_user String? @db.Text
+  to_user   String? @db.Text
+  timestamp String? @db.Text
+  token_id  BigInt?
+
+  @@index([token_id], map: "token_id")
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model tmp_veve_mints {
+  id        BigInt?
+  user      String? @db.Text
+  timestamp String? @db.Text
+  token_id  BigInt?
+
+  @@ignore
+}
+// schemas/user.prisma
+// User and Role Management
+
+model User {
+  id                              String                           @id @default(uuid())
+  email                           String?                          @unique
+  emailVerified                   DateTime?                        @map("email_verified")
+  createdAt                       DateTime                         @default(now())
+  updatedAt                       DateTime                         @updatedAt
+  role                            Role                             @default(BASIC)
+  username                        String?                          @unique
+  avatar                          String?
+  last_seen                       DateTime?                        @default(now())
+  activated                       Boolean                          @default(false)
+  stripe_customer_id              String?
+  ecomiwiki_user                  Boolean?                         @default(false)
+  onboarded                       Boolean                          @default(false)
+  name                            String?
+  impressions                     Int?
+  viewed_profile                  Int?
+  cover_image                     String?
+  status                          UserStatus                       @default(ACTIVE)
+  notification_count              Int                              @default(0)
+  message_count                   Int                              @default(0)
+  poker_table_potsId              String?
+  likes_comments                  likes_comments[]
+  likes_community_posts           likes_community_posts[]
+  likes_posts                     likes_posts[]
+  member                          member[]
+  users_communities_invites       users_communities_invites[]
+  users_posts_tag                 users_posts_tag[]
+  accounts                        Account[]
+  article                         article[]
+  comments                        comments[]
+  communities_created             communities[]                    @relation("creator")
+  community_posts                 community_posts[]
+  conversation                    conversation[]
+  conversations                   conversation_participant[]
+  following                       follows[]                        @relation("follower")
+  followers                       follows[]                        @relation("following")
+  login_history                   login_history[]                  @relation("user_login_history")
+  marketplace_product             marketplace_product[]
+  messages                        message[]
+  from_notifications              notifications[]                  @relation("from_notifications")
+  to_notifications                notifications[]                  @relation("to_notifications")
+  poker_table                     poker_table[]
+  poker_table_message             poker_table_message[]
+  poker_table_participant         poker_table_participant[]
+  posts                           posts[]
+  price_alerts                    price_alerts[]                   @relation("price_alerts")
+  profile                         profile?
+  sessions                        Session[]
+  poker_table_pots                poker_table_pots?                @relation(fields: [poker_table_potsId], references: [id])
+  users_preferences_accessibility users_preferences_accessibility?
+  veve_watchlist                  veve_watchlist[]
+
+  @@index([email], map: "email")
+  @@index([username], map: "username")
+  @@index([stripe_customer_id], map: "stripe_customer_id")
+  @@index([poker_table_potsId], map: "users_poker_table_potsId_fkey")
+  @@map("users")
+}
+
+model users_preferences_accessibility {
+  id                Int          @id @default(autoincrement())
+  screen_reader     Boolean      @default(false)
+  magnifier         Boolean      @default(false)
+  readable_font     Boolean      @default(false)
+  dyslexia_font     Boolean      @default(false)
+  img_descriptions  Boolean      @default(false)
+  highlight_links   Boolean      @default(false)
+  highlight_headers Boolean      @default(false)
+  text_magnifier    Boolean      @default(false)
+  virtual_keyboard  Boolean      @default(false)
+  monochrome        Boolean      @default(false)
+  dark_contrast     Boolean      @default(false)
+  light_contrast    Boolean      @default(true)
+  cursor_option     CursorOption @default(DEFAULT)
+  font_size         Float        @default(1)
+  user_id           String       @unique
+  user              User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model follows {
+  followerId  String
+  followingId String
+  follower    User   @relation("follower", fields: [followerId], references: [id])
+  following   User   @relation("following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+  @@index([followingId], map: "follows_followingId_fkey")
+}
+
+model profile {
+  id                   Int                @id @default(autoincrement())
+  bio                  String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime
+  user_id              String             @unique
+  onboarded            Boolean            @default(false)
+  veve_wallet_imported Boolean            @default(false)
+  veve_wallet_address  String?
+  mcfarlane_wallets    mcfarlane_wallets?
+  users                User               @relation(fields: [user_id], references: [id])
+}
+// schemas/writers.prisma
+// Writers
+
+model writers {
+  author_id   String        @id
+  name        String
+  slug        String?       @unique
+  veve_comics veve_comics[] @relation("veve_comicsTowriters")
+}
+// schemas/_enums.prisma
+// Enum and Setting Tables
+
+enum Language {
+  EN
+  ES
+  DE
+  FR
+  CN
+  IN
+  IT
+  JP
+}
+
+enum WalletValuationType {
+  COLLECTIBLE
+  COMIC
+  TOTAL
+}
+
+enum MarketProductStatus {
+  PENDING
+  LISTED
+  COMPLETE
+  REJECTED
+}
+
+enum MarketProductType {
+  PHYSICAL_PRODUCT
+  DIGITAL_PRODUCT
+}
+
+enum Role {
+  BASIC
+  SUPREME
+}
+
+enum poker_table_message_type {
+  TEXT
+  IMAGE
+  OFFER
+}
+
+enum poker_table_status {
+  WAITING
+  IN_PROGRESS
+  GAME_OVER
+}
+
+enum message_type {
+  TEXT
+  IMAGE
+  OFFER
+  MARKETPLACE_OFFER
+}
+
+enum poker_table_message_status {
+  SENT
+  RECEIVED
+  SEEN
+}
+
+enum message_status {
+  SENT
+  RECEIVED
+  SEEN
+}
+
+enum posts_audience {
+  PUBLIC
+  ONLY_ME
+  SPECIFIC
+}
+
+enum CommunityPrivacy {
+  PUBLIC
+  PRIVATE
+  HODLERS
+}
+
+enum UserStatus {
+  ACTIVE
+  IDLE
+  LOGOUT
+}
+
+enum NotificationCategory {
+  DEFAULT
+  MARKETPLACE
+  COMMUNITY
+  ALERT
+}
+
+enum PriceAlertDirection {
+  ABOVE
+  BELOW
+}
+
+enum CollectibleType {
+  COLLECTIBLE
+  COMIC
+}
+
+enum NotificationType {
+  DEFAULT
+  POST
+  FOLLOWER
+  COMMUNITY
+  OFFER
+  MARKETPLACE_OFFER
+  PRICE_ALERT
+  WALLET_ACTIVITY
+}
+
+enum CursorOption {
+  DEFAULT
+  BLACK
+  WHITE
+}
+// END_MODELS
