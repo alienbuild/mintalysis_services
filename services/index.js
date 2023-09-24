@@ -1,8 +1,11 @@
 import * as schedule from "node-schedule"
-import {X_DAILY_SNAPSHOT} from "./X/X_DAILY_SNAPSHOT";
+
+import {GET_SOCIAL_STATS, SCRAPE_X_DOT_COM, X_DAILY_SNAPSHOT} from "./SOCIAL";
 
 const scheduledHourlyJobs = () => {
-    schedule.scheduleJob('05 * * * *', () => {
+    schedule.scheduleJob('05 * * * *', async () => {
+        await GET_SOCIAL_STATS()
+        await SCRAPE_X_DOT_COM()
         // VEVE_GET_COLLECTIBLE_FLOORS()
     })
     schedule.scheduleJob('08 * * * *', () => {

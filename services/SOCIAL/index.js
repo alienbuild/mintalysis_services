@@ -1,4 +1,37 @@
+// MAIN CALLERS (EXPORTED) ARE THE BOTTOM OF THE PAGE
+
 const puppeteer = require('puppeteer');
+
+// FUNCTIONS
+const getYouTubeStats = async (prisma, project_id, channel_id) => {
+    try {
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channel_id}&key=${process.env.YOUTUBE_API_KEY}`);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+
+        const subscribers = Number(data.items[0].statistics.subscriberCount)
+        const videos = Number(data.items[0].statistics.videoCount)
+        const views = Number(data.items[0].statistics.viewCount)
+
+        await prisma.youtube_account.upsert({
+            where: { project_id },
+            update: {
+                subscribers,
+                videos,
+                views
+            },
+            create: {
+                subscribers,
+                videos,
+                views,
+                channel_id
+            }
+        })
+
+    } catch (error) {
+        console.error('YouTube API error:', error);
+    }
+}
 
 const loginToX = async (page) => {
     await page.goto('https://twitter.com/i/flow/login')
@@ -170,6 +203,20 @@ const saveXInfo = async (accountHandle, saveObj, prisma) => {
     }
 }
 
+// GENERIC SOCIAL JOBS
+export const GET_SOCIAL_STATS = async (prisma) => {
+
+    const PROJECT_ID_VEVE = "de2180a8-4e26-402a-aed1-a09a51e6e33d"
+    const PROJECT_ID_MCFARLANE = "99ff1ba5-706d-4d15-9f3d-de4247ac3a7b"
+
+    // GET VEVE SOCIAL STATS
+    await getYouTubeStats(prisma, PROJECT_ID_VEVE, "UC6psiYgowNPQbodOphinq1A")
+
+    // GET MCFARLANE SOCIAL STATS
+    // await getYouTubeStats(prisma, PROJECT_ID_MCFARLANE, process.env.VEVE_YOUTUBE_CHANNEL_ID, process.env.YOUTUBE_API_KEY)
+}
+
+// X.COM (FORMERLY TWITTER)
 export const SCRAPE_X_DOT_COM = async (prisma) => {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
@@ -185,42 +232,16 @@ export const SCRAPE_X_DOT_COM = async (prisma) => {
     await browser.close();
 }
 
-const getYouTubeSubscribers = async (prisma, projectID, channelId) => {
-    try {
-        const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${process.env.YOUTUBE_API_KEY}`);
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const data = await response.json();
-
-        const subscribers = data.items[0].statistics.subscriberCount
-        const videos = data.items[0].statistics.videoCount
-        const views = data.items[0].statistics.viewCount
-
-        await prisma.youtube_account.upsert({
-            where: {
-
-            },
-            update: {
-
-            },
-            create: {
-
+// Daily snapshots of the X accounts followers and following
+export const X_DAILY_SNAPSHOT = async (prisma) => {
+    const snapshots = await prisma.x_account.findMany({})
+    snapshots.map(async snap => {
+        await prisma.x_account_snapshot.create({
+            data:{
+                handle: snap.handle,
+                followers: snap.followers,
+                following: snap.following
             }
         })
-
-    } catch (error) {
-        console.error('YouTube API error:', error);
-    }
-}
-
-export const GET_SOCIAL_STATS = async (prisma) => {
-
-    const PROJECT_ID_VEVE = "de2180a8-4e26-402a-aed1-a09a51e6e33d"
-    const PROJECT_ID_MCFARLANE = "99ff1ba5-706d-4d15-9f3d-de4247ac3a7b"
-
-    // GET VEVE SOCIAL STATS
-    await getYouTubeSubscribers(prisma, PROJECT_ID_VEVE, "UC6psiYgowNPQbodOphinq1A")
-
-    // GET MCFARLANE SOCIAL STATS
-    // await getYouTubeSubscribers(prisma, PROJECT_ID_MCFARLANE, process.env.VEVE_YOUTUBE_CHANNEL_ID, process.env.YOUTUBE_API_KEY)
-
+    })
 }
