@@ -1299,14 +1299,25 @@ model veve_watchlist {
 // X Stats (Formely Twitter)
 
 model x_account {
-  id         Int       @id @default(autoincrement())
-  handle     String    @unique
+  id         Int                  @id @default(autoincrement())
+  handle     String               @unique
   avatar     String?
-  followers  Int       @default(0)
-  following  Int       @default(0)
+  followers  Int                  @default(0)
+  following  Int                  @default(0)
   project_id String?
-  project    projects? @relation(fields: [project_id], references: [id])
+  project    projects?            @relation(fields: [project_id], references: [id])
   x_posts    x_posts[]
+  createdAt  DateTime?            @default(now())
+  snapshots  x_account_snapshot[]
+}
+
+model x_account_snapshot {
+  id        Int       @id @default(autoincrement())
+  handle    String
+  followers Int
+  following Int
+  createdAt DateTime  @default(now())
+  x_account x_account @relation(fields: [handle], references: [handle])
 }
 
 model x_posts {
