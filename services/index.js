@@ -1,4 +1,5 @@
 import * as schedule from "node-schedule"
+import {X_DAILY_SNAPSHOT} from "./X/X_DAILY_SNAPSHOT";
 
 const scheduledHourlyJobs = () => {
     schedule.scheduleJob('05 * * * *', () => {
@@ -14,7 +15,8 @@ const scheduledHourlyJobs = () => {
 }
 
 const scheduledDailyJobs = () => {
-    schedule.scheduleJob("0 0 * * *", () => {
+    schedule.scheduleJob("0 0 * * *", async () => {
+        await X_DAILY_SNAPSHOT
         // VEVE_GET_LATEST_LICENSORS()
         // VEVE_GET_LATEST_BRANDS()
         // VEVE_GET_LATEST_SERIES()

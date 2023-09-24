@@ -31,8 +31,8 @@ const loginToX = async (page) => {
     await page.waitForSelector('a[data-testid="SideNav_NewTweet_Button"]');
 }
 
-const scrapeXAccount = async (page, accountUrl) => {
-    await page.goto(accountUrl);
+const scrapeXAccount = async (page, accountHandle, prisma) => {
+    await page.goto(`https://twitter.com/${accountHandle}`);
     await page.waitForSelector('article[data-testid="tweet"]', { timeout: 10000 });
 
     for (let i = 0; i < 3; i++) {
@@ -42,16 +42,34 @@ const scrapeXAccount = async (page, accountUrl) => {
         await page.waitForTimeout(1000);
     }
 
-    const tweets = await page.evaluate(() => {
+    const tweets = await page.evaluate((accountHandle) => {
         const tweetElements = document.querySelectorAll('[data-testid="tweet"]');
         const tweets = [];
 
         for (const tweetElement of tweetElements) {
+
+            let tweetHTML = tweetElement.querySelector('[data-testid="tweetText"]').outerHTML;
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(tweetHTML, 'text/html');
+            doc.querySelectorAll('*').forEach(element => element.removeAttribute('class'));
+            tweetHTML = doc.body.innerHTML;
+
+            let photoURL = null;
+            const photoElement = tweetElement.querySelector('[data-testid="tweetPhoto"] img');
+            if (photoElement) {
+                photoURL = photoElement.src;
+            }
+
+            let createdAt = null;
+            const timeElement = tweetElement.querySelector('time');
+            if (timeElement) {
+                createdAt = timeElement.getAttribute('datetime');
+            }
+
             const tweetTextElement = tweetElement.querySelector('[lang]');
             const tweetLinkElement = tweetElement.querySelector('a[href^="/veve_official/status/"]');
 
             if (tweetTextElement && tweetLinkElement) {
-                const tweetText = tweetTextElement.textContent.trim();
                 const tweetLink = 'https://twitter.com' + tweetLinkElement.getAttribute('href');
 
                 const likeElement = tweetElement.querySelector('[data-testid^="like"] [dir] > div > span > span');
@@ -63,20 +81,40 @@ const scrapeXAccount = async (page, accountUrl) => {
                 const repostCount = repostElement ? repostElement.textContent.trim() : '0';
 
                 tweets.push({
-                    text: tweetText,
+                    handle: accountHandle,
+                    text: tweetHTML,
                     link: tweetLink,
-                    likeCount,
-                    commentCount,
-                    repostCount,
+                    like_count: Number(likeCount),
+                    comment_count: Number(commentCount),
+                    repost_count: Number(repostCount),
+                    image: photoURL,
+                    createdAt
                 });
             }
         }
 
         return tweets;
-    });
+    }, accountHandle);
+
     const accountInfo = await page.evaluate(() => {
         const ownerInfo = {};
         const profileHeader = document.querySelector('div[data-testid="primaryColumn"]');
+
+        const convertTwitterCount = (str) => {
+            let multiplier = 1;
+            str = str.replace(/,/g, '');
+            if (str.endsWith('K')) {
+                multiplier = 1000;
+                str = str.slice(0, -1);
+            } else if (str.endsWith('M')) {
+                multiplier = 1000000;
+                str = str.slice(0, -1);
+            }
+
+            const number = parseFloat(str);
+            if (isNaN(number)) return null;
+            return number * multiplier;
+        }
 
         if (profileHeader) {
             const avatar = profileHeader.querySelector('img[src*="/profile_images/"]');
@@ -84,19 +122,52 @@ const scrapeXAccount = async (page, accountUrl) => {
             const followingCount = profileHeader.querySelector('a[href="/veve_official/following"] span > span')
 
             ownerInfo.avatar = avatar ? avatar.src : '';
-            ownerInfo.followersCount = followersCount ? followersCount.textContent.trim() : 0
-            ownerInfo.followingCount = followingCount ? followingCount.textContent.trim() : 0
+            ownerInfo.followersCount = followersCount ? convertTwitterCount(followersCount.textContent.trim()) : 0
+            ownerInfo.followingCount = followingCount ? convertTwitterCount(followingCount.textContent.trim()) : 0
         }
 
         return ownerInfo;
     });
 
-    await saveXInfo(accountInfo, tweets)
+    const saveObj = {
+        account: accountInfo,
+        tweets: tweets,
+    }
+    await saveXInfo(accountHandle, saveObj, prisma)
+
 }
 
-const saveXInfo = async (accountInfo, tweets) => {
-    console.log('Saving account info', accountInfo)
-    console.log('Saving tweets too..')
+const saveXInfo = async (accountHandle, saveObj, prisma) => {
+    try {
+        switch (accountHandle){
+            case 'veve_official':
+                await prisma.x_account.upsert({
+                    where: {
+                        handle: accountHandle
+                    },
+                    update: {
+                        avatar: saveObj.account.avatar,
+                        followers: saveObj.account.followersCount,
+                        following: saveObj.account.followingCount,
+                    },
+                    create: {
+                        handle: accountHandle,
+                        avatar: saveObj.account.avatar,
+                        followers: saveObj.account.followersCount,
+                        following: saveObj.account.followingCount,
+                    }
+                })
+                await prisma.x_posts.createMany({
+                    data: saveObj.tweets
+                })
+                console.log('[SAVED X DATA FOR VEVE]')
+                break;
+            default:
+                return
+        }
+    } catch (e) {
+        console.log('[ERROR] Unable to save tweets: ', e)
+    }
 }
 
 export const SCRAPE_X_DOT_COM = async (prisma) => {
@@ -105,11 +176,51 @@ export const SCRAPE_X_DOT_COM = async (prisma) => {
 
     await loginToX(page);
 
-    const veveAccountUrl = 'https://twitter.com/veve_official';
-    // const mcfarlaneAccountUrl = 'https://twitter.com/mcfarlane_official';
+    const veveHandle = 'veve_official';
+    // const mcfarlaneHandle = 'mcfarlane_official';
 
-    await scrapeXAccount(page, veveAccountUrl);
-    // await scrapeXAccount(page, mcfarlaneAccountUrl);
+    await scrapeXAccount(page, veveHandle, prisma);
+    // await scrapeXAccount(page, mcfarlaneHandle, prisma);
 
     await browser.close();
+}
+
+const getYouTubeSubscribers = async (prisma, projectID, channelId) => {
+    try {
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${process.env.YOUTUBE_API_KEY}`);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+
+        const subscribers = data.items[0].statistics.subscriberCount
+        const videos = data.items[0].statistics.videoCount
+        const views = data.items[0].statistics.viewCount
+
+        await prisma.youtube_account.upsert({
+            where: {
+
+            },
+            update: {
+
+            },
+            create: {
+
+            }
+        })
+
+    } catch (error) {
+        console.error('YouTube API error:', error);
+    }
+}
+
+export const GET_SOCIAL_STATS = async (prisma) => {
+
+    const PROJECT_ID_VEVE = "de2180a8-4e26-402a-aed1-a09a51e6e33d"
+    const PROJECT_ID_MCFARLANE = "99ff1ba5-706d-4d15-9f3d-de4247ac3a7b"
+
+    // GET VEVE SOCIAL STATS
+    await getYouTubeSubscribers(prisma, PROJECT_ID_VEVE, "UC6psiYgowNPQbodOphinq1A")
+
+    // GET MCFARLANE SOCIAL STATS
+    // await getYouTubeSubscribers(prisma, PROJECT_ID_MCFARLANE, process.env.VEVE_YOUTUBE_CHANNEL_ID, process.env.YOUTUBE_API_KEY)
+
 }
