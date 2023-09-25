@@ -28,8 +28,26 @@ const getYouTubeStats = async (prisma, project_id, channel_id) => {
             }
         })
 
+        console.log(`[SUCCESS] YouTube metrics saved for ${project_id}`)
+
     } catch (error) {
         console.error('YouTube API error:', error);
+    }
+}
+
+const getInstagramStats = async (prisma, project_id, instagram_id) => {
+    try {
+        const response = await fetch(`https://graph.instagram.com/${instagram_id}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&access_token=${process.env.INSTAGRAM_API_KEY}`);
+
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+        const data = await response.json();
+        const followers = data.followers_count;
+        const following = data.follows_count
+        const media = data.media_count
+
+    } catch (error) {
+        console.error('Instagram API error:', error);
     }
 }
 
@@ -211,6 +229,7 @@ export const GET_SOCIAL_STATS = async (prisma) => {
 
     // GET VEVE SOCIAL STATS
     await getYouTubeStats(prisma, PROJECT_ID_VEVE, "UC6psiYgowNPQbodOphinq1A")
+    await getInstagramStats(prisma, PROJECT_ID_VEVE, '')
 
     // GET MCFARLANE SOCIAL STATS
     // await getYouTubeStats(prisma, PROJECT_ID_MCFARLANE, process.env.VEVE_YOUTUBE_CHANNEL_ID, process.env.YOUTUBE_API_KEY)
