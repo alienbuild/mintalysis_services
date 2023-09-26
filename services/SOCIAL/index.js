@@ -83,6 +83,13 @@ const loginToX = async (page) => {
 }
 
 const scrapeXAccount = async (page, accountHandle, prisma) => {
+
+    await prisma.x_posts.deleteMany({
+        where:{
+            handle: accountHandle
+        }
+    })
+
     await page.goto(`https://twitter.com/${accountHandle}`);
     await page.waitForSelector('article[data-testid="tweet"]', { timeout: 10000 });
 
@@ -97,13 +104,13 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
         const tweetElements = document.querySelectorAll('[data-testid="tweet"]');
         const tweets = [];
 
-        for (const tweetElement of tweetElements) {
-
-            let tweetHTML = tweetElement.querySelector('[data-testid="tweetText"]').outerHTML;
+        tweetElements.forEach((tweetElement) => {
+            // let tweetHTML = tweetElement.querySelector('[data-testid="tweetText"]').outerHTML;
+            let tweetText = tweetElement.querySelector('[data-testid="tweetText"]').textContent.trim();
             const parser = new DOMParser();
-            const doc = parser.parseFromString(tweetHTML, 'text/html');
-            doc.querySelectorAll('*').forEach(element => element.removeAttribute('class'));
-            tweetHTML = doc.body.innerHTML;
+            // const doc = parser.parseFromString(tweetHTML, 'text/html');
+            // doc.querySelectorAll('*').forEach(element => element.removeAttribute('class'));
+            // tweetHTML = doc.body.innerHTML;
 
             let photoURL = null;
             const photoElement = tweetElement.querySelector('[data-testid="tweetPhoto"] img');
@@ -118,7 +125,7 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
             }
 
             const tweetTextElement = tweetElement.querySelector('[lang]');
-            const tweetLinkElement = tweetElement.querySelector('a[href^="/veve_official/status/"]');
+            const tweetLinkElement = tweetElement.querySelector(`a[href^="/${accountHandle}/status/"]`);
 
             if (tweetTextElement && tweetLinkElement) {
                 const tweetLink = 'https://twitter.com' + tweetLinkElement.getAttribute('href');
@@ -133,7 +140,8 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
 
                 tweets.push({
                     handle: accountHandle,
-                    text: tweetHTML,
+                    text: tweetText,
+                    // text: tweetHTML,
                     link: tweetLink,
                     like_count: Number(likeCount),
                     comment_count: Number(commentCount),
@@ -142,14 +150,17 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
                     createdAt
                 });
             }
-        }
+        });
 
         return tweets;
     }, accountHandle);
 
-    const accountInfo = await page.evaluate(() => {
+    const accountInfo = await page.evaluate((accountHandle) => {
         const ownerInfo = {};
         const profileHeader = document.querySelector('div[data-testid="primaryColumn"]');
+        const headerImage = document.querySelector('img[src*="/profile_banners/"]');
+        const displayNameElement = profileHeader.querySelector('h2[role="heading"][aria-level="2"]');
+        const joinDateElement = profileHeader.querySelector('span[data-testid="UserJoinDate"] span');
 
         const convertTwitterCount = (str) => {
             let multiplier = 1;
@@ -169,17 +180,23 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
 
         if (profileHeader) {
             const avatar = profileHeader.querySelector('img[src*="/profile_images/"]');
-            const followersCount = profileHeader.querySelector('a[href="/veve_official/verified_followers"] span > span')
-            const followingCount = profileHeader.querySelector('a[href="/veve_official/following"] span > span')
+            const followersCount = profileHeader.querySelector(`a[href="/${accountHandle}/followers"] span > span`) || profileHeader.querySelector(`a[href="/${accountHandle}/verified_followers"] span > span`);
+            const followingCount = profileHeader.querySelector(`a[href="/${accountHandle}/following"] span > span`);
 
             ownerInfo.avatar = avatar ? avatar.src : '';
-            ownerInfo.followersCount = followersCount ? convertTwitterCount(followersCount.textContent.trim()) : 0
-            ownerInfo.followingCount = followingCount ? convertTwitterCount(followingCount.textContent.trim()) : 0
+            ownerInfo.coverPhoto = headerImage ? headerImage.src : '';
+            ownerInfo.followersCount = followersCount ? convertTwitterCount(followersCount.textContent.trim()) : 0;
+            ownerInfo.followingCount = followingCount ? convertTwitterCount(followingCount.textContent.trim()) : 0;
+            ownerInfo.displayName = displayNameElement ? displayNameElement.textContent.trim() : '';
+            ownerInfo.joinDate = joinDateElement ? joinDateElement.textContent.trim().replace('Joined ', '') : '';
+
         }
 
         return ownerInfo;
-    });
+    }, accountHandle);
 
+
+    console.log('accountInfo: ', accountInfo)
     const saveObj = {
         account: accountInfo,
         tweets: tweets,
@@ -190,32 +207,31 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
 
 const saveXInfo = async (accountHandle, saveObj, prisma) => {
     try {
-        switch (accountHandle){
-            case 'veve_official':
-                await prisma.x_account.upsert({
-                    where: {
-                        handle: accountHandle
-                    },
-                    update: {
-                        avatar: saveObj.account.avatar,
-                        followers: saveObj.account.followersCount,
-                        following: saveObj.account.followingCount,
-                    },
-                    create: {
-                        handle: accountHandle,
-                        avatar: saveObj.account.avatar,
-                        followers: saveObj.account.followersCount,
-                        following: saveObj.account.followingCount,
-                    }
-                })
-                await prisma.x_posts.createMany({
-                    data: saveObj.tweets
-                })
-                console.log('[SAVED X DATA FOR VEVE]')
-                break;
-            default:
-                return
-        }
+        await prisma.x_account.upsert({
+            where: {
+                handle: accountHandle
+            },
+            update: {
+                avatar: saveObj.account.avatar,
+                followers: saveObj.account.followersCount,
+                following: saveObj.account.followingCount,
+                display_name: saveObj.account.displayName,
+                join_date: saveObj.account.joinDate,
+                cover_photo: saveObj.account.coverPhoto,
+            },
+            create: {
+                handle: accountHandle,
+                display_name: saveObj.account.displayName,
+                join_date: saveObj.account.joinDate,
+                cover_photo: saveObj.account.coverPhoto,
+                avatar: saveObj.account.avatar,
+                followers: saveObj.account.followersCount,
+                following: saveObj.account.followingCount,
+            }
+        })
+        await prisma.x_posts.createMany({
+            data: saveObj.tweets
+        })
     } catch (e) {
         console.log('[ERROR] Unable to save tweets: ', e)
     }
@@ -243,7 +259,7 @@ export const SCRAPE_X_DOT_COM = async (prisma) => {
     await loginToX(page);
 
     const veveHandle = 'veve_official';
-    // const mcfarlaneHandle = 'mcfarlane_official';
+    // const mcfarlaneHandle = 'mcfarlanetoys';
 
     await scrapeXAccount(page, veveHandle, prisma);
     // await scrapeXAccount(page, mcfarlaneHandle, prisma);
