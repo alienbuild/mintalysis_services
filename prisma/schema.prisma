@@ -1400,16 +1400,19 @@ model Account {
 // Social Media Stats (X - Formely Twitter, YouTube, Instagram)
 
 model x_account {
-  id         Int                  @id @default(autoincrement())
-  handle     String               @unique
-  avatar     String?
-  followers  Int                  @default(0)
-  following  Int                  @default(0)
-  project_id String?
-  project    projects?            @relation(fields: [project_id], references: [id])
-  x_posts    x_posts[]
-  createdAt  DateTime?            @default(now())
-  snapshots  x_account_snapshot[]
+  id           Int                  @id @default(autoincrement())
+  handle       String               @unique
+  avatar       String?
+  followers    Int                  @default(0)
+  following    Int                  @default(0)
+  cover_photo  String?
+  display_name String?
+  join_date    DateTime?
+  project_id   String?
+  project      projects?            @relation(fields: [project_id], references: [id])
+  x_posts      x_posts[]
+  createdAt    DateTime?            @default(now())
+  snapshots    x_account_snapshot[]
 }
 
 model x_account_snapshot {
