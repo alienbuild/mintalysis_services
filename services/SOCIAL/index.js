@@ -105,12 +105,7 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
         const tweets = [];
 
         tweetElements.forEach((tweetElement) => {
-            // let tweetHTML = tweetElement.querySelector('[data-testid="tweetText"]').outerHTML;
             let tweetText = tweetElement.querySelector('[data-testid="tweetText"]').textContent.trim();
-            const parser = new DOMParser();
-            // const doc = parser.parseFromString(tweetHTML, 'text/html');
-            // doc.querySelectorAll('*').forEach(element => element.removeAttribute('class'));
-            // tweetHTML = doc.body.innerHTML;
 
             let photoURL = null;
             const photoElement = tweetElement.querySelector('[data-testid="tweetPhoto"] img');
@@ -141,7 +136,6 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
                 tweets.push({
                     handle: accountHandle,
                     text: tweetText,
-                    // text: tweetHTML,
                     link: tweetLink,
                     like_count: Number(likeCount),
                     comment_count: Number(commentCount),
@@ -161,7 +155,16 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
         const headerImage = document.querySelector('img[src*="/profile_banners/"]');
         const displayNameElement = profileHeader.querySelector('h2[role="heading"][aria-level="2"]');
         const joinDateElement = profileHeader.querySelector('span[data-testid="UserJoinDate"] span');
-
+        if (joinDateElement) {
+            const joinDateString = joinDateElement.textContent.trim().replace('Joined ', '');
+            const parts = joinDateString.split(' ');
+            const month = parts[0];
+            const year = parts[1];
+            const joinDate = new Date(`${month} 1, ${year}`);
+            ownerInfo.joinDate = joinDate.toISOString();
+        } else {
+            ownerInfo.joinDate = '';
+        }
         const convertTwitterCount = (str) => {
             let multiplier = 1;
             str = str.replace(/,/g, '');
@@ -195,8 +198,6 @@ const scrapeXAccount = async (page, accountHandle, prisma) => {
         return ownerInfo;
     }, accountHandle);
 
-
-    console.log('accountInfo: ', accountInfo)
     const saveObj = {
         account: accountInfo,
         tweets: tweets,
@@ -216,13 +217,13 @@ const saveXInfo = async (accountHandle, saveObj, prisma) => {
                 followers: saveObj.account.followersCount,
                 following: saveObj.account.followingCount,
                 display_name: saveObj.account.displayName,
-                join_date: saveObj.account.joinDate,
+                join_date: new Date(saveObj.account.joinDate),
                 cover_photo: saveObj.account.coverPhoto,
             },
             create: {
                 handle: accountHandle,
                 display_name: saveObj.account.displayName,
-                join_date: saveObj.account.joinDate,
+                join_date: new Date(saveObj.account.joinDate),
                 cover_photo: saveObj.account.coverPhoto,
                 avatar: saveObj.account.avatar,
                 followers: saveObj.account.followersCount,
@@ -245,7 +246,7 @@ export const GET_SOCIAL_STATS = async (prisma) => {
 
     // GET VEVE SOCIAL STATS
     await getYouTubeStats(prisma, PROJECT_ID_VEVE, "UC6psiYgowNPQbodOphinq1A")
-    await getInstagramStats(prisma, PROJECT_ID_VEVE, '')
+    // await getInstagramStats(prisma, PROJECT_ID_VEVE, '')
 
     // GET MCFARLANE SOCIAL STATS
     // await getYouTubeStats(prisma, PROJECT_ID_MCFARLANE, process.env.VEVE_YOUTUBE_CHANNEL_ID, process.env.YOUTUBE_API_KEY)
@@ -259,10 +260,10 @@ export const SCRAPE_X_DOT_COM = async (prisma) => {
     await loginToX(page);
 
     const veveHandle = 'veve_official';
-    // const mcfarlaneHandle = 'mcfarlanetoys';
+    const mcfarlaneHandle = 'mcfarlanetoys';
 
     await scrapeXAccount(page, veveHandle, prisma);
-    // await scrapeXAccount(page, mcfarlaneHandle, prisma);
+    await scrapeXAccount(page, mcfarlaneHandle, prisma);
 
     await browser.close();
 }

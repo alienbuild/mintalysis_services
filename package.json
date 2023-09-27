@@ -4,16 +4,15 @@
   "main": "index.js",
   "scripts": {
     "start": "babel-node index.js",
-    "dev": "nodemon --signal SIGINT index.js",
-    "merge-schemas": "node ./prisma/mergeSchemas.js",
-    "generate": "node ./prisma/mergeSchemas.js && prisma generate",
-    "migrate": "node ./prisma/mergeSchemas.js && prisma migrate dev"
+    "dev": "nodemon --signal SIGINT index.js"
   },
   "license": "MIT",
   "dependencies": {
     "@prisma/client": "^5.2.0",
     "babel-preset-env": "^1.7.0",
     "dotenv": "^16.0.3",
+    "moment": "^2.29.4",
+    "mongoose": "^7.5.3",
     "nanoid": "^4.0.0",
     "node-fetch": "^3.3.0",
     "node-schedule": "^2.1.1",
@@ -24,6 +23,7 @@
     "remove.bg": "^1.3.0",
     "short-unique-id": "^4.4.4",
     "slugify": "^1.6.5",
+    "tinify": "^1.7.1",
     "unique-names-generator": "^4.7.1"
   },
   "devDependencies": {
