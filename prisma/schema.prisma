@@ -570,6 +570,63 @@ model conversation_participant {
   @@index([user_id], map: "conversation_participant_user_id_fkey")
 }
 
+model direct_message {
+  id          Int      @id @default(autoincrement())
+  content     String
+  sender_id   String
+  receiver_id String
+  sender      User     @relation("sender", fields: [sender_id], references: [id])
+  receiver    User     @relation("receiver", fields: [receiver_id], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model channel_message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  channel_id Int
+  channel    channel  @relation(fields: [channel_id], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model server {
+  id            Int             @id @default(autoincrement())
+  name          String
+  ownerId       String
+  owner         User            @relation(fields: [ownerId], references: [id])
+  members       User[]          @relation("server_members")
+  channels      channel[]
+  server_member server_member[]
+}
+
+model channel {
+  id            Int               @id @default(autoincrement())
+  name          String
+  server_id     Int
+  server        server            @relation(fields: [server_id], references: [id])
+  messages      channel_message[]
+  ChannelMember ChannelMember[]
+}
+
+model server_member {
+  userId   String
+  serverId Int
+  user     User   @relation(fields: [userId], references: [id])
+  server   server @relation(fields: [serverId], references: [id])
+
+  @@id([userId, serverId])
+}
+
+model ChannelMember {
+  userId    String
+  channelId Int
+  user      User    @relation(fields: [userId], references: [id])
+  channel   channel @relation(fields: [channelId], references: [id])
+
+  @@id([userId, channelId])
+}
+
 // schemas/misc.prisma
 // Misc TODO: Sort this out?
 
@@ -1700,6 +1757,13 @@ model User {
   poker_table_pots                poker_table_pots?                @relation(fields: [poker_table_potsId], references: [id])
   users_preferences_accessibility users_preferences_accessibility?
   veve_watchlist                  veve_watchlist[]
+  servers                         server[]                         @relation("server_members")
+  sent_messages                   direct_message[]                 @relation("sender")
+  received_messages               direct_message[]                 @relation("receiver")
+  channel_message                 channel_message[]
+  server                          server[]
+  server_member                   server_member[]
+  ChannelMember                   ChannelMember[]
 
   @@index([email], map: "email")
   @@index([username], map: "username")
