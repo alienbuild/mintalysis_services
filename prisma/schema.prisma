@@ -601,12 +601,13 @@ model server {
 }
 
 model channel {
-  id            Int               @id @default(autoincrement())
-  name          String
-  server_id     Int
-  server        server            @relation(fields: [server_id], references: [id])
-  messages      channel_message[]
-  ChannelMember ChannelMember[]
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  server_id            Int
+  server               server                 @relation(fields: [server_id], references: [id])
+  messages             channel_message[]
+  ChannelMember        ChannelMember[]
+  channel_read_receipt channel_read_receipt[]
 }
 
 model server_member {
@@ -625,6 +626,14 @@ model ChannelMember {
   channel   channel @relation(fields: [channelId], references: [id])
 
   @@id([userId, channelId])
+}
+
+model channel_read_receipt {
+  userId    String   @id
+  channelId Int
+  lastRead  DateTime @default(now())
+  channel   channel  @relation(fields: [channelId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 // schemas/misc.prisma
@@ -1758,12 +1767,13 @@ model User {
   users_preferences_accessibility users_preferences_accessibility?
   veve_watchlist                  veve_watchlist[]
   servers                         server[]                         @relation("server_members")
-  sent_messages                   direct_message[]                 @relation("sender")
-  received_messages               direct_message[]                 @relation("receiver")
-  channel_message                 channel_message[]
+  sent_direct_messages            direct_message[]                 @relation("sender")
+  received_direct_messages        direct_message[]                 @relation("receiver")
+  channel_messages                channel_message[]
   server                          server[]
   server_member                   server_member[]
   ChannelMember                   ChannelMember[]
+  channel_read_receipt            channel_read_receipt[]
 
   @@index([email], map: "email")
   @@index([username], map: "username")
