@@ -571,23 +571,25 @@ model conversation_participant {
 }
 
 model direct_message {
-  id          Int      @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   content     String
+  type        MessageType @default(TEXT)
   sender_id   String
   receiver_id String
-  sender      User     @relation("sender", fields: [sender_id], references: [id])
-  receiver    User     @relation("receiver", fields: [receiver_id], references: [id])
-  createdAt   DateTime @default(now())
+  sender      User        @relation("sender", fields: [sender_id], references: [id])
+  receiver    User        @relation("receiver", fields: [receiver_id], references: [id])
+  createdAt   DateTime    @default(now())
 }
 
 model channel_message {
-  id         Int      @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   content    String
+  type       MessageType @default(TEXT)
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
   channel_id Int
-  channel    channel  @relation(fields: [channel_id], references: [id])
-  createdAt  DateTime @default(now())
+  channel    channel     @relation(fields: [channel_id], references: [id])
+  createdAt  DateTime    @default(now())
 }
 
 model server {
@@ -636,6 +638,12 @@ model channel_read_receipt {
   user      User     @relation(fields: [userId], references: [id])
 
   @@id([userId, channelId])
+}
+
+enum MessageType {
+  TEXT
+  EMOJI
+  GIF
 }
 
 // schemas/misc.prisma
