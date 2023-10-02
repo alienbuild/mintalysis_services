@@ -1742,7 +1742,7 @@ model User {
   impressions                     Int?
   viewed_profile                  Int?
   cover_image                     String?
-  status                          UserStatus                       @default(ACTIVE)
+  status                          UserStatus?                      @default(OFFLINE)
   notification_count              Int                              @default(0)
   message_count                   Int                              @default(0)
   poker_table_potsId              String?
@@ -1926,9 +1926,9 @@ enum CommunityPrivacy {
 }
 
 enum UserStatus {
-  ACTIVE
+  ONLINE
+  OFFLINE
   IDLE
-  LOGOUT
 }
 
 enum NotificationCategory {
