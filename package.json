@@ -6,6 +6,7 @@
     "start": "babel-node index.js",
     "dev": "nodemon --signal SIGINT index.js"
   },
+  "type": "module",
   "license": "MIT",
   "dependencies": {
     "@prisma/client": "^5.2.0",
