@@ -9,8 +9,15 @@ import {VEVE_GET_LATEST_COLLECTIBLES} from "./VEVE/VEVE_GET_LATEST_COLLECTIBLES"
 import {VEVE_GET_LATEST_BRANDS} from "./VEVE/VEVE_GET_LATEST_BRANDS";
 import {VEVE_GET_COMIC_FLOORS} from "./VEVE/VEVE_GET_COMIC_FLOORS";
 import {VEVE_GET_COLLECTIBLE_FLOORS} from "./VEVE/VEVE_GET_COLLECTIBLE_FLOORS";
+import {UPDATE_USER_STATUS} from "./MINTALYSIS/UPDATE_USER_STATUS";
 
 export const prisma = new PrismaClient()
+
+const scheduledMinuteJobs = async () => {
+    schedule.scheduleJob('05 * * * *', async () => {
+        await UPDATE_USER_STATUS(prisma)
+    })
+}
 
 const scheduledHourlyJobs = () => {
     schedule.scheduleJob('05 * * * *', async () => {
