@@ -1,28 +1,34 @@
 export const UPDATE_USER_STATUS = async (prisma) => {
-    console.log('[UPDATING USER STATUSES]')
-    const now = new Date();
+    try {
+        console.log('[UPDATE_USER_STATUS] Function Entered');
 
-    // Set users to OFFLINE if they have been inactive for more than 30 minutes
-    await prisma.User.updateMany({
-        where: {
-            last_seen: {
-                lt: new Date(now - 30 * 60 * 1000) // 30 minutes ago
+        const now = new Date();
+
+        console.log('[UPDATE_USER_STATUS] About to update OFFLINE users');
+        await prisma.User.updateMany({
+            where: {
+                last_seen: {
+                    lt: new Date(now - 30 * 60 * 1000) // 30 minutes ago
+                },
             },
-        },
-        data: {status: 'OFFLINE'},
-    });
+            data: {status: 'OFFLINE'},
+        });
+        console.log('[UPDATE_USER_STATUS] OFFLINE users updated');
 
-    // Set users to IDLE if they have been inactive for more than 15 minutes
-    await prisma.User.updateMany({
-        where: {
-            last_seen: {
-                lt: new Date(now - 15 * 60 * 1000), // 15 minutes ago
-                gte: new Date(now - 30 * 60 * 1000) // but less than 30 minutes ago
+        console.log('[UPDATE_USER_STATUS] About to update IDLE users');
+        await prisma.User.updateMany({
+            where: {
+                last_seen: {
+                    lt: new Date(now - 15 * 60 * 1000), // 15 minutes ago
+                    gte: new Date(now - 30 * 60 * 1000) // but less than 30 minutes ago
+                },
             },
-        },
-        data: {status: 'IDLE'},
-    });
-    console.log('[SUCCESS UPDATED USER STATUSES]')
-}
+            data: {status: 'IDLE'},
+        });
+        console.log('[UPDATE_USER_STATUS] IDLE users updated');
 
-UPDATE_USER_STATUS()
+        console.log('[SUCCESS UPDATED USER STATUSES]');
+    } catch (error) {
+        console.error('[UPDATE_USER_STATUS] FAILED TO UPDATE USER STATUSES: ', error);
+    }
+};
