@@ -608,6 +608,9 @@ model thread {
 model server {
   id            Int             @id @default(autoincrement())
   slug          String?         @unique
+  description   String?
+  icon          String?
+  coverImage    String?
   name          String
   ownerId       String
   owner         User            @relation(fields: [ownerId], references: [id])
