@@ -174,185 +174,185 @@ model characters {
   veve_comics  veve_comics[] @relation("charactersToveve_comics")
 }
 
-// schemas/community.prisma
-// Community
-
-model communities {
-  id                        String                      @id @default(uuid())
-  name                      String                      @unique
-  type                      CommunityPrivacy            @default(PUBLIC)
-  creator_id                String
-  member_count              Int?
-  createdAt                 DateTime                    @default(now())
-  updatedAt                 DateTime                    @updatedAt
-  cover_image               String?
-  image                     String?
-  slug                      String                      @unique
-  project_id                String?
-  veve_collectible_id       String?
-  veve_comic_id             String?
-  gate_key                  String?
-  member                    member[]
-  users_communities_invites users_communities_invites[]
-  comments                  comments[]
-  creator                   User                        @relation("creator", fields: [creator_id], references: [id])
-  project                   projects?                   @relation(fields: [project_id], references: [id])
-  veve_collectible          veve_collectibles?          @relation(fields: [veve_collectible_id], references: [collectible_id])
-  veve_comic                veve_comics?                @relation(fields: [veve_comic_id], references: [unique_cover_id])
-  community_posts           community_posts[]
-  posts                     posts[]
-  utilities                 utilities[]
-
-  @@index([creator_id], map: "communities_creator_id_fkey")
-  @@index([project_id], map: "communities_project_id_fkey")
-  @@index([veve_collectible_id], map: "communities_veve_collectible_id_fkey")
-  @@index([veve_comic_id], map: "communities_veve_comic_id_fkey")
-}
-
-model member {
-  A           String
-  B           String
-  users       User        @relation(fields: [A], references: [id], onDelete: Cascade)
-  communities communities @relation(fields: [B], references: [id], onDelete: Cascade)
-
-  @@unique([A, B], map: "_member_AB_unique")
-  @@index([B], map: "_member_B_index")
-  @@map("_member")
-}
-
-model users_communities_invites {
-  A           String
-  B           String
-  users       User        @relation(fields: [A], references: [id], onDelete: Cascade)
-  communities communities @relation(fields: [B], references: [id], onDelete: Cascade)
-
-  @@unique([A, B], map: "_users_communities_invites_AB_unique")
-  @@index([B], map: "_users_communities_invites_B_index")
-  @@map("_users_communities_invites")
-}
-
-model utilities {
-  id           String       @id
-  title        String?
-  body         String?
-  value        Int?
-  community_id String?
-  communities  communities? @relation(fields: [community_id], references: [id])
-
-  @@index([community_id], map: "utilities_community_id_fkey")
-}
-
-model community_posts {
-  id                           String                  @id
-  author_id                    String
-  community_id                 String
-  content                      String?
-  image_url                    String?
-  community_image_url          String?
-  comment_count                Int?
-  like_count                   Int?
-  createdAt                    DateTime                @default(now())
-  updatedAt                    DateTime
-  likes_community_posts        likes_community_posts[]
-  comments                     comments[]
-  users_community_postsTousers User                    @relation(fields: [author_id], references: [id])
-  communities                  communities             @relation(fields: [community_id], references: [id])
-
-  @@index([author_id], map: "community_posts_author_id_fkey")
-  @@index([community_id], map: "community_posts_community_id_fkey")
-}
-
-model likes_community_posts {
-  A               String
-  B               String
-  users           User            @relation(fields: [A], references: [id], onDelete: Cascade)
-  community_posts community_posts @relation(fields: [B], references: [id], onDelete: Cascade)
-
-  @@unique([A, B], map: "_likes_community_posts_AB_unique")
-  @@index([B], map: "_likes_community_posts_B_index")
-  @@map("_likes_community_posts")
-}
-
-// Post and Comment Management
-model posts {
-  id                  String            @id
-  author_id           String?
-  community_id        String?
-  body                String?
-  image_url           String?
-  community_image_url String?
-  comment_count       Int?
-  like_count          Int?
-  createdAt           DateTime          @default(now())
-  audience            posts_audience    @default(PUBLIC)
-  likes_posts         likes_posts[]
-  users_posts_tag     users_posts_tag[]
-  comments            comments[]
-  users_postsTousers  User?             @relation(fields: [author_id], references: [id])
-  communities         communities?      @relation(fields: [community_id], references: [id])
-
-  @@index([author_id], map: "posts_author_id_fkey")
-  @@index([community_id], map: "posts_community_id_fkey")
-}
-
-model comments {
-  id                    String           @id
-  author_id             String
-  post_id               String
-  community_id          String
-  body                  String?
-  like_count            Int?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime
-  parent_id             String?
-  community_postsId     String?
-  likes_comments        likes_comments[]
-  users_commentsTousers User             @relation(fields: [author_id], references: [id])
-  communities           communities      @relation(fields: [community_id], references: [id])
-  community_posts       community_posts? @relation(fields: [community_postsId], references: [id])
-  comments              comments?        @relation("commentsTocomments", fields: [parent_id], references: [id])
-  other_comments        comments[]       @relation("commentsTocomments")
-  posts                 posts            @relation(fields: [post_id], references: [id])
-
-  @@index([author_id], map: "comments_author_id_fkey")
-  @@index([community_id], map: "comments_community_id_fkey")
-  @@index([community_postsId], map: "comments_community_postsId_fkey")
-  @@index([parent_id], map: "comments_parent_id_fkey")
-  @@index([post_id], map: "comments_post_id_fkey")
-}
-
-model likes_comments {
-  A        String
-  B        String
-  users    User     @relation(fields: [A], references: [id], onDelete: Cascade)
-  comments comments @relation(fields: [B], references: [id], onDelete: Cascade)
-
-  @@unique([A, B], map: "_likes_comments_AB_unique")
-  @@index([B], map: "_likes_comments_B_index")
-  @@map("_likes_comments")
-}
-
-model likes_posts {
-  A     String
-  B     String
-  users User   @relation(fields: [A], references: [id], onDelete: Cascade)
-  posts posts  @relation(fields: [B], references: [id], onDelete: Cascade)
-
-  @@unique([A, B], map: "_likes_posts_AB_unique")
-  @@index([B], map: "_likes_posts_B_index")
-  @@map("_likes_posts")
-}
-
-model users_posts_tag {
-  A     String
-  B     String
-  users User   @relation(fields: [A], references: [id], onDelete: Cascade)
-  posts posts  @relation(fields: [B], references: [id], onDelete: Cascade)
-
-  @@unique([A, B], map: "_users_posts_tag_AB_unique")
-  @@index([B], map: "_users_posts_tag_B_index")
-  @@map("_users_posts_tag")
-}
+//// schemas/community.prisma
+//// Community
+//
+//model communities {
+//  id                        String                      @id @default(uuid())
+//  name                      String                      @unique
+//  type                      CommunityPrivacy            @default(PUBLIC)
+//  creator_id                String
+//  member_count              Int?
+//  createdAt                 DateTime                    @default(now())
+//  updatedAt                 DateTime                    @updatedAt
+//  cover_image               String?
+//  image                     String?
+//  slug                      String                      @unique
+//  project_id                String?
+//  veve_collectible_id       String?
+//  veve_comic_id             String?
+//  gate_key                  String?
+//  member                    member[]
+//  users_communities_invites users_communities_invites[]
+//  comments                  comments[]
+//  creator                   User                        @relation("creator", fields: [creator_id], references: [id])
+//  project                   projects?                   @relation(fields: [project_id], references: [id])
+//  veve_collectible          veve_collectibles?          @relation(fields: [veve_collectible_id], references: [collectible_id])
+//  veve_comic                veve_comics?                @relation(fields: [veve_comic_id], references: [unique_cover_id])
+//  community_posts           community_posts[]
+//  posts                     posts[]
+//  utilities                 utilities[]
+//
+//  @@index([creator_id], map: "communities_creator_id_fkey")
+//  @@index([project_id], map: "communities_project_id_fkey")
+//  @@index([veve_collectible_id], map: "communities_veve_collectible_id_fkey")
+//  @@index([veve_comic_id], map: "communities_veve_comic_id_fkey")
+//}
+//
+//model member {
+//  A           String
+//  B           String
+//  users       User        @relation(fields: [A], references: [id], onDelete: Cascade)
+//  communities communities @relation(fields: [B], references: [id], onDelete: Cascade)
+//
+//  @@unique([A, B], map: "_member_AB_unique")
+//  @@index([B], map: "_member_B_index")
+//  @@map("_member")
+//}
+//
+//model users_communities_invites {
+//  A           String
+//  B           String
+//  users       User        @relation(fields: [A], references: [id], onDelete: Cascade)
+//  communities communities @relation(fields: [B], references: [id], onDelete: Cascade)
+//
+//  @@unique([A, B], map: "_users_communities_invites_AB_unique")
+//  @@index([B], map: "_users_communities_invites_B_index")
+//  @@map("_users_communities_invites")
+//}
+//
+//model utilities {
+//  id           String       @id
+//  title        String?
+//  body         String?
+//  value        Int?
+//  community_id String?
+//  communities  communities? @relation(fields: [community_id], references: [id])
+//
+//  @@index([community_id], map: "utilities_community_id_fkey")
+//}
+//
+//model community_posts {
+//  id                           String                  @id
+//  author_id                    String
+//  community_id                 String
+//  content                      String?
+//  image_url                    String?
+//  community_image_url          String?
+//  comment_count                Int?
+//  like_count                   Int?
+//  createdAt                    DateTime                @default(now())
+//  updatedAt                    DateTime
+//  likes_community_posts        likes_community_posts[]
+//  comments                     comments[]
+//  users_community_postsTousers User                    @relation(fields: [author_id], references: [id])
+//  communities                  communities             @relation(fields: [community_id], references: [id])
+//
+//  @@index([author_id], map: "community_posts_author_id_fkey")
+//  @@index([community_id], map: "community_posts_community_id_fkey")
+//}
+//
+//model likes_community_posts {
+//  A               String
+//  B               String
+//  users           User            @relation(fields: [A], references: [id], onDelete: Cascade)
+//  community_posts community_posts @relation(fields: [B], references: [id], onDelete: Cascade)
+//
+//  @@unique([A, B], map: "_likes_community_posts_AB_unique")
+//  @@index([B], map: "_likes_community_posts_B_index")
+//  @@map("_likes_community_posts")
+//}
+//
+//// Post and Comment Management
+//model posts {
+//  id                  String            @id
+//  author_id           String?
+//  community_id        String?
+//  body                String?
+//  image_url           String?
+//  community_image_url String?
+//  comment_count       Int?
+//  like_count          Int?
+//  createdAt           DateTime          @default(now())
+//  audience            posts_audience    @default(PUBLIC)
+//  likes_posts         likes_posts[]
+//  users_posts_tag     users_posts_tag[]
+//  comments            comments[]
+//  users_postsTousers  User?             @relation(fields: [author_id], references: [id])
+//  communities         communities?      @relation(fields: [community_id], references: [id])
+//
+//  @@index([author_id], map: "posts_author_id_fkey")
+//  @@index([community_id], map: "posts_community_id_fkey")
+//}
+//
+//model comments {
+//  id                    String           @id
+//  author_id             String
+//  post_id               String
+//  community_id          String
+//  body                  String?
+//  like_count            Int?
+//  createdAt             DateTime         @default(now())
+//  updatedAt             DateTime
+//  parent_id             String?
+//  community_postsId     String?
+//  likes_comments        likes_comments[]
+//  users_commentsTousers User             @relation(fields: [author_id], references: [id])
+//  communities           communities      @relation(fields: [community_id], references: [id])
+//  community_posts       community_posts? @relation(fields: [community_postsId], references: [id])
+//  comments              comments?        @relation("commentsTocomments", fields: [parent_id], references: [id])
+//  other_comments        comments[]       @relation("commentsTocomments")
+//  posts                 posts            @relation(fields: [post_id], references: [id])
+//
+//  @@index([author_id], map: "comments_author_id_fkey")
+//  @@index([community_id], map: "comments_community_id_fkey")
+//  @@index([community_postsId], map: "comments_community_postsId_fkey")
+//  @@index([parent_id], map: "comments_parent_id_fkey")
+//  @@index([post_id], map: "comments_post_id_fkey")
+//}
+//
+//model likes_comments {
+//  A        String
+//  B        String
+//  users    User     @relation(fields: [A], references: [id], onDelete: Cascade)
+//  comments comments @relation(fields: [B], references: [id], onDelete: Cascade)
+//
+//  @@unique([A, B], map: "_likes_comments_AB_unique")
+//  @@index([B], map: "_likes_comments_B_index")
+//  @@map("_likes_comments")
+//}
+//
+//model likes_posts {
+//  A     String
+//  B     String
+//  users User   @relation(fields: [A], references: [id], onDelete: Cascade)
+//  posts posts  @relation(fields: [B], references: [id], onDelete: Cascade)
+//
+//  @@unique([A, B], map: "_likes_posts_AB_unique")
+//  @@index([B], map: "_likes_posts_B_index")
+//  @@map("_likes_posts")
+//}
+//
+//model users_posts_tag {
+//  A     String
+//  B     String
+//  users User   @relation(fields: [A], references: [id], onDelete: Cascade)
+//  posts posts  @relation(fields: [B], references: [id], onDelete: Cascade)
+//
+//  @@unique([A, B], map: "_users_posts_tag_AB_unique")
+//  @@index([B], map: "_users_posts_tag_B_index")
+//  @@map("_users_posts_tag")
+//}
 
 // schemas/games/poker/poker.prisma
 // Poker
@@ -518,57 +518,58 @@ model marketplace_product_offers {
   @@index([product_id])
 }
 
-// schemas/messaging.prisma
-// Messaging and Conversations
-
-model message {
-  id                   String         @id @default(uuid())
-  conversationId       String
-  senderId             String
-  body                 String         @db.Text
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
-  type                 message_type   @default(TEXT)
-  status               message_status @default(SENT)
-  marketplace_offer_id String?
-  is_latest_in         conversation?  @relation("latest_conversation_message")
-  conversation         conversation   @relation(fields: [conversationId], references: [id])
-  sender               User           @relation(fields: [senderId], references: [id])
-  offer                offers[]
-
-  @@index([conversationId], map: "message_conversationId_fkey")
-  @@index([senderId], map: "message_senderId_fkey")
-}
-
-model conversation {
-  id                String                     @id @default(uuid())
-  createdAt         DateTime                   @default(now())
-  updatedAt         DateTime                   @updatedAt
-  latest_message_id String?                    @unique
-  owner_id          String?
-  latest_message    message?                   @relation("latest_conversation_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  owner             User?                      @relation(fields: [owner_id], references: [id])
-  participants      conversation_participant[]
-  messages          message[]
-
-  @@index([latest_message_id], map: "latest_message_id")
-  @@index([owner_id], map: "conversation_owner_id_fkey")
-}
-
-model conversation_participant {
-  id                      String       @id @default(uuid())
-  user_id                 String
-  conversation_id         String
-  createdAt               DateTime     @default(now())
-  has_seen_latest_message Boolean
-  updatedAt               DateTime     @updatedAt
-  conversation            conversation @relation(fields: [conversation_id], references: [id])
-  user                    User         @relation(fields: [user_id], references: [id])
-
-  @@index([has_seen_latest_message], map: "has_seen_latest_message")
-  @@index([conversation_id], map: "conversation_participant_conversation_id_fkey")
-  @@index([user_id], map: "conversation_participant_user_id_fkey")
-}
+//// schemas/messaging.prisma
+//// Messaging and Conversations
+//
+//model message {
+//  id                   String         @id @default(uuid())
+//  conversationId       String
+//  senderId             String
+//  body                 String         @db.Text
+//  createdAt            DateTime       @default(now())
+//  updatedAt            DateTime       @updatedAt
+//  type                 message_type   @default(TEXT)
+//  status               message_status @default(SENT)
+//  marketplace_offer_id String?
+//  is_latest_in         conversation?  @relation("latest_conversation_message")
+//  conversation         conversation   @relation(fields: [conversationId], references: [id])
+//  sender               User           @relation(fields: [senderId], references: [id])
+//  offer                offers[]
+//
+//  @@index([conversationId], map: "message_conversationId_fkey")
+//  @@index([senderId], map: "message_senderId_fkey")
+//}
+//
+//model conversation {
+//  id                String                     @id @default(uuid())
+//  createdAt         DateTime                   @default(now())
+//  updatedAt         DateTime                   @updatedAt
+//  latest_message_id String?                    @unique
+//  owner_id          String?
+//  latest_message    message?                   @relation("latest_conversation_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//  owner             User?                      @relation(fields: [owner_id], references: [id])
+//  participants      conversation_participant[]
+//  messages          message[]
+//
+//  @@index([latest_message_id], map: "latest_message_id")
+//  @@index([owner_id], map: "conversation_owner_id_fkey")
+//}
+//
+//model conversation_participant {
+//  id                      String       @id @default(uuid())
+//  user_id                 String
+//  conversation_id         String
+//  createdAt               DateTime     @default(now())
+//  has_seen_latest_message Boolean
+//  updatedAt               DateTime     @updatedAt
+//  conversation            conversation @relation(fields: [conversation_id], references: [id])
+//  user                    User         @relation(fields: [user_id], references: [id])
+//
+//  @@index([has_seen_latest_message], map: "has_seen_latest_message")
+//  @@index([conversation_id], map: "conversation_participant_conversation_id_fkey")
+//  @@index([user_id], map: "conversation_participant_user_id_fkey")
+//}
+//
 
 model direct_message {
   id          Int         @id @default(autoincrement())
@@ -600,7 +601,7 @@ model channel_message {
 model thread {
   id                Int               @id @default(autoincrement())
   startingMessageId Int               @unique
-  startingMessage   channel_message   @relation(name: "CreatedThread", fields: [startingMessageId], references: [id])
+  startingMessage   channel_message?  @relation(name: "CreatedThread", fields: [startingMessageId], references: [id])
   messages          channel_message[] @relation(name: "PartOfThread")
 }
 
@@ -743,17 +744,6 @@ model veve_mcp_staging {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime? @updatedAt
   transaction_id     Int       @id
-}
-
-// TODO: Might not be needed anymore...
-model offers {
-  id            String   @id
-  offer         Decimal? @db.Decimal(10, 2)
-  offerAccepted Boolean? @default(false)
-  messageId     String?
-  message       message? @relation(fields: [messageId], references: [id])
-
-  @@index([messageId], map: "offers_messageId_fkey")
 }
 
 // schemas/notifications.prisma
@@ -1072,7 +1062,6 @@ model veve_collectibles {
   mcp_base_value                       Int?
   mcp_rarity_value                     Decimal?                         @db.Decimal(4, 2)
   mcp_total_value                      Decimal?                         @db.Decimal(5, 2)
-  communities                          communities[]
   tmp_veve_tokens_collectibles         tmp_veve_tokens_collectibles[]
   brand                                veve_brands?                     @relation(fields: [brand_id], references: [brand_id])
   licensor                             veve_licensors?                  @relation(fields: [licensor_id], references: [licensor_id])
@@ -1170,7 +1159,6 @@ model veve_comics {
   mcp_low_ed_limit          Int?
   mcp_rarity_value          Decimal?                   @db.Decimal(10, 2)
   comic_image_url_id        String?                    @db.VarChar(50)
-  communities               communities[]
   translations              veve_comics_translations[]
   veve_watchlist            veve_watchlist[]
   artists                   artists[]                  @relation("artistsToveve_comics")
@@ -1391,7 +1379,6 @@ model projects {
   tile              String?
   motiff_url        String?
   article           article[]
-  communities       communities[]
   notifications     notifications[]
   price_alerts      price_alerts[]
   metrics           projects_metrics[]
@@ -1742,7 +1729,6 @@ model User {
   last_seen                       DateTime?                        @default(now())
   activated                       Boolean                          @default(false)
   stripe_customer_id              String?
-  ecomiwiki_user                  Boolean?                         @default(false)
   onboarded                       Boolean                          @default(false)
   name                            String?
   impressions                     Int?
@@ -1752,30 +1738,17 @@ model User {
   notification_count              Int                              @default(0)
   message_count                   Int                              @default(0)
   poker_table_potsId              String?
-  likes_comments                  likes_comments[]
-  likes_community_posts           likes_community_posts[]
-  likes_posts                     likes_posts[]
-  member                          member[]
-  users_communities_invites       users_communities_invites[]
-  users_posts_tag                 users_posts_tag[]
   accounts                        Account[]
   article                         article[]
-  comments                        comments[]
-  communities_created             communities[]                    @relation("creator")
-  community_posts                 community_posts[]
-  conversation                    conversation[]
-  conversations                   conversation_participant[]
   following                       follows[]                        @relation("follower")
   followers                       follows[]                        @relation("following")
   login_history                   login_history[]                  @relation("user_login_history")
   marketplace_product             marketplace_product[]
-  messages                        message[]
   from_notifications              notifications[]                  @relation("from_notifications")
   to_notifications                notifications[]                  @relation("to_notifications")
   poker_table                     poker_table[]
   poker_table_message             poker_table_message[]
   poker_table_participant         poker_table_participant[]
-  posts                           posts[]
   price_alerts                    price_alerts[]                   @relation("price_alerts")
   profile                         profile?
   sessions                        Session[]
