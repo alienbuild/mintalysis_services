@@ -1773,6 +1773,7 @@ model User {
   @@index([username], map: "username")
   @@index([stripe_customer_id], map: "stripe_customer_id")
   @@index([poker_table_potsId], map: "users_poker_table_potsId_fkey")
+  @@index([id], name: "userId_idx")
   @@map("users")
 }
 
