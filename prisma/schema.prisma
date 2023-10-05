@@ -148,20 +148,15 @@ model imx_withdrawals {
 }
 
 model imx_stats {
-  project_id                   String   @unique
-  token_count                  Int
-  wallet_count                 Int
-  transaction_count            Int
-  unique_owners_count          Int
-  last_updated_mint_txn_id     Int?
-  last_updated_transfer_txn_id Int?
-  veve_metadata_missing_count  Int?
-  max_mints_timestamp          String?
-  max_transfers_timestamp      String?
-  createdAt                    DateTime @default(now())
-  mint_count                   Int
-  transfer_count               Int
-  updatedAt                    DateTime @updatedAt
+  project_id          String   @unique
+  token_count         Int
+  wallet_count        Int
+  transaction_count   Int
+  unique_owners_count Int
+  createdAt           DateTime @default(now())
+  mint_count          Int
+  transfer_count      Int
+  updatedAt           DateTime @updatedAt
 }
 
 // schemas/characters.prisma
@@ -724,6 +719,7 @@ model veve_imx_status {
   last_timestamp String?
   last_txn_id    Int?
   table_name     String?
+  next_cursor    String?
   updatedAt      DateTime? @updatedAt
 }
 
