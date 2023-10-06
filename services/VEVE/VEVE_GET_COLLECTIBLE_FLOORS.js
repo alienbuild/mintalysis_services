@@ -2,9 +2,9 @@ import fetch from 'node-fetch'
 import slugify from 'slugify'
 import CollectiblePrice from "../../models/CollectiblePrices.js"
 import MarketPrice from "../../models/MarketPrice.js"
-import {VEVE_CALCULATE_SERIES_METRICS} from "./VEVE_CALCULATE_SERIES_METRICS";
-import {VEVE_CALCULATE_LICENSORS_METRICS} from "./VEVE_CALCULATE_LICENSORS_METRICS";
-import {VEVE_CALCULATE_BRANDS_METRICS} from "./VEVE_CALCULATE_BRANDS_METRICS";
+import {VEVE_CALCULATE_SERIES_METRICS} from "./VEVE_CALCULATE_SERIES_METRICS.js";
+import {VEVE_CALCULATE_BRANDS_METRICS} from "./VEVE_CALCULATE_BRANDS_METRICS.js";
+import {VEVE_CALCULATE_LICENSORS_METRICS} from "./VEVE_CALCULATE_LICENSORS_METRICS.js";
 
 const getVeveCollectibleFloorsQuery = () => {
     return `query collectibleTypeList {

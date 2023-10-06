@@ -1,6 +1,7 @@
 import fetch from 'node-fetch'
 import ComicPrice from "../../models/ComicPrices.js"
-import {getVeveComicFloorsQuery} from "../../queries/getVeveComicFloorsQuery";
+import * as Queries from "../../queries/getVeveComicFloorsQuery.js";
+
 
 const updateTimeSeries = (comic) => {
     return new Promise((resolve, reject) => {
@@ -534,7 +535,7 @@ export const VEVE_GET_COMIC_FLOORS = async (prisma) => {
             // 'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
         },
         body: JSON.stringify({
-            query: getVeveComicFloorsQuery(),
+            query: Queries.getVeveComicFloorsQuery(),
         }),
     })
         .then(comic_floors => comic_floors.json())

@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import { customAlphabet } from 'nanoid/non-secure'
 import slugify from 'slugify'
-import {getVevelatestCollectiblesQuery} from "../../queries/getVevelatestCollectiblesQuery";
+import * as Queries from "../../queries/getVevelatestCollectiblesQuery.js";
 
 export const VEVE_GET_LATEST_COLLECTIBLES = async (prisma) => {
     console.log(`[ALICE][VEVE] - [GET LATEST COLLECTIBLES]`)
@@ -17,7 +17,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async (prisma) => {
             'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
         },
         body: JSON.stringify({
-            query: getVevelatestCollectiblesQuery(),
+            query: Queries.getVevelatestCollectiblesQuery(),
         }),
     })
         .then(latest_collectibles => latest_collectibles.json())
@@ -26,7 +26,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async (prisma) => {
             const collectibleTypeList = latest_collectibles.data.collectibleTypeList.edges
             const nanoid = customAlphabet('1234567890abcdef', 5)
 
-            collectibleTypeList.map(async (collectible) => {
+            for (const collectible of collectibleTypeList) {
                 const slug = slugify(`${collectible.node.name} ${collectible.node.rarity} ${collectible.node.editionType} ${nanoid()}`,{ lower: true, strict: true })
                 const mcp_base_value = 1
                 const mcp_rarity_value = collectible.node.rarity === 'COMMON' ? 0 : collectible.node.rarity === 'UNCOMMON' ? 0 : collectible.node.rarity === 'RARE' ? .25 : collectible.node.rarity === 'ULTRA_RARE' ? .5 : collectible.node.rarity === 'SECRET_RARE' ? 5.0 : NULL
@@ -122,7 +122,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async (prisma) => {
                     console.log('[SUCCESS] VEVE LATEST COLLECTIBLES UPDATED')
                 }
 
-            })
+            }
 
             if (latest_collectibles.data.collectibleTypeList.pageInfo?.hasNextPage){
                 console.log('next page is: ', latest_collectibles.data.collectibleTypeList.pageInfo.endCursor)
