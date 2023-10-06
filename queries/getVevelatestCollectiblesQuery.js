@@ -1,3 +1,5 @@
+console.log("Query file is being read");
+
 export const getVevelatestCollectiblesQuery = () => {
     return `query collectibleTypeList {
         collectibleTypeList(first: 150, sortOptions: {sortBy: DROP_DATE, sortDirection: DESCENDING} ){

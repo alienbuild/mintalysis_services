@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import slugify from 'slugify'
-import {getVeveLatestLicensorsQuery} from "../../queries/getVeveLatestLicensorsQuery";
+import * as Queries from "../../queries/getVeveLatestLicensorsQuery.js";
 
 export const VEVE_GET_LATEST_LICENSORS = async (prisma) => {
     console.log(`[ALICE][VEVE] - [GET LATEST LICENSORS]`)
@@ -16,7 +16,7 @@ export const VEVE_GET_LATEST_LICENSORS = async (prisma) => {
             'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
         },
         body: JSON.stringify({
-            query: getVeveLatestLicensorsQuery(),
+            query: Queries.getVeveLatestLicensorsQuery(),
         }),
     })
         .then(latest_licensors => latest_licensors.json())

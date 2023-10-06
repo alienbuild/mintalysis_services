@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import { customAlphabet } from 'nanoid/non-secure'
 import slugify from 'slugify'
-import {getVevelatestComicsQuery} from "../../queries/getVevelatestComicsQuery";
+import * as Queries from "../../queries/getVevelatestComicsQuery.js";
 
 export const VEVE_GET_LATEST_COMICS = async (prisma) => {
     console.log('GETTING LATEST COMICS')
@@ -18,7 +18,7 @@ export const VEVE_GET_LATEST_COMICS = async (prisma) => {
             'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
         },
         body: JSON.stringify({
-            query: getVevelatestComicsQuery(),
+            query: Queries.getVevelatestComicsQuery(),
         }),
     })
         .then(latest_comics => latest_comics.json())
