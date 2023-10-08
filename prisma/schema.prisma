@@ -349,80 +349,85 @@ model characters {
 //  @@map("_users_posts_tag")
 //}
 
-// schemas/games/poker/poker.prisma
-// Poker
-
-model poker_table {
-  id                                                                     String                    @id
-  host_id                                                                String?
-  createdAt                                                              DateTime                  @default(now())
-  updatedAt                                                              DateTime
-  latest_message_id                                                      String?                   @unique
-  community_cards                                                        String?                   @db.LongText
-  status                                                                 poker_table_status        @default(WAITING)
-  buy_in                                                                 Int                       @default(1000)
-  current_round                                                          String?
-  hand_number                                                            Int                       @default(0)
-  deck                                                                   String?                   @db.LongText
-  current_bet                                                            Int?
-  current_position                                                       Int?
-  last_position                                                          Int?
-  users                                                                  User?                     @relation(fields: [host_id], references: [id])
-  poker_table_message_poker_table_latest_message_idTopoker_table_message poker_table_message?      @relation("poker_table_latest_message_idTopoker_table_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  poker_table_message_poker_tableTopoker_table_message_poker_table_id    poker_table_message[]     @relation("poker_tableTopoker_table_message_poker_table_id")
-  poker_table_participant                                                poker_table_participant[]
-  poker_table_pots                                                       poker_table_pots[]
-
-  @@index([host_id], map: "poker_table_host_id_fkey")
-}
-
-model poker_table_message {
-  id                                                             String                     @id
-  poker_table_id                                                 String
-  senderId                                                       String
-  body                                                           String                     @db.Text
-  createdAt                                                      DateTime                   @default(now())
-  updatedAt                                                      DateTime
-  type                                                           poker_table_message_type   @default(TEXT)
-  status                                                         poker_table_message_status @default(SENT)
-  poker_table_poker_table_latest_message_idTopoker_table_message poker_table?               @relation("poker_table_latest_message_idTopoker_table_message")
-  poker_table_poker_tableTopoker_table_message_poker_table_id    poker_table                @relation("poker_tableTopoker_table_message_poker_table_id", fields: [poker_table_id], references: [id])
-  users                                                          User                       @relation(fields: [senderId], references: [id])
-
-  @@index([poker_table_id], map: "message_conversationId_fkey")
-  @@index([senderId], map: "message_senderId_fkey")
-}
-
-model poker_table_participant {
-  id                      String      @id
-  seat                    Int         @default(1)
-  action                  String?
-  poker_table_id          String
-  updatedAt               DateTime
-  user_id                 String
-  has_seen_latest_message Boolean
-  bet                     Int?        @default(0)
-  folded                  Boolean     @default(false)
-  hole_cards              String?     @db.LongText
-  show_cards              Boolean     @default(false)
-  stack_size              Int?        @default(1000)
-  left                    Boolean     @default(false)
-  poker_table             poker_table @relation(fields: [poker_table_id], references: [id])
-  users                   User        @relation(fields: [user_id], references: [id])
-
-  @@index([poker_table_id], map: "poker_table_participant_poker_table_id_fkey")
-  @@index([user_id], map: "poker_table_participant_user_id_fkey")
-}
-
-model poker_table_pots {
-  id             String      @id
-  poker_table_id String
-  amount         Int         @default(0)
-  poker_table    poker_table @relation(fields: [poker_table_id], references: [id])
-  users          User[]
-
-  @@index([poker_table_id], map: "poker_table_pots_poker_table_id_fkey")
-}
+//// schemas/games/poker/poker.prisma
+//// Poker
+//
+//model poker_profile {
+//  id                            String                      @id @default(uuid())
+//  userId                        String                      @unique
+//  poker_table_potsId            String?
+//  poker_table                   poker_table[]
+//  poker_table_message           poker_table_message[]
+//  poker_table_participant       poker_table_participant[]
+//  poker_table_pots              poker_table_pots?           @relation(fields: [poker_table_potsId], references: [id])
+//  user                          User                        @relation(fields: [userId], references: [id])
+//}
+//
+//model poker_table {
+//  id                                                                     String                    @id
+//  host_id                                                                String?
+//  createdAt                                                              DateTime                  @default(now())
+//  updatedAt                                                              DateTime
+//  latest_message_id                                                      String?                   @unique
+//  community_cards                                                        String?                   @db.LongText
+//  status                                                                 poker_table_status        @default(WAITING)
+//  buy_in                                                                 Int                       @default(1000)
+//  current_round                                                          String?
+//  hand_number                                                            Int                       @default(0)
+//  deck                                                                   String?                   @db.LongText
+//  current_bet                                                            Int?
+//  current_position                                                       Int?
+//  last_position                                                          Int?
+//  users                                                                  User?                     @relation(fields: [host_id], references: [id])
+//  poker_table_message_poker_table_latest_message_idTopoker_table_message poker_table_message?      @relation("poker_table_latest_message_idTopoker_table_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//  poker_table_message_poker_tableTopoker_table_message_poker_table_id    poker_table_message[]     @relation("poker_tableTopoker_table_message_poker_table_id")
+//  poker_table_participant                                                poker_table_participant[]
+//  poker_table_pots                                                       poker_table_pots[]
+//
+//}
+//
+//model poker_table_message {
+//  id                                                             String                     @id
+//  poker_table_id                                                 String
+//  senderId                                                       String
+//  body                                                           String                     @db.Text
+//  createdAt                                                      DateTime                   @default(now())
+//  updatedAt                                                      DateTime
+//  type                                                           poker_table_message_type   @default(TEXT)
+//  status                                                         poker_table_message_status @default(SENT)
+//  poker_table_poker_table_latest_message_idTopoker_table_message poker_table?               @relation("poker_table_latest_message_idTopoker_table_message")
+//  poker_table_poker_tableTopoker_table_message_poker_table_id    poker_table                @relation("poker_tableTopoker_table_message_poker_table_id", fields: [poker_table_id], references: [id])
+//  users                                                          User                       @relation(fields: [senderId], references: [id])
+//
+//}
+//
+//model poker_table_participant {
+//  id                      String      @id
+//  seat                    Int         @default(1)
+//  action                  String?
+//  poker_table_id          String
+//  updatedAt               DateTime
+//  user_id                 String
+//  has_seen_latest_message Boolean
+//  bet                     Int?        @default(0)
+//  folded                  Boolean     @default(false)
+//  hole_cards              String?     @db.LongText
+//  show_cards              Boolean     @default(false)
+//  stack_size              Int?        @default(1000)
+//  left                    Boolean     @default(false)
+//  poker_table             poker_table @relation(fields: [poker_table_id], references: [id])
+//  users                   User        @relation(fields: [user_id], references: [id])
+//
+//}
+//
+//model poker_table_pots {
+//  id             String      @id
+//  poker_table_id String
+//  amount         Int         @default(0)
+//  poker_table    poker_table @relation(fields: [poker_table_id], references: [id])
+//  users          User[]
+//
+//}
 
 // schemas/logs.prisma
 // Logging and Errors
@@ -1271,6 +1276,16 @@ model veve_licensors_metrics {
   licensor           veve_licensors @relation(fields: [licensor_id], references: [licensor_id])
 }
 
+// schemas/projects/veve/profile.prisma
+// VeVe User Profile
+
+model veve_profile {
+  id                String @id @default(uuid())
+  userId            String @unique
+  verification_code Int?
+  user              User   @relation(fields: [userId], references: [id])
+}
+
 // schemas/projects/veve/series.prisma
 // Veve Series
 
@@ -1360,10 +1375,6 @@ model veve_watchlist {
   veve_collectibles veve_collectibles? @relation(fields: [collectible_id], references: [collectible_id])
   veve_comics       veve_comics?       @relation(fields: [unique_cover_id], references: [unique_cover_id])
   users             User               @relation(fields: [user_id], references: [id])
-
-  @@index([collectible_id], map: "veve_watchlist_collectible_id_fkey")
-  @@index([unique_cover_id], map: "veve_watchlist_unique_cover_id_fkey")
-  @@index([user_id], map: "veve_watchlist_user_id_fkey")
 }
 
 // schemas/projects.prisma
@@ -1738,7 +1749,6 @@ model User {
   status                          UserStatus?                      @default(OFFLINE)
   notification_count              Int                              @default(0)
   message_count                   Int                              @default(0)
-  poker_table_potsId              String?
   accounts                        Account[]
   article                         article[]
   following                       follows[]                        @relation("follower")
@@ -1747,14 +1757,12 @@ model User {
   marketplace_product             marketplace_product[]
   from_notifications              notifications[]                  @relation("from_notifications")
   to_notifications                notifications[]                  @relation("to_notifications")
-  poker_table                     poker_table[]
-  poker_table_message             poker_table_message[]
-  poker_table_participant         poker_table_participant[]
   price_alerts                    price_alerts[]                   @relation("price_alerts")
   profile                         profile?
   sessions                        Session[]
-  poker_table_pots                poker_table_pots?                @relation(fields: [poker_table_potsId], references: [id])
   users_preferences_accessibility users_preferences_accessibility?
+  //  poker_profile                   poker_profile?
+  veve_profile                    veve_profile?
   veve_watchlist                  veve_watchlist[]
   servers                         server[]                         @relation("server_members")
   sent_direct_messages            direct_message[]                 @relation("sender")
@@ -1768,7 +1776,6 @@ model User {
   @@index([email], map: "email")
   @@index([username], map: "username")
   @@index([stripe_customer_id], map: "stripe_customer_id")
-  @@index([poker_table_potsId], map: "users_poker_table_potsId_fkey")
   @@index([id], name: "userId_idx")
   @@map("users")
 }
