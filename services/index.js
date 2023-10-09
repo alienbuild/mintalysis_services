@@ -28,12 +28,6 @@ const scheduledHourlyJobs = (prisma) => {
         // GET LATEST X POSTS
         // await SCRAPE_X_DOT_COM(prisma)
 
-        // VEVE GET COMIC FLOOR PRICES
-        await VEVE_GET_COMIC_FLOORS(prisma)
-
-        // VEVE GET COLLECTIBLE FLOOR PRICES
-        await VEVE_GET_COLLECTIBLE_FLOORS(prisma)
-
         // VEVE GET LATEST LICENSORS
         await VEVE_GET_LATEST_LICENSORS(prisma)
 
@@ -49,6 +43,11 @@ const scheduledHourlyJobs = (prisma) => {
         // VEVE GET LATEST COMICS
         await VEVE_GET_LATEST_COMICS(prisma)
 
+        // VEVE GET COMIC FLOOR PRICES
+        await VEVE_GET_COMIC_FLOORS(prisma)
+
+        // VEVE GET COLLECTIBLE FLOOR PRICES
+        await VEVE_GET_COLLECTIBLE_FLOORS(prisma)
     })
 }
 

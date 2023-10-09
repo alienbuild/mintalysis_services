@@ -5,6 +5,7 @@ console.log('[ALICE IS WAITING FOR INSTRUCTION]')
 
 import { PrismaClient } from "@prisma/client"
 import {scheduledDailyJobs, scheduledHourlyJobs} from "./services/index.js";
+import {VEVE_GET_LATEST_COLLECTIBLES} from "./services/VEVE/VEVE_GET_LATEST_COLLECTIBLES.js";
 
 export const prisma = new PrismaClient()
 
@@ -51,6 +52,7 @@ const main = async () => {
     try {
         await prisma.$connect();
         await scheduledHourlyJobs(prisma)
+        await VEVE_GET_LATEST_COLLECTIBLES(prisma)
         // await scheduledDailyJobs(prisma)
     } catch (error) {
         console.error('Error in main:', error);
