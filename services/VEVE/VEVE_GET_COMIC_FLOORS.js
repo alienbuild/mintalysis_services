@@ -9,7 +9,7 @@ const updateTimeSeries = (comic) => {
             .lean()
             .sort({ date: -1 })
             .limit(5)
-            .exec((err, history) => {
+            .exec((history) => {
                 if (err) console.log('Unable to get timeseries data: ', err)
                 let newArr = []
 
