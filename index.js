@@ -52,7 +52,7 @@ const main = async () => {
     try {
         await prisma.$connect();
         await scheduledHourlyJobs(prisma)
-        await VEVE_GET_LATEST_COLLECTIBLES(prisma)
+        // await VEVE_GET_LATEST_COLLECTIBLES(prisma)
         // await scheduledDailyJobs(prisma)
     } catch (error) {
         console.error('Error in main:', error);
