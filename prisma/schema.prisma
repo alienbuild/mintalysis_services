@@ -1312,6 +1312,8 @@ model veve_profile {
   edition           Int?
   collectible_id    String?
   collectible       veve_collectibles? @relation(fields: [collectible_id], references: [collectible_id])
+  verified          Boolean            @default(false)
+  requestedAt       DateTime?
 }
 
 // schemas/projects/veve/series.prisma
