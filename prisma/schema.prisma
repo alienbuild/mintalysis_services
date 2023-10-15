@@ -70,6 +70,7 @@ model imx_deposits {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime? @updatedAt
   timestamp_d        DateTime? @db.DateTime(6)
+  to_process         Boolean?  @default(true)
 
   @@index([wallet_id])
 }
@@ -105,6 +106,7 @@ model imx_orders {
   createdAt                DateTime  @default(now())
   updatedAt                DateTime? @updatedAt
   status                   String?
+  to_process               Boolean?  @default(true)
 
   @@index([wallet_id])
 }
@@ -125,6 +127,7 @@ model imx_trades {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime? @updatedAt
   a_token_address String?   @db.Text
+  to_process      Boolean?  @default(true)
 }
 
 model imx_withdrawals {
@@ -143,6 +146,7 @@ model imx_withdrawals {
   timestamp           DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime? @updatedAt
+  to_process          Boolean?  @default(true)
 
   @@index([txn_id])
 }
@@ -453,11 +457,6 @@ model error_log {
   createdAt    DateTime @default(now())
 }
 
-model veve_metadata_missing {
-  token_id  Int     @id
-  wallet_id String?
-}
-
 // schemas/marketplace.prisma
 // Marketplace
 
@@ -715,6 +714,7 @@ model omi_transfers {
   quantity       String
   timestamp      DateTime
   createdAt      DateTime?
+  to_process     Boolean?  @default(true)
 
   @@index([transaction_id])
 }
@@ -853,6 +853,7 @@ model veve_wallets {
   veve_tokens             veve_tokens[]
   wallet_tags             wallet_tags?              @relation(fields: [tagsId], references: [id])
   veve_wallets_valuations veve_wallets_valuations[]
+  veve_top_wallet_metrics veve_top_wallet_metrics[]
 
   @@index([tagsId], map: "veve_wallets_tagsId_fkey")
   @@index([id, user_id, veve_username])
@@ -874,6 +875,7 @@ model veve_wallets_valuations {
 
 model veve_tokens {
   token_id           Int                 @id
+  name               String?
   edition            Int?
   mint_date          DateTime?
   rarity             String?
@@ -892,6 +894,7 @@ model veve_tokens {
   to_process         Boolean?            @default(false)
   is_invalid         Boolean?            @default(false)
   is_burned          Boolean?            @default(false)
+  no_meta            Boolean?            @default(false)
   veve_brands        veve_brands?        @relation(fields: [brand_id], references: [brand_id])
   veve_wallets       veve_wallets?       @relation(fields: [wallet_id], references: [id], map: "veve_tokens_ibfk_1")
   veve_licensors     veve_licensors?     @relation(fields: [licensor_id], references: [licensor_id])
@@ -916,17 +919,18 @@ model veve_transfers {
   token_id        Int
   createdAt       DateTime  @default(now())
   updatedAt       DateTime?
+  to_process      Boolean?  @default(false)
   break_even      Float?
   entry_price     Float?
   break_even_new  Float?
   entry_price_new Float?
-  timestamp_new   DateTime? @db.DateTime(6)
+  timestamp_dt    DateTime? @db.DateTime(6)
   is_transfer     Boolean?  @default(false)
   is_burn         Boolean?  @default(false)
   is_craft        Boolean?  @default(false)
   is_auction      Boolean?  @default(false)
   is_redemption   Boolean?  @default(false)
-  is_mkt_action   Boolean?  @default(false)
+  is_mkt_auction  Boolean?  @default(false)
   is_mkt_fixed    Boolean?  @default(false)
 
   @@index([token_id, from_wallet, to_wallet])
@@ -937,9 +941,11 @@ model veve_mints {
   wallet_id     String?
   timestamp     String?   @db.Text
   token_id      Int
+  to_process    Boolean?  @default(false)
+  code_step     Int?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime?
-  timestamp_new DateTime? @db.DateTime(6)
+  timestamp_dt  DateTime? @db.DateTime(6)
   is_burn       Boolean?  @default(false)
   is_redemption Boolean?  @default(false)
 
@@ -1058,7 +1064,6 @@ model veve_collectibles {
   licensor_id                          String?
   series_id                            String?
   drop_method                          String?
-  minimum_age                          Int?
   is_free                              Boolean?                         @default(false)
   total_store_allocation               Int?
   slug                                 String?                          @unique
@@ -1159,6 +1164,7 @@ model veve_comics {
   image_med_resolution_url  String?
   image_thumbnail           String?
   all_time_change           Decimal?                   @db.Decimal(10, 2)
+  minimum_age               Int?
   slug                      String?                    @unique
   comic_id                  String?
   unique_holders            BigInt?
@@ -1205,6 +1211,24 @@ model veve_leaderboard {
   wallet       veve_wallets @relation(fields: [wallet_id], references: [id])
 
   @@index([wallet_id], map: "veve_leaderboard_wallet_id_fkey")
+}
+
+model veve_top_wallet_metrics {
+  id           Int          @id @default(autoincrement())
+  datetime     DateTime?    @db.DateTime(0)
+  rank         Int?
+  wallet_id    String
+  token_count  Int?
+  omi_balance  Float?
+  mint_count   Int?
+  purchases    Int?
+  sales        Int?
+  net_accum    Int?
+  createdAt    DateTime     @default(now())
+  last_updated DateTime?    @db.DateTime(0)
+  wallet       veve_wallets @relation(fields: [wallet_id], references: [id])
+
+  @@index([wallet_id], map: "veve_top_wallet_metrics_wallet_id_fkey")
 }
 
 // schemas/projects/veve/licensors.prisma
