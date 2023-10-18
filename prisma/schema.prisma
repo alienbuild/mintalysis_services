@@ -622,6 +622,7 @@ model channel {
   id                   Int                    @id @default(autoincrement())
   slug                 String?                @unique
   name                 String
+  type                 ChannelType            @default(TEXT)
   server_id            Int
   server               server                 @relation(fields: [server_id], references: [id])
   messages             channel_message[]
@@ -655,6 +656,12 @@ model channel_read_receipt {
   user      User     @relation(fields: [userId], references: [id])
 
   @@id([userId, channelId])
+}
+
+enum ChannelType {
+  TEXT
+  AUDIO
+  VIDEO
 }
 
 // schemas/misc.prisma
