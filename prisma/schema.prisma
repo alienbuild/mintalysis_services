@@ -448,13 +448,16 @@ model login_history {
 }
 
 model error_log {
-  id           Int      @id @default(autoincrement())
-  type         String?
-  function     String?
-  missing_data Boolean?
-  table_name   String?
-  error_msg    String?
-  createdAt    DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  token_id       Int?
+  transaction_id Int?
+  table_name     String?
+  type           String?
+  process        String?
+  missing_data   Boolean?
+  bad_data       Boolean?
+  error_msg      String?
+  createdAt      DateTime @default(now())
 }
 
 // schemas/marketplace.prisma
@@ -860,7 +863,7 @@ model veve_wallets {
   veve_tokens             veve_tokens[]
   wallet_tags             wallet_tags?              @relation(fields: [tagsId], references: [id])
   veve_wallets_valuations veve_wallets_valuations[]
-  veve_top_wallet_metrics veve_top_wallet_metrics[]
+  veve_top_wallet_metrics veve_top_wallet_metrics?
 
   @@index([tagsId], map: "veve_wallets_tagsId_fkey")
   @@index([id, user_id, veve_username])
@@ -950,7 +953,6 @@ model veve_mints {
   timestamp     String?   @db.Text
   token_id      Int
   to_process    Boolean?  @default(false)
-  code_step     Int?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime?
   timestamp_dt  DateTime? @db.DateTime(6)
@@ -1180,7 +1182,7 @@ model veve_comics {
   first_public_mint         Int?
   mcp_low_ed_limit          Int?
   mcp_rarity_value          Decimal?                   @db.Decimal(10, 2)
-  comic_image_url_id        String?                    @db.VarChar(50)
+  comic_image_url_id        String?                    @unique @db.VarChar(50)
   translations              veve_comics_translations[]
   veve_watchlist            veve_watchlist[]
   artists                   artists[]                  @relation("artistsToveve_comics")
@@ -1223,19 +1225,24 @@ model veve_leaderboard {
 }
 
 model veve_top_wallet_metrics {
-  id           Int          @id @default(autoincrement())
-  datetime     DateTime?    @db.DateTime(0)
-  rank         Int?
-  wallet_id    String
-  token_count  Int?
-  omi_balance  Float?
-  mint_count   Int?
-  purchases    Int?
-  sales        Int?
-  net_accum    Int?
-  createdAt    DateTime     @default(now())
-  last_updated DateTime?    @db.DateTime(0)
-  wallet       veve_wallets @relation(fields: [wallet_id], references: [id])
+  id            Int          @id @default(autoincrement())
+  datetime      DateTime?    @db.DateTime(0)
+  rank          Int?         @unique
+  prev_rank     Int?
+  rank_change   Int?
+  wallet_id     String       @unique
+  tokens        Int?
+  comics        Int?
+  collectibles  Int?
+  artist_proofs Int?
+  omi_balance   Float?
+  mints         Int?
+  purchases     Int?
+  sales         Int?
+  net_accum     Int?
+  created_at    DateTime     @default(now())
+  updated_at    DateTime?    @db.DateTime(0)
+  wallet        veve_wallets @relation(fields: [wallet_id], references: [id])
 
   @@index([wallet_id], map: "veve_top_wallet_metrics_wallet_id_fkey")
 }
