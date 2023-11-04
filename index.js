@@ -11,6 +11,8 @@ import {VEVE_GET_LATEST_SERIES} from "./services/VEVE/VEVE_GET_LATEST_SERIES.js"
 import {VEVE_GET_LATEST_LICENSORS} from "./services/VEVE/VEVE_GET_LATEST_LICENSORS.js";
 import {VEVE_GET_LATEST_BRANDS} from "./services/VEVE/VEVE_GET_LATEST_BRANDS.js";
 import {VEVE_GET_COLLECTIBLE_FLOORS} from "./services/VEVE/VEVE_GET_COLLECTIBLE_FLOORS.js";
+import mongoose from "mongoose";
+import {VEVE_GET_COMIC_FLOORS} from "./services/VEVE/VEVE_GET_COMIC_FLOORS.js";
 
 export const prisma = new PrismaClient()
 
@@ -52,25 +54,32 @@ export const prisma = new PrismaClient()
 //     }
 // }
 
+const initializeMongoose = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_DB, { useNewUrlParser: true, useUnifiedTopology: true });
+        console.log('[CONNECTED] MongoDB');
+    } catch (error) {
+        console.log('[ERROR] MongoDB connection', error);
+    }
+};
+
 const main = async () => {
 
     try {
+        await initializeMongoose();
         await prisma.$connect();
+        console.log('[CONNECTED] Prisma');
+
         await scheduledHourlyJobs(prisma)
-        // await VEVE_GET_LATEST_COLLECTIBLES(prisma)
-        // await VEVE_GET_LATEST_COMICS(prisma)
-        // await VEVE_GET_LATEST_SERIES(prisma)
-        // await VEVE_GET_LATEST_LICENSORS(prisma)
-        // await VEVE_GET_LATEST_BRANDS(prisma)
-        await VEVE_GET_COLLECTIBLE_FLOORS(prisma)
-        // await scheduledDailyJobs(prisma)
+
     } catch (error) {
-        console.error('Error in main:', error);
+        console.error('[ERROR] main.js:', error);
     } finally {
-        console.log('FINISHED')
+        console.log('[DISCONNECTED] Prisma');
         await prisma.$disconnect();
+        console.log('[FINISHED]');
     }
 
 }
 
-main()
+main().catch((e) => console.error('Server failed to start:', e));

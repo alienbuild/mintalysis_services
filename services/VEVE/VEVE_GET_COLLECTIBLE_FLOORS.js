@@ -161,529 +161,534 @@ const updateTimeSeries = (collectible) => {
 
 const updateMintalysis = async (collectible, prisma) => {
 
-    let collectibleMetrics = await CollectiblePrice.aggregate([
-        {
-            '$match': {
-                'collectibleId': collectible.id
-            }
-        }, {
-            '$set': {
-                'target-date': '$$NOW'
-            }
-        }, {
-            '$facet': {
-                'one_day': [
-                    {
-                        '$match': {
-                            '$expr': {
-                                '$lte': [
-                                    {
-                                        '$subtract': [
-                                            '$target-date', '$date'
-                                        ]
-                                    }, {
-                                        '$multiply': [
-                                            24, 60, 60, 1000
-                                        ]
+    try {
+        let collectibleMetrics = await CollectiblePrice.aggregate([
+            {
+                '$match': {
+                    'collectibleId': collectible.id
+                }
+            }, {
+                '$set': {
+                    'target-date': '$$NOW'
+                }
+            }, {
+                '$facet': {
+                    'one_day': [
+                        {
+                            '$match': {
+                                '$expr': {
+                                    '$lte': [
+                                        {
+                                            '$subtract': [
+                                                '$target-date', '$date'
+                                            ]
+                                        }, {
+                                            '$multiply': [
+                                                24, 60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }, {
+                            '$group': {
+                                '_id': null,
+                                'avg': {
+                                    '$avg': '$value'
+                                },
+                                'previous': {
+                                    '$first': '$value'
+                                },
+                                'current': {
+                                    '$last': '$value'
+                                },
+                                'min': {
+                                    '$min': '$low'
+                                },
+                                'max': {
+                                    '$max': '$high'
+                                },
+                                'volume': {
+                                    '$avg': '$volume'
+                                }
+                            }
+                        },
+                        {
+                            '$addFields': {
+                                'percentage_change': {
+                                    '$cond': {
+                                        'if': { '$eq': ['$previous', 0] },
+                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'else': {
+                                            '$multiply': [
+                                                {
+                                                    '$divide': [
+                                                        {
+                                                            '$subtract': [
+                                                                '$current', '$previous'
+                                                            ]
+                                                        }, '$previous'
+                                                    ]
+                                                }, 100
+                                            ]
+                                        }
                                     }
-                                ]
+                                }
                             }
+                        }, {
+                            '$unset': [
+                                '_id'
+                            ]
                         }
-                    }, {
-                        '$group': {
-                            '_id': null,
-                            'avg': {
-                                '$avg': '$value'
-                            },
-                            'previous': {
-                                '$first': '$value'
-                            },
-                            'current': {
-                                '$last': '$value'
-                            },
-                            'min': {
-                                '$min': '$low'
-                            },
-                            'max': {
-                                '$max': '$high'
-                            },
-                            'volume': {
-                                '$avg': '$volume'
+                    ],
+                    'one_week': [
+                        {
+                            '$match': {
+                                '$expr': {
+                                    '$lte': [
+                                        {
+                                            '$subtract': [
+                                                '$target-date', '$date'
+                                            ]
+                                        }, {
+                                            '$multiply': [
+                                                7, 24, 60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }
                             }
+                        }, {
+                            '$group': {
+                                '_id': null,
+                                'avg': {
+                                    '$avg': '$value'
+                                },
+                                'previous': {
+                                    '$first': '$value'
+                                },
+                                'current': {
+                                    '$last': '$value'
+                                },
+                                'min': {
+                                    '$min': '$low'
+                                },
+                                'max': {
+                                    '$max': '$high'
+                                }
+                            }
+                        },
+                        {
+                            '$addFields': {
+                                'percentage_change': {
+                                    '$cond': {
+                                        'if': { '$eq': ['$previous', 0] },
+                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'else': {
+                                            '$multiply': [
+                                                {
+                                                    '$divide': [
+                                                        {
+                                                            '$subtract': [
+                                                                '$current', '$previous'
+                                                            ]
+                                                        }, '$previous'
+                                                    ]
+                                                }, 100
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }, {
+                            '$unset': [
+                                '_id'
+                            ]
                         }
+                    ],
+                    'one_month': [
+                        {
+                            '$match': {
+                                '$expr': {
+                                    '$lte': [
+                                        {
+                                            '$subtract': [
+                                                '$target-date', '$date'
+                                            ]
+                                        }, {
+                                            '$multiply': [
+                                                30, 24, 60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }, {
+                            '$group': {
+                                '_id': null,
+                                'avg': {
+                                    '$avg': '$value'
+                                },
+                                'previous': {
+                                    '$first': '$value'
+                                },
+                                'current': {
+                                    '$last': '$value'
+                                },
+                                'min': {
+                                    '$min': '$low'
+                                },
+                                'max': {
+                                    '$max': '$high'
+                                }
+                            }
+                        },{
+                            '$addFields': {
+                                'percentage_change': {
+                                    '$cond': {
+                                        'if': { '$eq': ['$previous', 0] },
+                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'else': {
+                                            '$multiply': [
+                                                {
+                                                    '$divide': [
+                                                        {
+                                                            '$subtract': [
+                                                                '$current', '$previous'
+                                                            ]
+                                                        }, '$previous'
+                                                    ]
+                                                }, 100
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }, {
+                            '$unset': [
+                                '_id'
+                            ]
+                        }
+                    ],
+                    'three_months': [
+                        {
+                            '$match': {
+                                '$expr': {
+                                    '$lte': [
+                                        {
+                                            '$subtract': [
+                                                '$target-date', '$date'
+                                            ]
+                                        }, {
+                                            '$multiply': [
+                                                3, 30, 24, 60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }, {
+                            '$group': {
+                                '_id': null,
+                                'avg': {
+                                    '$avg': '$value'
+                                },
+                                'previous': {
+                                    '$first': '$value'
+                                },
+                                'current': {
+                                    '$last': '$value'
+                                },
+                                'min': {
+                                    '$min': '$low'
+                                },
+                                'max': {
+                                    '$max': '$high'
+                                }
+                            }
+                        },{
+                            '$addFields': {
+                                'percentage_change': {
+                                    '$cond': {
+                                        'if': { '$eq': ['$previous', 0] },
+                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'else': {
+                                            '$multiply': [
+                                                {
+                                                    '$divide': [
+                                                        {
+                                                            '$subtract': [
+                                                                '$current', '$previous'
+                                                            ]
+                                                        }, '$previous'
+                                                    ]
+                                                }, 100
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }, {
+                            '$unset': [
+                                '_id'
+                            ]
+                        }
+                    ],
+                    'six_months': [
+                        {
+                            '$match': {
+                                '$expr': {
+                                    '$lte': [
+                                        {
+                                            '$subtract': [
+                                                '$target-date', '$date'
+                                            ]
+                                        }, {
+                                            '$multiply': [
+                                                6, 30, 24, 60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }, {
+                            '$group': {
+                                '_id': null,
+                                'avg': {
+                                    '$avg': '$value'
+                                },
+                                'previous': {
+                                    '$first': '$value'
+                                },
+                                'current': {
+                                    '$last': '$value'
+                                },
+                                'min': {
+                                    '$min': '$low'
+                                },
+                                'max': {
+                                    '$max': '$high'
+                                }
+                            }
+                        },{
+                            '$addFields': {
+                                'percentage_change': {
+                                    '$cond': {
+                                        'if': { '$eq': ['$previous', 0] },
+                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'else': {
+                                            '$multiply': [
+                                                {
+                                                    '$divide': [
+                                                        {
+                                                            '$subtract': [
+                                                                '$current', '$previous'
+                                                            ]
+                                                        }, '$previous'
+                                                    ]
+                                                }, 100
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }, {
+                            '$unset': [
+                                '_id'
+                            ]
+                        }
+                    ],
+                    'one_year': [
+                        {
+                            '$match': {
+                                '$expr': {
+                                    '$lte': [
+                                        {
+                                            '$subtract': [
+                                                '$target-date', '$date'
+                                            ]
+                                        }, {
+                                            '$multiply': [
+                                                12, 30, 24, 60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }, {
+                            '$group': {
+                                '_id': null,
+                                'avg': {
+                                    '$avg': '$value'
+                                },
+                                'previous': {
+                                    '$first': '$value'
+                                },
+                                'current': {
+                                    '$last': '$value'
+                                },
+                                'min': {
+                                    '$min': '$low'
+                                },
+                                'max': {
+                                    '$max': '$high'
+                                }
+                            }
+                        },{
+                            '$addFields': {
+                                'percentage_change': {
+                                    '$cond': {
+                                        'if': { '$eq': ['$previous', 0] },
+                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'else': {
+                                            '$multiply': [
+                                                {
+                                                    '$divide': [
+                                                        {
+                                                            '$subtract': [
+                                                                '$current', '$previous'
+                                                            ]
+                                                        }, '$previous'
+                                                    ]
+                                                }, 100
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }, {
+                            '$unset': [
+                                '_id'
+                            ]
+                        }
+                    ],
+                    'all_time': [
+                        {
+                            '$group': {
+                                '_id': null,
+                                'avg': {
+                                    '$avg': '$value'
+                                },
+                                'previous': {
+                                    '$first': '$value'
+                                },
+                                'current': {
+                                    '$last': '$value'
+                                },
+                                'min': {
+                                    '$min': '$low'
+                                },
+                                'max': {
+                                    '$max': '$high'
+                                }
+                            }
+                        }, {
+                            '$addFields': {
+                                'percentage_change': {
+                                    '$cond': {
+                                        'if': { '$eq': ['$previous', 0] },
+                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'else': {
+                                            '$multiply': [
+                                                {
+                                                    '$divide': [
+                                                        {
+                                                            '$subtract': [
+                                                                '$current', '$previous'
+                                                            ]
+                                                        }, '$previous'
+                                                    ]
+                                                }, 100
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }, {
+                            '$unset': [
+                                '_id'
+                            ]
+                        }
+                    ]
+                }
+            }
+        ])
+        collectibleMetrics = collectibleMetrics[0]
+
+        let total_issued = await prisma.veve_collectibles.findUnique({where: {collectible_id: collectible.id}})
+        total_issued = total_issued?.total_issued ? total_issued.total_issued : 0
+
+        let volume = 0
+        const market_cap = Number(collectible.floorMarketPrice) * Number(total_issued)
+        const one_day_change = collectibleMetrics.one_day[0]?.percentage_change
+        const one_wk_change = collectibleMetrics.one_week[0]?.percentage_change
+        const one_mo_change = collectibleMetrics?.one_month[0]?.percentage_change
+        const three_mo_change = collectibleMetrics?.three_months[0]?.percentage_change
+        const six_mo_change = collectibleMetrics?.six_months[0]?.percentage_change
+        const one_year_change = collectibleMetrics?.one_year[0]?.percentage_change
+        const all_time_change = collectibleMetrics?.all_time[0]?.percentage_change
+        volume = collectibleMetrics?.one_day[0]?.volume
+
+        let all_time_high = await CollectiblePrice.find({collectibleId: collectible.id }).sort({value: -1}).select('value').limit(1)
+        all_time_high = all_time_high[0]?.value
+
+        let all_time_low = await CollectiblePrice.find({collectibleId: collectible.id }).sort({value: 1}).select('value').limit(1)
+        all_time_low = all_time_low[0]?.value
+
+        // let volume = await CollectiblePrice.find({ collectibleId: collectible.id }).sort({ date: -1 }).select('volume').limit(1)
+        // volume = volume[0].volume
+
+        const circulating_supply = ((( Number(collectible.totalMarketListings) || 0) / ( total_issued || 1)) * 100)
+
+        return new Promise(async (resolve, reject) => {
+            try {
+                await prisma.veve_collectibles_metrics.upsert({
+                    create: {
+                        collectible_id: collectible.id,
+                        floor_price: Number(collectible.floorMarketPrice),
+                        total_listings: Number(collectible.totalMarketListings),
+                        circulating_supply,
+                        volume,
+                        one_day_change,
+                        one_wk_change,
+                        one_mo_change,
+                        one_year_change,
+                        six_mo_change,
+                        three_mo_change,
+                        all_time_change,
+                        all_time_high,
+                        all_time_low,
+                        market_cap,
                     },
-                    {
-                        '$addFields': {
-                            'percentage_change': {
-                                '$cond': {
-                                    'if': { '$eq': ['$previous', 0] },
-                                    'then': 'Divisor is zero', // or null, or whatever you want
-                                    'else': {
-                                        '$multiply': [
-                                            {
-                                                '$divide': [
-                                                    {
-                                                        '$subtract': [
-                                                            '$current', '$previous'
-                                                        ]
-                                                    }, '$previous'
-                                                ]
-                                            }, 100
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }, {
-                        '$unset': [
-                            '_id'
-                        ]
-                    }
-                ],
-                'one_week': [
-                    {
-                        '$match': {
-                            '$expr': {
-                                '$lte': [
-                                    {
-                                        '$subtract': [
-                                            '$target-date', '$date'
-                                        ]
-                                    }, {
-                                        '$multiply': [
-                                            7, 24, 60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    }, {
-                        '$group': {
-                            '_id': null,
-                            'avg': {
-                                '$avg': '$value'
-                            },
-                            'previous': {
-                                '$first': '$value'
-                            },
-                            'current': {
-                                '$last': '$value'
-                            },
-                            'min': {
-                                '$min': '$low'
-                            },
-                            'max': {
-                                '$max': '$high'
-                            }
-                        }
+                    update: {
+                        floor_price: Number(collectible.floorMarketPrice),
+                        total_listings: Number(collectible.totalMarketListings),
+                        circulating_supply,
+                        volume,
+                        one_day_change,
+                        one_wk_change,
+                        one_mo_change,
+                        one_year_change,
+                        six_mo_change,
+                        three_mo_change,
+                        all_time_change,
+                        all_time_high,
+                        all_time_low,
+                        market_cap,
                     },
-                    {
-                        '$addFields': {
-                            'percentage_change': {
-                                '$cond': {
-                                    'if': { '$eq': ['$previous', 0] },
-                                    'then': 'Divisor is zero', // or null, or whatever you want
-                                    'else': {
-                                        '$multiply': [
-                                            {
-                                                '$divide': [
-                                                    {
-                                                        '$subtract': [
-                                                            '$current', '$previous'
-                                                        ]
-                                                    }, '$previous'
-                                                ]
-                                            }, 100
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }, {
-                        '$unset': [
-                            '_id'
-                        ]
-                    }
-                ],
-                'one_month': [
-                    {
-                        '$match': {
-                            '$expr': {
-                                '$lte': [
-                                    {
-                                        '$subtract': [
-                                            '$target-date', '$date'
-                                        ]
-                                    }, {
-                                        '$multiply': [
-                                            30, 24, 60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    }, {
-                        '$group': {
-                            '_id': null,
-                            'avg': {
-                                '$avg': '$value'
-                            },
-                            'previous': {
-                                '$first': '$value'
-                            },
-                            'current': {
-                                '$last': '$value'
-                            },
-                            'min': {
-                                '$min': '$low'
-                            },
-                            'max': {
-                                '$max': '$high'
-                            }
-                        }
-                    },{
-                        '$addFields': {
-                            'percentage_change': {
-                                '$cond': {
-                                    'if': { '$eq': ['$previous', 0] },
-                                    'then': 'Divisor is zero', // or null, or whatever you want
-                                    'else': {
-                                        '$multiply': [
-                                            {
-                                                '$divide': [
-                                                    {
-                                                        '$subtract': [
-                                                            '$current', '$previous'
-                                                        ]
-                                                    }, '$previous'
-                                                ]
-                                            }, 100
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }, {
-                        '$unset': [
-                            '_id'
-                        ]
-                    }
-                ],
-                'three_months': [
-                    {
-                        '$match': {
-                            '$expr': {
-                                '$lte': [
-                                    {
-                                        '$subtract': [
-                                            '$target-date', '$date'
-                                        ]
-                                    }, {
-                                        '$multiply': [
-                                            3, 30, 24, 60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    }, {
-                        '$group': {
-                            '_id': null,
-                            'avg': {
-                                '$avg': '$value'
-                            },
-                            'previous': {
-                                '$first': '$value'
-                            },
-                            'current': {
-                                '$last': '$value'
-                            },
-                            'min': {
-                                '$min': '$low'
-                            },
-                            'max': {
-                                '$max': '$high'
-                            }
-                        }
-                    },{
-                        '$addFields': {
-                            'percentage_change': {
-                                '$cond': {
-                                    'if': { '$eq': ['$previous', 0] },
-                                    'then': 'Divisor is zero', // or null, or whatever you want
-                                    'else': {
-                                        '$multiply': [
-                                            {
-                                                '$divide': [
-                                                    {
-                                                        '$subtract': [
-                                                            '$current', '$previous'
-                                                        ]
-                                                    }, '$previous'
-                                                ]
-                                            }, 100
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }, {
-                        '$unset': [
-                            '_id'
-                        ]
-                    }
-                ],
-                'six_months': [
-                    {
-                        '$match': {
-                            '$expr': {
-                                '$lte': [
-                                    {
-                                        '$subtract': [
-                                            '$target-date', '$date'
-                                        ]
-                                    }, {
-                                        '$multiply': [
-                                            6, 30, 24, 60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    }, {
-                        '$group': {
-                            '_id': null,
-                            'avg': {
-                                '$avg': '$value'
-                            },
-                            'previous': {
-                                '$first': '$value'
-                            },
-                            'current': {
-                                '$last': '$value'
-                            },
-                            'min': {
-                                '$min': '$low'
-                            },
-                            'max': {
-                                '$max': '$high'
-                            }
-                        }
-                    },{
-                        '$addFields': {
-                            'percentage_change': {
-                                '$cond': {
-                                    'if': { '$eq': ['$previous', 0] },
-                                    'then': 'Divisor is zero', // or null, or whatever you want
-                                    'else': {
-                                        '$multiply': [
-                                            {
-                                                '$divide': [
-                                                    {
-                                                        '$subtract': [
-                                                            '$current', '$previous'
-                                                        ]
-                                                    }, '$previous'
-                                                ]
-                                            }, 100
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }, {
-                        '$unset': [
-                            '_id'
-                        ]
-                    }
-                ],
-                'one_year': [
-                    {
-                        '$match': {
-                            '$expr': {
-                                '$lte': [
-                                    {
-                                        '$subtract': [
-                                            '$target-date', '$date'
-                                        ]
-                                    }, {
-                                        '$multiply': [
-                                            12, 30, 24, 60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    }, {
-                        '$group': {
-                            '_id': null,
-                            'avg': {
-                                '$avg': '$value'
-                            },
-                            'previous': {
-                                '$first': '$value'
-                            },
-                            'current': {
-                                '$last': '$value'
-                            },
-                            'min': {
-                                '$min': '$low'
-                            },
-                            'max': {
-                                '$max': '$high'
-                            }
-                        }
-                    },{
-                        '$addFields': {
-                            'percentage_change': {
-                                '$cond': {
-                                    'if': { '$eq': ['$previous', 0] },
-                                    'then': 'Divisor is zero', // or null, or whatever you want
-                                    'else': {
-                                        '$multiply': [
-                                            {
-                                                '$divide': [
-                                                    {
-                                                        '$subtract': [
-                                                            '$current', '$previous'
-                                                        ]
-                                                    }, '$previous'
-                                                ]
-                                            }, 100
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }, {
-                        '$unset': [
-                            '_id'
-                        ]
-                    }
-                ],
-                'all_time': [
-                    {
-                        '$group': {
-                            '_id': null,
-                            'avg': {
-                                '$avg': '$value'
-                            },
-                            'previous': {
-                                '$first': '$value'
-                            },
-                            'current': {
-                                '$last': '$value'
-                            },
-                            'min': {
-                                '$min': '$low'
-                            },
-                            'max': {
-                                '$max': '$high'
-                            }
-                        }
-                    }, {
-                        '$addFields': {
-                            'percentage_change': {
-                                '$cond': {
-                                    'if': { '$eq': ['$previous', 0] },
-                                    'then': 'Divisor is zero', // or null, or whatever you want
-                                    'else': {
-                                        '$multiply': [
-                                            {
-                                                '$divide': [
-                                                    {
-                                                        '$subtract': [
-                                                            '$current', '$previous'
-                                                        ]
-                                                    }, '$previous'
-                                                ]
-                                            }, 100
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }, {
-                        '$unset': [
-                            '_id'
-                        ]
-                    }
-                ]
+                    where: {
+                        collectible_id: collectible.id,
+                    },
+                })
+            } catch (e) {
+                console.log(`[ERROR] Unable to update mintalysis - Name: ${collectible.name}. Id: ${collectible.id}`)
             }
-        }
-    ])
-    collectibleMetrics = collectibleMetrics[0]
+            resolve()
+        })
+    } catch (e) {
+        console.log('FFS: ', e)
+    }
 
-    let total_issued = await prisma.veve_collectibles.findUnique({where: {collectible_id: collectible.id}})
-    total_issued = total_issued?.total_issued ? total_issued.total_issued : 0
-
-    let volume = 0
-    const market_cap = Number(collectible.floorMarketPrice) * Number(total_issued)
-    const one_day_change = collectibleMetrics.one_day[0]?.percentage_change
-    const one_wk_change = collectibleMetrics.one_week[0]?.percentage_change
-    const one_mo_change = collectibleMetrics?.one_month[0]?.percentage_change
-    const three_mo_change = collectibleMetrics?.three_months[0]?.percentage_change
-    const six_mo_change = collectibleMetrics?.six_months[0]?.percentage_change
-    const one_year_change = collectibleMetrics?.one_year[0]?.percentage_change
-    const all_time_change = collectibleMetrics?.all_time[0]?.percentage_change
-    volume = collectibleMetrics?.one_day[0]?.volume
-
-    let all_time_high = await CollectiblePrice.find({collectibleId: collectible.id }).sort({value: -1}).select('value').limit(1)
-    all_time_high = all_time_high[0]?.value
-
-    let all_time_low = await CollectiblePrice.find({collectibleId: collectible.id }).sort({value: 1}).select('value').limit(1)
-    all_time_low = all_time_low[0]?.value
-
-    // let volume = await CollectiblePrice.find({ collectibleId: collectible.id }).sort({ date: -1 }).select('volume').limit(1)
-    // volume = volume[0].volume
-
-    const circulating_supply = ((( Number(collectible.totalMarketListings) || 0) / ( total_issued || 1)) * 100)
-
-    return new Promise(async (resolve, reject) => {
-        try {
-            await prisma.veve_collectibles_metrics.upsert({
-                create: {
-                    collectible_id: collectible.id,
-                    floor_price: Number(collectible.floorMarketPrice),
-                    total_listings: Number(collectible.totalMarketListings),
-                    circulating_supply,
-                    volume,
-                    one_day_change,
-                    one_wk_change,
-                    one_mo_change,
-                    one_year_change,
-                    six_mo_change,
-                    three_mo_change,
-                    all_time_change,
-                    all_time_high,
-                    all_time_low,
-                    market_cap,
-                },
-                update: {
-                    floor_price: Number(collectible.floorMarketPrice),
-                    total_listings: Number(collectible.totalMarketListings),
-                    circulating_supply,
-                    volume,
-                    one_day_change,
-                    one_wk_change,
-                    one_mo_change,
-                    one_year_change,
-                    six_mo_change,
-                    three_mo_change,
-                    all_time_change,
-                    all_time_high,
-                    all_time_low,
-                    market_cap,
-                },
-                where: {
-                    collectible_id: collectible.id,
-                },
-            })
-        } catch (e) {
-            console.log(`[ERROR] Unable to update mintalysis - Name: ${collectible.name}. Id: ${collectible.id}`)
-        }
-        resolve()
-    })
 }
 
 export const VEVE_GET_COLLECTIBLE_FLOORS = async (prisma) => {
@@ -710,9 +715,9 @@ export const VEVE_GET_COLLECTIBLE_FLOORS = async (prisma) => {
                 const edges = collectible_floors.data.collectibleTypeList.edges
                 await edges.map(async (collectible, index) => {
                     try {
-                        await updateTimeSeries(collectible.node)
+                        // await updateTimeSeries(collectible.node)
                         await updateMintalysis(collectible.node, prisma)
-                        await updateLegacyShit(collectible.node)
+                        // await updateLegacyShit(collectible.node)
                     } catch (e) {
                         console.log('[FAILED] : ', e)
                     }
