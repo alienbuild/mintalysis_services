@@ -618,6 +618,7 @@ model server {
   owner         User            @relation(fields: [ownerId], references: [id])
   members       User[]          @relation("server_members")
   channels      channel[]
+  is_public     Boolean         @default(false)
   server_member server_member[]
 }
 
