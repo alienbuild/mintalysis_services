@@ -25,6 +25,7 @@ export const VEVE_GET_LATEST_BRANDS = async (prisma) => {
             const brandList = latest_brands.data.brandList.edges
             brandList.map(async (brand) => {
                 try {
+                    console.log(`Brand name is ${brand.node.name}. id: ${brand.node.id}`)
                     await prisma.veve_brands.upsert({
                         where: {
                             brand_id: brand.node.id,

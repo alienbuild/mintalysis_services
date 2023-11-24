@@ -72,6 +72,8 @@ const main = async () => {
 
         await scheduledHourlyJobs(prisma)
 
+        await VEVE_GET_LATEST_COLLECTIBLES(prisma)
+
     } catch (error) {
         console.error('[ERROR] main.js:', error);
     } finally {
