@@ -618,6 +618,7 @@ model server {
   owner         User            @relation(fields: [ownerId], references: [id])
   members       User[]          @relation("server_members")
   channels      channel[]
+  is_public     Boolean         @default(false)
   server_member server_member[]
 }
 
@@ -906,6 +907,8 @@ model veve_tokens {
   is_invalid         Boolean?            @default(false)
   is_burned          Boolean?            @default(false)
   no_meta            Boolean?            @default(false)
+  is_premint         Boolean?            @default(false)
+  has_full_meta      Boolean?            @default(false)
   veve_brands        veve_brands?        @relation(fields: [brand_id], references: [brand_id])
   veve_wallets       veve_wallets?       @relation(fields: [wallet_id], references: [id], map: "veve_tokens_ibfk_1")
   veve_licensors     veve_licensors?     @relation(fields: [licensor_id], references: [licensor_id])
@@ -936,6 +939,7 @@ model veve_transfers {
   break_even_new  Float?
   entry_price_new Float?
   timestamp_dt    DateTime? @db.DateTime(6)
+  txn_type        String?
   is_transfer     Boolean?  @default(false)
   is_burn         Boolean?  @default(false)
   is_craft        Boolean?  @default(false)
