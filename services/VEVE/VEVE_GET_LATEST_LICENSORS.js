@@ -114,9 +114,9 @@ export const VEVE_GET_LATEST_LICENSORS = async (prisma) => {
                         }
                     })
                 } catch (e) {
-                    // console.log(`[FAIL][VEVE][LICENSORS]: ${licensor.node.name} was not added to prisma db.`)
+                    console.log(`[FAIL][VEVE][LICENSORS]: ${licensor.node.name} was not added to prisma db.`)
                 } finally {
-                    console.log('[SUCCESS] VEVE LATEST LICENSORS UPDATED')
+                    console.log(`[SUCCESS] VEVE LATEST LICENSORS UPDATED: ${licensor.node.name} - ${licensorList.length}`)
                 }
 
             })

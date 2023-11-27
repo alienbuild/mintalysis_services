@@ -51,9 +51,9 @@ const main = async () => {
 
     try {
         await prisma.$connect();
-        await scheduledHourlyJobs(prisma)
-        // await VEVE_GET_LATEST_COLLECTIBLES(prisma)
-        // await scheduledDailyJobs(prisma)
+        // await UPDATE_USER_STATUS(prisma); // Here prisma instance is passed as argument.
+        console.log('UPDATE_USER_STATUS has been called');
+        // await addAllUsersToServer()
     } catch (error) {
         console.error('Error in main:', error);
     } finally {
