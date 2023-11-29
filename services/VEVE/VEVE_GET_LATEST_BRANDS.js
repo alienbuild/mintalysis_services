@@ -4,7 +4,7 @@ import * as Queries from "../../queries/getVeveLatestBrandsQuery.js";
 
 export const VEVE_GET_LATEST_BRANDS = async (prisma) => {
     console.log(`[ALICE][VEVE] - [GET LATEST BRANDS]`)
-
+    let count = 0
     await fetch(`https://web.api.prod.veve.me/graphql`, {
         method: 'POST',
         headers: {
@@ -117,7 +117,8 @@ export const VEVE_GET_LATEST_BRANDS = async (prisma) => {
                 } catch (e) {
                     console.log(`[FAIL][VEVE][BRAND]: ${brand.node.name} was not added to prisma db.`, latest_brands.data.brandList.pageInfo.endCursor)
                 } finally {
-                    console.log('[SUCCESS] VEVE LATEST BRANDS UPDATED')
+                    count += 1
+                    console.log(`[SUCCESS] VEVE LATEST BRANDS UPDATED: ${brand.node.name} - ${count}/${brandList.length}`)
                 }
             })
 

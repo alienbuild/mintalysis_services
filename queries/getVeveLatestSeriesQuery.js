@@ -1,5 +1,5 @@
 export const getVeveLatestSeriesQuery = () => `query seriesList {
-    seriesList {
+    seriesList (first: 400){
         pageInfo {
             endCursor
             hasNextPage

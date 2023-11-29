@@ -7,11 +7,11 @@ import {VEVE_GET_LATEST_BRANDS} from "./VEVE/VEVE_GET_LATEST_BRANDS.js";
 import {VEVE_GET_LATEST_SERIES} from "./VEVE/VEVE_GET_LATEST_SERIES.js";
 import {VEVE_GET_LATEST_COLLECTIBLES} from "./VEVE/VEVE_GET_LATEST_COLLECTIBLES.js";
 import {VEVE_GET_LATEST_COMICS} from "./VEVE/VEVE_GET_LATEST_COMICS.js";
-// import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client"
 
 // import {GET_SOCIAL_STATS, SCRAPE_X_DOT_COM, X_DAILY_SNAPSHOT} from "./SOCIAL";
 
-// export const prisma = new PrismaClient()
+export const prisma = new PrismaClient()
 
 const scheduledMinuteJobs = async (prisma) => {
     schedule.scheduleJob('05 * * * *', async () => {

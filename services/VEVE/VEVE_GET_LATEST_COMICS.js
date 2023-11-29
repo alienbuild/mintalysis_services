@@ -3,9 +3,11 @@ import { customAlphabet } from 'nanoid/non-secure'
 import slugify from 'slugify'
 import * as Queries from "../../queries/getVevelatestComicsQuery.js";
 
+let count = 0
+
 export const VEVE_GET_LATEST_COMICS = async (prisma) => {
     console.log('GETTING LATEST COMICS')
-    console.log(`[ALICE][VEVE] - [GET LATEST COLLECTIBLES]`)
+    console.log(`[ALICE][VEVE] - [GET ALL COMICS]`)
 
     await fetch(`https://web.api.prod.veve.me/graphql`, {
         method: 'POST',
@@ -58,6 +60,7 @@ export const VEVE_GET_LATEST_COMICS = async (prisma) => {
                 const nanoid = customAlphabet('1234567890abcdef', 5)
                 const slug = slugify(`${comic.node.comicType.name} ${comic.node.comicType.comicNumber} ${comic.node.rarity} ${comic.node.comicType.startYear} ${nanoid()}`,{ lower: true, strict: true })
                 const mcp_rarity_value = comic.node.rarity === 'COMMON' ? .25 : comic.node.rarity === 'UNCOMMON' ? .5 : comic.node.rarity === 'RARE' ? 2.0 : comic.node.rarity === 'ULTRA_RARE' ? 3.0 : comic.node.rarity === 'SECRET_RARE' ? 6.0 : NULL
+                const title_case_rarity = comic.node.rarity === 'COMMON' ? 'Common' : comic.node.rarity === 'UNCOMMON' ? 'Uncommon' : comic.node.rarity === 'RARE' ? 'Rare' : comic.node.rarity === 'ULTRA_RARE' ? 'Ultra Rare' : comic.node.rarity === 'SECRET_RARE' ? 'Secret Rare' : NULL
 
                 try {
                     await prisma.veve_comics.upsert({
@@ -69,7 +72,7 @@ export const VEVE_GET_LATEST_COMICS = async (prisma) => {
                             mcp_rarity_value: mcp_rarity_value,
                             comic_image_url_id: comic_image_url_id,
                             name: comic.node.comicType.name,
-                            rarity: comic.node.rarity,
+                            rarity: title_case_rarity,
                             description: comic.node.comicType.description,
                             comic_number: Number(comic.node.comicType.comicNumber),
                             comic_series_id: comic.node.comicType.comicSeries.id,
@@ -90,6 +93,7 @@ export const VEVE_GET_LATEST_COMICS = async (prisma) => {
                             total_available: comic.node.comicType.totalAvailable,
                             is_free: comic.node.comicType.isFree,
                             is_unlimited: comic.node.comicType.isUnlimited,
+                            minimum_age: comic.node.comicType.minimumAge,
                             writers: {
                                 connectOrCreate: writersArr,
                             },
@@ -108,7 +112,7 @@ export const VEVE_GET_LATEST_COMICS = async (prisma) => {
                             mcp_rarity_value: mcp_rarity_value,
                             comic_image_url_id: comic_image_url_id,
                             name: comic.node.comicType.name,
-                            rarity: comic.node.rarity,
+                            rarity: title_case_rarity,
                             description: comic.node.comicType.description,
                             comic_number: Number(comic.node.comicType.comicNumber),
                             comic_series_id: comic.node.comicType.comicSeries.id,
@@ -129,6 +133,7 @@ export const VEVE_GET_LATEST_COMICS = async (prisma) => {
                             total_available: comic.node.comicType.totalAvailable,
                             is_free: comic.node.comicType.isFree,
                             is_unlimited: comic.node.comicType.isUnlimited,
+                            minimum_age: comic.node.comicType.minimumAge,
                             writers: {
                                 connectOrCreate: writersArr,
                             },
@@ -143,9 +148,9 @@ export const VEVE_GET_LATEST_COMICS = async (prisma) => {
                         }
                     })
                 } catch (e) {
-                    // console.log(`[FAIL][VEVE][COMIC]: ${comic.node.comicType.name} was not added to prisma db.`, e)
+                    console.log(`[FAIL][VEVE][COMIC]: ${comic.node.comicType.name} was not added to prisma db.`, e)
                 } finally {
-                    console.log('[SUCCESS] VEVE LATEST COMICS UPDATED')
+                    console.log('[SUCCESS] VEVE LATEST COMICS UPDATED. count: ', count++)
                 }
 
             })
