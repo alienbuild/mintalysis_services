@@ -870,35 +870,37 @@ model veve_wallets_valuations {
 }
 
 model veve_tokens {
-  token_id           Int                 @id
-  name               String?
-  edition            Int?
-  mint_date          DateTime?           @db.DateTime(6)
-  rarity             String?
-  collectible_id     String?
-  unique_cover_id    String?
-  type               String?             @db.Text
-  created_at         DateTime?           @default(now()) @db.DateTime(6)
-  last_updated       DateTime?           @db.DateTime(6)
-  brand_id           String?
-  licensor_id        String?
-  series_id          String?
-  wallet_id          String?
-  element_id         String?
-  comic_image_url_id String?             @db.VarChar(50)
-  mint_order         Int?
-  mcp_ed_bonus       Boolean?            @default(false)
-  to_process         Boolean?            @default(false)
-  is_invalid         Boolean?            @default(false)
-  is_burned          Boolean?            @default(false)
-  no_meta            Boolean?            @default(false)
-  is_premint         Boolean?            @default(false)
-  has_full_meta      Boolean?            @default(false)
-  veve_brands        veve_brands?        @relation(fields: [brand_id], references: [brand_id])
-  veve_wallets       veve_wallets?       @relation(fields: [wallet_id], references: [id], map: "veve_tokens_ibfk_1")
-  veve_licensors     veve_licensors?     @relation(fields: [licensor_id], references: [licensor_id])
-  veve_series        veve_series?        @relation(fields: [series_id], references: [series_id])
-  veve_collectibles  veve_collectibles[] @relation("veve_collectiblesToveve_tokens")
+  token_id              Int                    @id
+  name                  String?
+  edition               Int?
+  mint_date             DateTime?              @db.DateTime(6)
+  rarity                String?
+  collectible_id        String?
+  unique_cover_id       String?
+  type                  String?                @db.Text
+  created_at            DateTime?              @default(now()) @db.DateTime(6)
+  last_updated          DateTime?              @db.DateTime(6)
+  brand_id              String?
+  licensor_id           String?
+  series_id             String?
+  wallet_id             String?
+  element_id            String?
+  comic_image_url_id    String?                @db.VarChar(50)
+  mint_order            Int?
+  mcp_ed_bonus          Boolean?               @default(false)
+  to_process            Boolean?               @default(false)
+  is_invalid            Boolean?               @default(false)
+  is_burned             Boolean?               @default(false)
+  no_meta               Boolean?               @default(false)
+  is_premint            Boolean?               @default(false)
+  has_full_meta         Boolean?               @default(false)
+  veve_brands           veve_brands?           @relation(fields: [brand_id], references: [brand_id])
+  veve_wallets          veve_wallets?          @relation(fields: [wallet_id], references: [id], map: "veve_tokens_ibfk_1")
+  veve_licensors        veve_licensors?        @relation(fields: [licensor_id], references: [licensor_id])
+  veve_series           veve_series?           @relation(fields: [series_id], references: [series_id])
+  //  veve_collectibles  veve_collectibles[] @relation("veve_collectiblesToveve_tokens")
+  veveTokenCollectibles veveTokenCollectible[]
+  veveTokenComics       veveTokenComic[]
 
   @@index([brand_id], map: "veve_tokens_brand_id_fkey")
   @@index([licensor_id], map: "veve_tokens_licensor_id_fkey")
@@ -908,6 +910,24 @@ model veve_tokens {
   @@index([comic_image_url_id])
   @@index([unique_cover_id])
   @@index([edition])
+}
+
+model veveTokenCollectible {
+  tokenId           Int
+  collectibleId     String
+  veve_tokens       veve_tokens       @relation(fields: [tokenId], references: [token_id])
+  veve_collectibles veve_collectibles @relation(fields: [collectibleId], references: [collectible_id])
+
+  @@id([tokenId, collectibleId])
+}
+
+model veveTokenComic {
+  tokenId         Int
+  unique_cover_id String
+  veve_tokens     veve_tokens @relation(fields: [tokenId], references: [token_id])
+  veve_comics     veve_comics @relation(fields: [unique_cover_id], references: [unique_cover_id])
+
+  @@id([tokenId, unique_cover_id])
 }
 
 model veve_transfers {
@@ -1083,7 +1103,8 @@ model veve_collectibles {
   metrics                              veve_collectibles_metrics?
   translations                         veve_collectibles_translations[]
   veve_watchlist                       veve_watchlist[]
-  veve_tokens                          veve_tokens[]                    @relation("veve_collectiblesToveve_tokens")
+  //  veve_tokens                          veve_tokens[]                    @relation("veve_collectiblesToveve_tokens")
+  veveTokenCollectibles                veveTokenCollectible[]
   veve_profile                         veve_profile[]
 
   @@index([brand_id], map: "collectibles_brand_id_fkey")
@@ -1182,6 +1203,7 @@ model veve_comics {
   artists                   artists[]                  @relation("artistsToveve_comics")
   characters                characters[]               @relation("charactersToveve_comics")
   writers                   writers[]                  @relation("veve_comicsTowriters")
+  veveTokenComics           veveTokenComic[]
 
   @@index([unique_cover_id], map: "unique_cover_id")
   @@index([comic_image_url_id], map: "comic_image_url_id")
