@@ -20,7 +20,7 @@ const scheduledMinuteJobs = async (prisma) => {
 }
 
 const scheduledHourlyJobs = (prisma) => {
-    schedule.scheduleJob('05 * * * *', async (prisma) => {
+    schedule.scheduleJob('05 */30 * * * *', async (prisma) => {
 
         // UPDATE YOUTUBE/INSTA SOCIAL STATS
         // await GET_SOCIAL_STATS(prisma)

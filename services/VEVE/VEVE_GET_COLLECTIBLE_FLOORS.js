@@ -681,12 +681,12 @@ const updateMintalysis = async (collectible, prisma) => {
                     },
                 })
             } catch (e) {
-                console.log(`[ERROR] Unable to update mintalysis - Name: ${collectible.name}. Id: ${collectible.id}`)
+                console.log(`[ERROR] Unable to update mintalysis - Name: ${collectible.name}. Id: ${collectible.id}`, e)
             }
             resolve()
         })
     } catch (e) {
-        console.log('FFS: ', e)
+        console.log(`FFS: collectible id is ${collectible.id}` , e)
     }
 
 }
