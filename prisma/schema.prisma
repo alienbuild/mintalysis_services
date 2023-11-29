@@ -913,21 +913,21 @@ model veve_tokens {
 }
 
 model veveTokenCollectible {
-  tokenId           Int
-  collectibleId     String
-  veve_tokens       veve_tokens       @relation(fields: [tokenId], references: [token_id])
-  veve_collectibles veve_collectibles @relation(fields: [collectibleId], references: [collectible_id])
+  token_id          Int
+  collectible_id    String
+  veve_tokens       veve_tokens       @relation(fields: [token_id], references: [token_id])
+  veve_collectibles veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
 
-  @@id([tokenId, collectibleId])
+  @@id([token_id, collectible_id])
 }
 
 model veveTokenComic {
-  tokenId         Int
+  token_id        Int
   unique_cover_id String
-  veve_tokens     veve_tokens @relation(fields: [tokenId], references: [token_id])
+  veve_tokens     veve_tokens @relation(fields: [token_id], references: [token_id])
   veve_comics     veve_comics @relation(fields: [unique_cover_id], references: [unique_cover_id])
 
-  @@id([tokenId, unique_cover_id])
+  @@id([token_id, unique_cover_id])
 }
 
 model veve_transfers {
