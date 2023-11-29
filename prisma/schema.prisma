@@ -924,7 +924,6 @@ model veve_transfers {
   break_even_new  Float?
   entry_price_new Float?
   timestamp_dt    DateTime? @db.DateTime(6)
-  txn_type        String?
   is_transfer     Boolean?  @default(false)
   is_burn         Boolean?  @default(false)
   is_craft        Boolean?  @default(false)
@@ -933,6 +932,9 @@ model veve_transfers {
   is_mkt_auction  Boolean?  @default(false)
   is_mkt_fixed    Boolean?  @default(false)
 
+  @@index([createdAt])
+  @@index([timestamp_dt])
+  @@index([token_id, createdAt])
   @@index([token_id, from_wallet, to_wallet])
 }
 
@@ -1354,7 +1356,7 @@ model veve_mcp_completed_sets {
   wallet_id       String
   series_id       String
   date_completed  DateTime
-  completed_sets  Int
+  completed_count Int
   date_set_broken DateTime?
   completed_set   Boolean
   updatedAt       DateTime  @updatedAt()
