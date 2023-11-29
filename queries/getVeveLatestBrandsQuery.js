@@ -1,5 +1,5 @@
 export const getVeveLatestBrandsQuery = () => `query brandList {
-    brandList(first: 200, sortOptions: {sortBy: NAME, sortDirection: DESCENDING }) {
+    brandList(first: 300, sortOptions: {sortBy: NAME, sortDirection: DESCENDING }) {
         pageInfo {
             hasNextPage
             hasPreviousPage

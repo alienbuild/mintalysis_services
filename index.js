@@ -68,10 +68,11 @@ const main = async () => {
     try {
         await initializeMongoose();
         await prisma.$connect();
+        // await UPDATE_USER_STATUS(prisma); // Here prisma instance is passed as argument.
+        console.log('UPDATE_USER_STATUS has been called');
+        // await addAllUsersToServer
         console.log('[CONNECTED] Prisma');
-
         await scheduledHourlyJobs(prisma)
-
     } catch (error) {
         console.error('[ERROR] main.js:', error);
     } finally {
