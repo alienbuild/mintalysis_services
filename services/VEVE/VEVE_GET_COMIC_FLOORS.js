@@ -2,64 +2,80 @@ import fetch from 'node-fetch'
 import ComicPrice from "../../models/ComicPrices.js"
 import * as Queries from "../../queries/getVeveComicFloorsQuery.js";
 
-
 const updateTimeSeries = (comic) => {
-    return new Promise((resolve, reject) => {
-        ComicPrice.find({ uniqueCoverId: comic.image.id })
-            .lean()
-            .sort({ date: -1 })
-            .limit(5)
-            .exec((history) => {
-                if (err) console.log('Unable to get timeseries data: ', err)
-                let newArr = []
+    try {
+        return new Promise((resolve, reject) => {
 
-                const getDifference = (a, b) => {
-                    return Math.abs(a - b);
-                }
-                const calculateVolume = (totalSales = 0) => {
-                    if (isNaN(totalSales)) {
-                        totalSales = 0
+            if (!comic?.image?.id) {
+                return reject(new Error("Invalid or missing comic image id."));
+            }
+
+            ComicPrice.find({ uniqueCoverId: comic?.image?.id })
+                .lean()
+                .sort({ date: -1 })
+                .limit(5)
+                .exec((history, err) => {
+                    if (err) {
+                        console.error('Unable to get timeseries data:');
+                        return reject(err); // Properly reject the promise on error
                     }
-                    return totalSales * parseFloat(comic.floorMarketPrice)
-                }
-                const calculateCandleHigh = () => {
-                    const shallowCopy = history.slice(0, 4)
 
-                    return Math.max.apply(Math, shallowCopy.map(function (o) {
-                        return o.value;
-                    }))
-                }
-                const calculateCandleLow = () => {
-                    const shallowCopy = history.slice(0, 4)
+                    if (!history) {
+                        return reject(new Error("History is null."));
+                    }
 
-                    return Math.min.apply(Math, shallowCopy.map(function (o) {
-                        return o.value;
-                    }))
-                }
-                const calculateCandleOpen = () => {
-                    return history[history.length - 1].value
-                }
+                    let newArr = []
 
-                const newPriceHistory = new ComicPrice({
-                    uniqueCoverId: comic.image.id,
-                    date: new Date(),
-                    value: comic.floorMarketPrice,
-                    listings: Number(comic.totalMarketListings),
-                    volume: calculateVolume(getDifference(history[history.length - 1]?.listings, Number(comic.totalMarketListings))),
-                    high: history.length < 1 ? comic.floorMarketPrice : calculateCandleHigh(0),
-                    low: history.length < 1 ? comic.floorMarketPrice : calculateCandleLow(0),
-                    open: history.length < 1 ? comic.comicType.storePrice : calculateCandleOpen()
-                })
-                newArr.push(newPriceHistory)
+                    const getDifference = (a, b) => {
+                        return Math.abs(a - b);
+                    }
+                    const calculateVolume = (totalSales = 0) => {
+                        if (isNaN(totalSales)) {
+                            totalSales = 0
+                        }
+                        return totalSales * parseFloat(comic.floorMarketPrice)
+                    }
+                    const calculateCandleHigh = () => {
+                        const shallowCopy = history.slice(0, 4)
 
-                ComicPrice.insertMany(newArr)
-                    .then((success) => {
-                        console.log('[SUCCESS][COMIC]: Time series updated.')
-                        resolve()
+                        return Math.max.apply(Math, shallowCopy.map(function (o) {
+                            return o.value;
+                        }))
+                    }
+                    const calculateCandleLow = () => {
+                        const shallowCopy = history.slice(0, 4)
+
+                        return Math.min.apply(Math, shallowCopy.map(function (o) {
+                            return o.value;
+                        }))
+                    }
+                    const calculateCandleOpen = () => {
+                        return history[history.length - 1].value
+                    }
+
+                    const newPriceHistory = new ComicPrice({
+                        uniqueCoverId: comic.image.id,
+                        date: new Date(),
+                        value: comic.floorMarketPrice,
+                        listings: Number(comic.totalMarketListings),
+                        volume: calculateVolume(getDifference(history[history.length - 1]?.listings, Number(comic.totalMarketListings))),
+                        high: history.length < 1 ? comic.floorMarketPrice : calculateCandleHigh(0),
+                        low: history.length < 1 ? comic.floorMarketPrice : calculateCandleLow(0),
+                        open: history.length < 1 ? comic.comicType.storePrice : calculateCandleOpen()
                     })
-                    .catch((error) => console.log(`[ERROR] Unable to insertMany on ${comic.image.id}`))
-            })
-    })
+                    newArr.push(newPriceHistory)
+
+                    ComicPrice.insertMany(newArr)
+                        .then((success) => {
+                            console.log('[SUCCESS][COMIC]: Time series updated.')
+                            resolve()
+                        })
+                        .catch((error) => console.log(`[ERROR] Unable to insertMany on ${comic.image.id}`))
+                })
+        })
+    } catch (e) {
+        console.log('[ERROR] ' , e)
+    }
 }
 
 const updateMintalysis = async (comic, prisma) => {
@@ -549,7 +565,7 @@ export const VEVE_GET_COMIC_FLOORS = async (prisma) => {
                 } catch (e) {
                     // console.log('[ERROR] Unable to get comic floor prices')
                 } finally {
-                    console.log('[SUCCESS] VEVE LATEST BRANDS UPDATED')
+                    console.log('[SUCCESS] VEVE LATEST COMIC FLOORS UPDATED')
                 }
             })
         })
