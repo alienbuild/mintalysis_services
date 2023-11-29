@@ -23,6 +23,17 @@ let lastTransferTimestamp = null;
 let lastMintTxnId = null; 
 let lastTransferTxnId = null;
 
+const triggerTransferUpdate = async () => {
+    const response = await fetch("http://localhost:8001/graphql", { // TODO: Put gql url into env and switch between dev/prod
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: `mutation { triggerImxTransfer }` }),
+    });
+
+    const responseData = await response.json();
+    console.log(responseData);
+};
+
 export const GET_VEVE_TRANSACTIONS = async () => {
     const last_mint_timestamp = await prisma.veve_mints.findFirst({
       select: { timestamp: true },
@@ -64,7 +75,7 @@ export const GET_VEVE_TRANSACTIONS = async () => {
     }
   };
   
-  const fetchFromIMX = async (endpoint, tableName) => {
+const fetchFromIMX = async (endpoint, tableName) => {
     let retryCount = 3;
 
     while (retryCount > 0) {
@@ -124,9 +135,9 @@ export const GET_VEVE_TRANSACTIONS = async () => {
             });
 
             //temp fix
-            if (tableName == "veve_mints") {
+            if (tableName === "veve_mints") {
                 mintsRemaining = responseBody.remaining;
-            } else if (tableName == "veve_transfers") {
+            } else if (tableName === "veve_transfers") {
                 transfersRemaining = responseBody.remaining;
             }
 
@@ -282,6 +293,8 @@ const performUpserts = async (
       skipDuplicates: true,
     });
 
+    if (imxTransArr.length > 0) await triggerTransferUpdate()
+
     await setVeveImxStatus('veve_transfers', lastTransferTimestamp, lastTransferTxnId);
     console.log("Updated veve_imx_status with Last Transfer Timestamp: ", lastTransferTimestamp, " and Last Transfer Txn Id: ", lastTransferTxnId);
 
@@ -398,8 +411,7 @@ const updateStats = async (
 
 //   }
 
-
-  async function setVeveImxStatus(table_name, last_timestamp, last_txn_id) {
+async function setVeveImxStatus(table_name, last_timestamp, last_txn_id) {
     await prisma.veve_imx_status.update({
       where: {
         table_name: table_name,
@@ -411,7 +423,7 @@ const updateStats = async (
     });
   }
 
-  function formatDateString(input) {
+function formatDateString(input) {
     const date = new Date(input);
     return date.toISOString().split('.')[0] + 'Z';
   }
@@ -424,9 +436,8 @@ const updateStats = async (
 //     return input; // if the string does not contain fractional seconds, return it as-is
 // }
 
-  function sleep(ms) {
+function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-
 
 GET_VEVE_TRANSACTIONS();
