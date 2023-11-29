@@ -69,10 +69,7 @@ const main = async () => {
         await initializeMongoose();
         await prisma.$connect();
         console.log('[CONNECTED] Prisma');
-
         await scheduledHourlyJobs(prisma)
-
-        await VEVE_GET_LATEST_COLLECTIBLES(prisma)
 
     } catch (error) {
         console.error('[ERROR] main.js:', error);
