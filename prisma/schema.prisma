@@ -944,13 +944,8 @@ model veve_transfers {
   break_even_new  Float?
   entry_price_new Float?
   timestamp_dt    DateTime? @db.DateTime(6)
-  is_transfer     Boolean?  @default(false)
-  is_burn         Boolean?  @default(false)
-  is_craft        Boolean?  @default(false)
-  is_auction      Boolean?  @default(false)
-  is_redemption   Boolean?  @default(false)
-  is_mkt_auction  Boolean?  @default(false)
-  is_mkt_fixed    Boolean?  @default(false)
+  txn_type        String?
+  is_burned       Boolean?  @default(false)
 
   @@index([createdAt])
   @@index([timestamp_dt])
@@ -967,7 +962,7 @@ model veve_mints {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime?
   timestamp_dt  DateTime? @db.DateTime(6)
-  is_burn       Boolean?  @default(false)
+  is_burned     Boolean?  @default(false)
   is_redemption Boolean?  @default(false)
 
   @@index([wallet_id, token_id])
@@ -1406,6 +1401,69 @@ model veve_mcp_staging_csv_import {
   gem_amount      Float?
   updatedAt       DateTime @updatedAt()
   created_at      DateTime @default(now())
+}
+
+model veve_mcp_staging_csv_import_sets {
+  id                 Int       @id @default(autoincrement())
+  wallet_id          String
+  series_id          String
+  series_name        String?
+  nbr_of_items       Int?
+  daily_mcp_pts      Float?
+  date_set_completed DateTime
+  date_set_broken    DateTime?
+  updatedAt          DateTime  @updatedAt()
+  created_at         DateTime  @default(now())
+}
+
+model veve_mcp_output {
+  id                 Int      @id @default(autoincrement())
+  wallet_id          String
+  mint_count         Int?
+  mint_points        Int?
+  mkt_purchase_count Int?
+  mkt_purchase_pts   Int?
+  col_count          Int?
+  col_pts            Int?
+  col_rarity_bonus   Float?
+  col_low_ed_bonus   Float?
+  col_dup_bonus      Float?
+  col_set_count      Int?
+  col_set_bonus      Int?
+  col_dup_set_bonus  Int?
+  comic_count        Int?
+  comic_pts          Float?
+  comic_rarity_bonus Float?
+  comic_low_ed_bonus Float?
+  comic_dup_bonus    Float?
+  omi_balance        Float?
+  omi_mcp_pts        Float?
+  total_col_pts      Float?
+  total_comic_pts    Float?
+  total_daily_pts    Float?   @default(0)
+  total__mcp_pts     Float?   @default(0)
+  mcp_level          String?
+  mcp_rank           String?
+  updated_at         DateTime @updatedAt()
+  created_at         DateTime @default(now())
+}
+
+model mcp_rank {
+  id         Int      @id @default(autoincrement())
+  rank       String
+  min_points Int
+  max_points Int
+  updatedAt  DateTime @updatedAt()
+  created_at DateTime @default(now())
+}
+
+model mcp_level {
+  id         Int      @id @default(autoincrement())
+  level      String
+  min_points Int
+  max_points Int
+  updatedAt  DateTime @updatedAt()
+  created_at DateTime @default(now())
 }
 
 // schemas/projects/veve/profile.prisma
