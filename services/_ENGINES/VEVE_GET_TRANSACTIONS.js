@@ -34,6 +34,17 @@ const triggerTransferUpdate = async () => {
     console.log(responseData);
 };
 
+const triggerMintsUpdate = async () => {
+    const response = await fetch("http://localhost:8001/graphql", { // TODO: Put gql url into env and switch between dev/prod
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: `mutation { triggerImxMint }` }),
+    });
+
+    const responseData = await response.json();
+    console.log(responseData);
+};
+
 export const GET_VEVE_TRANSACTIONS = async () => {
     const last_mint_timestamp = await prisma.veve_mints.findFirst({
       select: { timestamp: true },
@@ -208,7 +219,7 @@ const processTransactions = (allTransactions) => {
         token_id: token_id,
         timestamp_dt: timestamp,
         to_process: true,
-        is_burn: isBurned,
+        is_burned: isBurned,
       });
 
       imxWalletsArr.push({
@@ -244,7 +255,7 @@ const processTransactions = (allTransactions) => {
         token_id: token_id,
         timestamp_dt: timestamp,
         to_process: true,
-        is_burn: isBurned,
+        is_burned: isBurned,
       });
 
       imxWalletsArr.push({
@@ -283,6 +294,8 @@ const performUpserts = async (
       data: imxMintsArr,
       skipDuplicates: true,
     });
+
+    if (imxMintsArr.length > 0) await triggerMintsUpdate()
 
     await setVeveImxStatus('veve_mints', lastMintTimestamp, lastMintTxnId);
     console.log("Updated veve_imx_status with Last Mint Timestamp: ", lastMintTimestamp, " and Last Mint Txn Id: ", lastMintTxnId);
