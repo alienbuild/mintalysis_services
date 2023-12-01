@@ -219,7 +219,7 @@ const processTransactions = (allTransactions) => {
         token_id: token_id,
         timestamp_dt: timestamp,
         to_process: true,
-        is_burn: isBurned,
+        is_burned: isBurned,
       });
 
       imxWalletsArr.push({
@@ -255,7 +255,7 @@ const processTransactions = (allTransactions) => {
         token_id: token_id,
         timestamp_dt: timestamp,
         to_process: true,
-        is_burn: isBurned,
+        is_burned: isBurned,
       });
 
       imxWalletsArr.push({
@@ -295,9 +295,9 @@ const performUpserts = async (
       skipDuplicates: true,
     });
 
-      if (imxMintsArr.length > 0) await triggerMintsUpdate()
+    if (imxMintsArr.length > 0) await triggerMintsUpdate()
 
-      await setVeveImxStatus('veve_mints', lastMintTimestamp, lastMintTxnId);
+    await setVeveImxStatus('veve_mints', lastMintTimestamp, lastMintTxnId);
     console.log("Updated veve_imx_status with Last Mint Timestamp: ", lastMintTimestamp, " and Last Mint Txn Id: ", lastMintTxnId);
 
     console.log("\nUpdating veve_transfers.");
