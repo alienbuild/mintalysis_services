@@ -15,10 +15,10 @@ import {VEVE_GET_LATEST_COMICS} from "./VEVE/VEVE_GET_LATEST_COMICS.js";
 
 export const prisma = new PrismaClient()
 
-export const scheduleLiveJobs = () => {
-    startTask('./services/_ENGINES/VEVE_ASSETS.js', 'GET_VEVE_ASSETS_TASK');
-    startTask('./services/_ENGINES/VEVE_GET_TRANSACTIONS.js', 'GET_VEVE_TRANSACTIONS_TASK');
-}
+// export const scheduleLiveJobs = () => {
+//     startTask('./services/_ENGINES/VEVE_ASSETS.js', 'GET_VEVE_ASSETS_TASK');
+//     startTask('./services/_ENGINES/VEVE_GET_TRANSACTIONS.js', 'GET_VEVE_TRANSACTIONS_TASK');
+// }
 
 export const scheduledMinuteJobs = async (prisma) => {
     schedule.scheduleJob('05 * * * *', async () => {

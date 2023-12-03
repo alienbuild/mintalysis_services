@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 import { PrismaClient } from "@prisma/client"
-import {scheduledHourlyJobs, scheduleLiveJobs} from "./services/index.js";
+import {scheduledHourlyJobs} from "./services/index.js";
 import mongoose from "mongoose";
 
 export const prisma = new PrismaClient()
@@ -23,7 +23,6 @@ async function main() {
         await prisma.$connect();
         console.log('[CONNECTED] Prisma');
         await scheduledHourlyJobs(prisma);
-        scheduleLiveJobs();
     } catch (error) {
         console.error('[ERROR] main.js:', error);
     }
