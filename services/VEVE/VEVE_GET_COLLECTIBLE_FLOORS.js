@@ -218,7 +218,7 @@ const updateMintalysis = async (collectible, prisma) => {
                                 'percentage_change': {
                                     '$cond': {
                                         'if': { '$eq': ['$previous', 0] },
-                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'then': null, // or null, or whatever you want
                                         'else': {
                                             '$multiply': [
                                                 {
@@ -283,7 +283,7 @@ const updateMintalysis = async (collectible, prisma) => {
                                 'percentage_change': {
                                     '$cond': {
                                         'if': { '$eq': ['$previous', 0] },
-                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'then': null, // or null, or whatever you want
                                         'else': {
                                             '$multiply': [
                                                 {
@@ -347,7 +347,7 @@ const updateMintalysis = async (collectible, prisma) => {
                                 'percentage_change': {
                                     '$cond': {
                                         'if': { '$eq': ['$previous', 0] },
-                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'then': null, // or null, or whatever you want
                                         'else': {
                                             '$multiply': [
                                                 {
@@ -411,7 +411,7 @@ const updateMintalysis = async (collectible, prisma) => {
                                 'percentage_change': {
                                     '$cond': {
                                         'if': { '$eq': ['$previous', 0] },
-                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'then': null, // or null, or whatever you want
                                         'else': {
                                             '$multiply': [
                                                 {
@@ -475,7 +475,7 @@ const updateMintalysis = async (collectible, prisma) => {
                                 'percentage_change': {
                                     '$cond': {
                                         'if': { '$eq': ['$previous', 0] },
-                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'then': null, // or null, or whatever you want
                                         'else': {
                                             '$multiply': [
                                                 {
@@ -539,7 +539,7 @@ const updateMintalysis = async (collectible, prisma) => {
                                 'percentage_change': {
                                     '$cond': {
                                         'if': { '$eq': ['$previous', 0] },
-                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'then': null, // or null, or whatever you want
                                         'else': {
                                             '$multiply': [
                                                 {
@@ -587,7 +587,7 @@ const updateMintalysis = async (collectible, prisma) => {
                                 'percentage_change': {
                                     '$cond': {
                                         'if': { '$eq': ['$previous', 0] },
-                                        'then': 'Divisor is zero', // or null, or whatever you want
+                                        'then': null, // or null, or whatever you want
                                         'else': {
                                             '$multiply': [
                                                 {
@@ -655,7 +655,7 @@ const updateMintalysis = async (collectible, prisma) => {
                         one_year_change,
                         six_mo_change,
                         three_mo_change,
-                        all_time_change,
+                        all_time_change: typeof all_time_change === 'number' ? all_time_change : null,
                         all_time_high,
                         all_time_low,
                         market_cap,
@@ -671,7 +671,7 @@ const updateMintalysis = async (collectible, prisma) => {
                         one_year_change,
                         six_mo_change,
                         three_mo_change,
-                        all_time_change,
+                        all_time_change: typeof all_time_change === 'number' ? all_time_change : null,
                         all_time_high,
                         all_time_low,
                         market_cap,
@@ -715,7 +715,7 @@ export const VEVE_GET_COLLECTIBLE_FLOORS = async (prisma) => {
                 const edges = collectible_floors.data.collectibleTypeList.edges
                 await edges.map(async (collectible, index) => {
                     try {
-                        // await updateTimeSeries(collectible.node)
+                        await updateTimeSeries(collectible.node)
                         await updateMintalysis(collectible.node, prisma)
                         // await updateLegacyShit(collectible.node)
                     } catch (e) {
