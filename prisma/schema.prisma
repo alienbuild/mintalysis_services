@@ -1932,14 +1932,14 @@ model mints {
 }
 
 model temp_wallet_token_ownership {
-  id       Int      @id @default(autoincrement())
-  walletId String
-  tokenId  Int
-  date     DateTime
-  isComic  Boolean
+  id        Int      @id @default(autoincrement())
+  wallet_id String
+  token_id  Int
+  date      DateTime
+  isComic   Boolean
 
-  @@index([walletId, date])
-  @@index([tokenId, date])
+  @@index([wallet_id, date])
+  @@index([token_id, date])
 }
 
 // schemas/user.prisma
