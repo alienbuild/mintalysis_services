@@ -1936,6 +1936,7 @@ model temp_wallet_token_ownership {
   wallet_id       String
   token_id        Int
   date            DateTime
+  owned           Boolean
   collectible_id  String?
   unique_cover_id String?
 
