@@ -2,6 +2,7 @@ import moment from 'moment'
 import { PrismaClient } from "@prisma/client"
 import fs from 'fs'
 const progressFilePath = './progress.json';
+const progressFilePathTempTable = './populateTempProgress.json';
 
 import CollectiblePrice from "../../models/CollectiblePrices.js"
 import ComicPrice from "../../models/CollectiblePrices.js"
@@ -12,6 +13,19 @@ const batchSize = 1000;
 
 let lastCollectibleData = { valuation: 0, count: 0 };
 let lastComicData = { valuation: 0, count: 0 };
+
+function readLastOffset() {
+    if (fs.existsSync(progressFilePathTempTable)) {
+        const progressData = JSON.parse(fs.readFileSync(progressFilePathTempTable, 'utf8'));
+        return progressData.offset || 0;
+    }
+    return 0;
+}
+
+function saveOffset(offset) {
+    const progressData = { offset };
+    fs.writeFileSync(progressFilePathTempTable, JSON.stringify(progressData), 'utf8');
+}
 
 function readLastProgress() {
     if (fs.existsSync(progressFilePath)) {
@@ -31,9 +45,8 @@ function saveProgress(walletId, day) {
 async function populateTempTable() {
     console.log("Starting to populate the temp_wallet_token_ownership table...");
 
-    const chunkSize = 10000
-
-    let offset = 0;
+    const chunkSize = 50000
+    let offset = readLastOffset();
     let continueProcessing = true;
 
     while (continueProcessing) {
@@ -45,9 +58,9 @@ async function populateTempTable() {
             continueProcessing = false;
             break;
         }
-        for (const tokenId of distinctTokenIds) {
-            console.log(`Processing token: ${tokenId.token_id}`);
 
+        const processingPromises = distinctTokenIds.map(async (tokenId) => {
+            console.log(`Processing token: ${tokenId.token_id}`);
             const events = await prisma.$queryRaw`
             SELECT wallet_id, timestamp_dt FROM veve_mints WHERE token_id = ${tokenId.token_id}
             UNION
@@ -68,9 +81,7 @@ async function populateTempTable() {
                                 wallet_id: previousWalletId,
                                 token_id: tokenId.token_id,
                                 date: new Date(date),
-                                owned: true,
-                                collectible_id: event.collectible_id,
-                                unique_cover_id: event.unique_cover_id,
+                                owned: true
                             }
                         });
                     }
@@ -92,8 +103,12 @@ async function populateTempTable() {
                     }
                 });
             }
-        }
+
+        })
+
+        await Promise.all(processingPromises);
         offset += chunkSize;
+        saveOffset(offset)
     }
     console.log("Finished populating the temp_wallet_token_ownership table.");
 }
