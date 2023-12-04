@@ -858,6 +858,8 @@ model veve_wallets {
   veve_wallets_valuations veve_wallets_valuations[]
   veve_top_wallet_metrics veve_top_wallet_metrics?
 
+  @@index([last_activity_date])
+  @@index([first_activity_date])
   @@index([tagsId], map: "veve_wallets_tagsId_fkey")
   @@index([id, user_id, veve_username])
 }
@@ -874,6 +876,8 @@ model veve_wallets_valuations {
   total_collectibles     Int?
   total_comics           Int?
   type                   WalletValuationType @default(TOTAL)
+
+  @@unique([wallet_id, timestamp])
 }
 
 model veve_tokens {
@@ -1927,6 +1931,19 @@ model mints {
   token_id  BigInt?
 
   @@ignore
+}
+
+model temp_wallet_token_ownership {
+  id              Int      @id @default(autoincrement())
+  wallet_id       String
+  token_id        Int
+  date            DateTime
+  owned           Boolean
+  collectible_id  String?
+  unique_cover_id String?
+
+  @@index([wallet_id, date])
+  @@index([token_id, date])
 }
 
 // schemas/user.prisma

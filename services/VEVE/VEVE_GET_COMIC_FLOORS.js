@@ -14,9 +14,9 @@ const updateTimeSeries = (comic) => {
                 .lean()
                 .sort({ date: -1 })
                 .limit(5)
-                .exec((history, err) => {
+                .exec((err, history) => {
                     if (err) {
-                        console.error('Unable to get timeseries data:');
+                        console.error('Unable to get timeseries data:', err);
                         return reject(err); // Properly reject the promise on error
                     }
 
