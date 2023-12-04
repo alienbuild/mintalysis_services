@@ -874,6 +874,8 @@ model veve_wallets_valuations {
   total_collectibles     Int?
   total_comics           Int?
   type                   WalletValuationType @default(TOTAL)
+
+  @@unique([wallet_id, timestamp])
 }
 
 model veve_tokens {
