@@ -1931,6 +1931,17 @@ model mints {
   @@ignore
 }
 
+model temp_wallet_token_ownership {
+  id       Int      @id @default(autoincrement())
+  walletId String
+  tokenId  Int
+  date     DateTime
+  isComic  Boolean
+
+  @@index([walletId, date])
+  @@index([tokenId, date])
+}
+
 // schemas/user.prisma
 // User and Role Management
 
