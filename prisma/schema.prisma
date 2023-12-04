@@ -858,6 +858,8 @@ model veve_wallets {
   veve_wallets_valuations veve_wallets_valuations[]
   veve_top_wallet_metrics veve_top_wallet_metrics?
 
+  @@index([last_activity_date])
+  @@index([first_activity_date])
   @@index([tagsId], map: "veve_wallets_tagsId_fkey")
   @@index([id, user_id, veve_username])
 }
