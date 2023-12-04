@@ -1110,7 +1110,7 @@ model veve_collectibles {
   metrics                              veve_collectibles_metrics?
   translations                         veve_collectibles_translations[]
   veve_watchlist                       veve_watchlist[]
-  //  veve_tokens                          veve_tokens[]                    @relation("veve_collectiblesToveve_tokens")
+  //veve_tokens                          veve_tokens[]                    @relation("veve_collectiblesToveve_tokens")
   veveTokenCollectibles                veveTokenCollectible[]
   veve_profile                         veve_profile[]
 
@@ -1124,6 +1124,7 @@ model veve_collectibles_translations {
   collectible_id String
   name           String?
   description    String?           @db.Text
+  ai_description String?           @db.Text
   language       Language
   edition_type   String?
   rarity         String?
@@ -1354,7 +1355,7 @@ model veve_mcp_daily_pts {
 
 model veve_mcp_staging {
   id                 Int       @id @default(autoincrement())
-  wallet_id          String
+  wallet_id          String?
   transaction_id     Int?
   token_id           Int?
   from_wallet        String?
