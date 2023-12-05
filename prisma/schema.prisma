@@ -1121,14 +1121,19 @@ model veve_collectibles {
 }
 
 model veve_collectibles_translations {
-  collectible_id String
-  name           String?
-  description    String?           @db.Text
-  ai_description String?           @db.Text
-  language       Language
-  edition_type   String?
-  rarity         String?
-  collectible    veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+  collectible_id  String
+  name            String?
+  description     String?           @db.Text
+  ai_description  String?           @db.Text
+  seo_description String?           @db.Text
+  seo_keywords    String?
+  seo_title       String?
+  og_title        String?
+  og_description  String?
+  language        Language
+  edition_type    String?
+  rarity          String?
+  collectible     veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
 
   @@id([language, collectible_id])
   @@index([language])
