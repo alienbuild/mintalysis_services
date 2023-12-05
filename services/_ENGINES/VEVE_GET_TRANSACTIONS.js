@@ -48,6 +48,17 @@ const triggerMintsUpdate = async () => {
 	console.log(responseData);
 };
 
+const triggerMintsUpdate = async () => {
+    const response = await fetch("http://localhost:8001/graphql", { // TODO: Put gql url into env and switch between dev/prod
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: `mutation { triggerImxMint }` }),
+    });
+
+    const responseData = await response.json();
+    console.log(responseData);
+};
+
 export const GET_VEVE_TRANSACTIONS = async () => {
 	const last_mint_timestamp = await prisma.veve_mints.findFirst({
 		select: { timestamp: true },
@@ -274,7 +285,7 @@ const processTransactions = (allTransactions) => {
 		}
 	});
 
-	return [imxMintsArr, imxTransArr, imxWalletsArr, imxTokensArr];
+	return [imxMintsArr, imxTransArr, imxWalletsArr, imxTokensArr];ml
 };
 
 const performUpserts = async (

@@ -3,8 +3,6 @@ import { customAlphabet } from 'nanoid/non-secure'
 import slugify from 'slugify'
 import * as Queries from "../../queries/getVevelatestComicsQuery.js";
 
-let count = 0
-
 export const VEVE_GET_LATEST_COMICS = async (prisma) => {
     console.log('GETTING LATEST COMICS')
     console.log(`[ALICE][VEVE] - [GET ALL COMICS]`)
@@ -149,12 +147,8 @@ export const VEVE_GET_LATEST_COMICS = async (prisma) => {
                     })
                 } catch (e) {
                     console.log(`[FAIL][VEVE][COMIC]: ${comic.node.comicType.name} was not added to prisma db.`, e)
-                } finally {
-                    console.log('[SUCCESS] VEVE LATEST COMICS UPDATED. count: ', count++)
                 }
-
             })
-
         })
         .catch(err => console.log('[ERROR][VEVE] Unable to get latest comics. ', err))
 

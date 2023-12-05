@@ -745,6 +745,13 @@ model veve_imx_status {
   updatedAt      DateTime? @updatedAt
 }
 
+model newsletter_subscribers {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  ip_address String?
+  createdAt  DateTime @default(now())
+}
+
 // schemas/notifications.prisma
 // Notifications and Alerts
 
@@ -851,6 +858,8 @@ model veve_wallets {
   veve_wallets_valuations veve_wallets_valuations[]
   veve_top_wallet_metrics veve_top_wallet_metrics?
 
+  @@index([last_activity_date])
+  @@index([first_activity_date])
   @@index([tagsId], map: "veve_wallets_tagsId_fkey")
   @@index([id, user_id, veve_username])
 }
@@ -867,6 +876,8 @@ model veve_wallets_valuations {
   total_collectibles     Int?
   total_comics           Int?
   type                   WalletValuationType @default(TOTAL)
+
+  @@unique([wallet_id, timestamp])
 }
 
 model veve_tokens {
@@ -898,7 +909,6 @@ model veve_tokens {
   veve_wallets          veve_wallets?          @relation(fields: [wallet_id], references: [id], map: "veve_tokens_ibfk_1")
   veve_licensors        veve_licensors?        @relation(fields: [licensor_id], references: [licensor_id])
   veve_series           veve_series?           @relation(fields: [series_id], references: [series_id])
-  //  veve_collectibles  veve_collectibles[] @relation("veve_collectiblesToveve_tokens")
   veveTokenCollectibles veveTokenCollectible[]
   veveTokenComics       veveTokenComic[]
 
@@ -944,13 +954,8 @@ model veve_transfers {
   break_even_new  Float?
   entry_price_new Float?
   timestamp_dt    DateTime? @db.DateTime(6)
-  is_transfer     Boolean?  @default(false)
-  is_burn         Boolean?  @default(false)
-  is_craft        Boolean?  @default(false)
-  is_auction      Boolean?  @default(false)
-  is_redemption   Boolean?  @default(false)
-  is_mkt_auction  Boolean?  @default(false)
-  is_mkt_fixed    Boolean?  @default(false)
+  txn_type        String?
+  is_burned       Boolean?  @default(false)
 
   @@index([createdAt])
   @@index([timestamp_dt])
@@ -967,9 +972,11 @@ model veve_mints {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime?
   timestamp_dt  DateTime? @db.DateTime(6)
-  is_burn       Boolean?  @default(false)
+  is_burned     Boolean?  @default(false)
   is_redemption Boolean?  @default(false)
 
+  @@index([createdAt])
+  @@index([timestamp_dt])
   @@index([wallet_id, token_id])
   @@index([token_id])
   @@index([wallet_id])
@@ -1103,7 +1110,7 @@ model veve_collectibles {
   metrics                              veve_collectibles_metrics?
   translations                         veve_collectibles_translations[]
   veve_watchlist                       veve_watchlist[]
-  //  veve_tokens                          veve_tokens[]                    @relation("veve_collectiblesToveve_tokens")
+  //veve_tokens                          veve_tokens[]                    @relation("veve_collectiblesToveve_tokens")
   veveTokenCollectibles                veveTokenCollectible[]
   veve_profile                         veve_profile[]
 
@@ -1117,6 +1124,7 @@ model veve_collectibles_translations {
   collectible_id String
   name           String?
   description    String?           @db.Text
+  ai_description String?           @db.Text
   language       Language
   edition_type   String?
   rarity         String?
@@ -1244,7 +1252,7 @@ model veve_top_wallet_metrics {
   id            Int          @id @default(autoincrement())
   datetime      DateTime?    @db.DateTime(0)
   rank          Int?         @unique
-  prev_rank     Int?
+  prev_rank     Int?         @unique
   rank_change   Int?
   wallet_id     String       @unique
   tokens        Int?
@@ -1257,7 +1265,7 @@ model veve_top_wallet_metrics {
   sales         Int?
   net_accum     Int?
   created_at    DateTime     @default(now())
-  updated_at    DateTime?    @db.DateTime(0)
+  updated_at    DateTime?    @updatedAt
   wallet        veve_wallets @relation(fields: [wallet_id], references: [id])
 
   @@index([wallet_id], map: "veve_top_wallet_metrics_wallet_id_fkey")
@@ -1341,12 +1349,13 @@ model veve_mcp_daily_pts {
   wallet_id     String   @unique
   mcp_daily_pts Json?
   mcp_total_pts Decimal? @default(0)
-  updatedAt     DateTime @updatedAt()
+  updatedAt     DateTime @updatedAt
   created_at    DateTime @default(now())
 }
 
 model veve_mcp_staging {
   id                 Int       @id @default(autoincrement())
+  wallet_id          String?
   transaction_id     Int?
   token_id           Int?
   from_wallet        String?
@@ -1381,7 +1390,7 @@ model veve_mcp_completed_sets {
   completed_count Int
   date_set_broken DateTime?
   completed_set   Boolean
-  updatedAt       DateTime  @updatedAt()
+  updatedAt       DateTime  @updatedAt
   created_at      DateTime  @default(now())
 }
 
@@ -1391,21 +1400,86 @@ model veve_mcp_staging_sets {
   series_id      String
   collectible_id String
   count          Int
-  updatedAt      DateTime @updatedAt()
+  updatedAt      DateTime @updatedAt
   created_at     DateTime @default(now())
 }
 
 model veve_mcp_staging_csv_import {
-  id              Int      @id @default(autoincrement())
-  txn_date        DateTime
-  txn_type        String
+  id              Int       @id @default(autoincrement())
+  wallet_id       String?
+  txn_date        DateTime?
+  txn_type        String?
   item_name       String?
   edition         Int?
   buyer_username  String?
   seller_username String?
   gem_amount      Float?
-  updatedAt       DateTime @updatedAt()
-  created_at      DateTime @default(now())
+  updatedAt       DateTime  @updatedAt
+  created_at      DateTime  @default(now())
+}
+
+model veve_mcp_staging_csv_import_sets {
+  id                 Int       @id @default(autoincrement())
+  wallet_id          String
+  series_id          String
+  series_name        String?
+  nbr_of_items       Int?
+  daily_mcp_pts      Float?
+  date_set_completed DateTime
+  date_set_broken    DateTime?
+  updatedAt          DateTime  @updatedAt
+  created_at         DateTime  @default(now())
+}
+
+model veve_mcp_output {
+  id                 Int      @id @default(autoincrement())
+  mcp_date           DateTime
+  wallet_id          String
+  mint_count         Int?
+  mint_points        Int?
+  mkt_purchase_count Int?
+  mkt_purchase_pts   Int?
+  col_count          Int?
+  col_pts            Int?
+  col_rarity_bonus   Float?
+  col_low_ed_bonus   Float?
+  col_dup_bonus      Float?
+  col_set_count      Int?
+  col_set_bonus      Int?
+  col_dup_set_bonus  Int?
+  comic_count        Int?
+  comic_pts          Float?
+  comic_rarity_bonus Float?
+  comic_low_ed_bonus Float?
+  comic_dup_bonus    Float?
+  omi_balance        Float?
+  omi_mcp_pts        Float?
+  total_col_pts      Float?
+  total_comic_pts    Float?
+  total_daily_pts    Float?   @default(0)
+  total__mcp_pts     Float?   @default(0)
+  mcp_level          String?
+  mcp_rank           String?
+  updatedAt          DateTime @updatedAt
+  created_at         DateTime @default(now())
+}
+
+model veve_mcp_rank {
+  id         Int      @id @default(autoincrement())
+  rank       String
+  min_points Int
+  max_points Int
+  updatedAt  DateTime @updatedAt
+  created_at DateTime @default(now())
+}
+
+model veve_mcp_level {
+  id         Int      @id @default(autoincrement())
+  level      String
+  min_points Int
+  max_points Int
+  updatedAt  DateTime @updatedAt
+  created_at DateTime @default(now())
 }
 
 // schemas/projects/veve/profile.prisma
@@ -1861,6 +1935,19 @@ model mints {
   token_id  BigInt?
 
   @@ignore
+}
+
+model temp_wallet_token_ownership {
+  id              Int      @id @default(autoincrement())
+  wallet_id       String
+  token_id        Int
+  date            DateTime
+  owned           Boolean
+  collectible_id  String?
+  unique_cover_id String?
+
+  @@index([wallet_id, date])
+  @@index([token_id, date])
 }
 
 // schemas/user.prisma
