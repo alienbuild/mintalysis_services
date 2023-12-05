@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { PrismaClient } from "@prisma/client"
+import { Prisma, PrismaClient } from "@prisma/client"
 import fs from 'fs'
 const progressFilePath = './progress.json';
 const progressFilePathTempTable = './populateTempProgress.json';
@@ -9,7 +9,7 @@ import ComicPrice from "../../models/CollectiblePrices.js"
 
 const prisma = new PrismaClient();
 
-const batchSize = 1000;
+const batchSize = 5000;
 
 let lastCollectibleData = { valuation: 0, count: 0 };
 let lastComicData = { valuation: 0, count: 0 };
@@ -42,17 +42,54 @@ function saveProgress(walletId, day) {
     fs.writeFileSync(progressFilePath, JSON.stringify(progressData), 'utf8');
 }
 
-async function populateTempTable() {
-    console.log("Starting to populate the temp_wallet_token_ownership table...");
 
-    const chunkSize = 50000
+const excludedWalletIds = ['0x7be178ba43a9828c22997a3ec3640497d88d2fd3'];
+
+const machineNumber = parseInt(process.argv[2]) || 1;
+const totalMachines = parseInt(process.argv[3]) || 100;
+
+async function POPULATE_TABLE(machineNumber, totalMachines) {
+    console.log(`[MACHINE ${machineNumber} OF ${totalMachines} READY]`)
+    console.log("Starting to populate the temp_wallet_token_ownership table...");
+    const chunkSize = 1000
     let offset = readLastOffset();
+
+    async function getTotalTokens() {
+        const result = await prisma.$queryRaw`SELECT COUNT(DISTINCT token_id) AS total FROM (
+        SELECT token_id FROM veve_mints
+        UNION
+        SELECT token_id FROM veve_transfers
+    ) AS combined`;
+        return result[0].total;
+    }
+
+    // const totalTokens = await getTotalTokens();
+    const totalTokens = 9051281;
+    const tokensPerMachine = Math.ceil(totalTokens / totalMachines);
+    const startToken = (machineNumber - 1) * tokensPerMachine;
+    const endToken = startToken + tokensPerMachine;
+
     let continueProcessing = true;
+    const twentyFiveMonthsAgo = moment().subtract(25, 'months').toDate();
 
     while (continueProcessing) {
+
         const distinctTokenIds = await prisma.$queryRaw`
-            SELECT DISTINCT token_id FROM veve_mints UNION SELECT DISTINCT token_id FROM veve_transfers
-            LIMIT ${chunkSize} OFFSET ${offset}`;
+            SELECT DISTINCT token_id FROM veve_mints
+            WHERE token_id BETWEEN ${startToken} AND ${endToken}
+              AND wallet_id NOT IN (${Prisma.join(excludedWalletIds)})
+              AND wallet_id IN (
+                SELECT id FROM veve_wallets WHERE last_activity_date >= ${twentyFiveMonthsAgo}
+            )
+            UNION
+            SELECT DISTINCT token_id FROM veve_transfers
+            WHERE token_id BETWEEN ${startToken} AND ${endToken}
+              AND (from_wallet NOT IN (${Prisma.join(excludedWalletIds)}) OR to_wallet NOT IN (${Prisma.join(excludedWalletIds)}))
+              AND (from_wallet IN (
+                SELECT id FROM veve_wallets WHERE last_activity_date >= ${twentyFiveMonthsAgo}
+            ) OR to_wallet IN (
+                SELECT id FROM veve_wallets WHERE last_activity_date >= ${twentyFiveMonthsAgo}
+            ))`;
 
         if (distinctTokenIds.length === 0) {
             continueProcessing = false;
@@ -115,139 +152,131 @@ async function populateTempTable() {
 
 export const VEVE_WALLET_VALUATIONS = async () => {
 
-    console.log('Populating temporary table...');
-    await populateTempTable();
-    console.log('Temporary table populated.');
+    // const { totalWallets, totalBatches } = await countWalletsAndBatches();
+    // console.log(`Total wallets to process: ${totalWallets}, in ${totalBatches} batches.`);
 
-    const twentyFourMonthsAgo = moment().subtract(24, 'months').startOf('day');
+    await POPULATE_TABLE();
 
-    let lastProcessedWalletIndex = 0;
-    let lastProcessedDay;
-
-    let startFromDate = twentyFourMonthsAgo;
-    const lastProgress = readLastProgress();
-
-    if (lastProgress) {
-        const lastProcessedWallet = await prisma.veve_wallets.findUnique({
-            where: { id: lastProgress.walletId }
-        });
-
-        if (lastProcessedWallet) {
-            const allWalletsUpToLastProgress = await prisma.veve_wallets.findMany({
-                where: {
-                    first_activity_date: {
-                        lte: lastProcessedWallet.first_activity_date
-                    }
-                },
-                orderBy: {
-                    first_activity_date: 'asc'
-                }
-            });
-            lastProcessedWalletIndex = allWalletsUpToLastProgress.length - 1;
-        }
-    }
-
-    while (true) {
-        const walletsBatch = await prisma.veve_wallets.findMany({
-            skip: lastProcessedWalletIndex,
-            take: batchSize
-        });
-        console.log(`Found ${walletsBatch.length} wallets to process.`);
-
-        if (walletsBatch.length === 0) break;
-
-        for (const wallet of walletsBatch) {
-            console.log(`Starting wallet valuation for ${wallet.id}`);
-
-            lastCollectibleData = { valuation: 0, count: 0 };
-            lastComicData = { valuation: 0, count: 0 };
-
-            // const tokens = await prisma.veve_tokens.findMany({
-            //     where: { wallet_id: wallet.id },
-            //     select: {
-            //         collectible_id: true,
-            //         unique_cover_id: true,
-            //     }
-            // });
-
-            for (let day = moment(startFromDate); day.isBefore(moment()); day.add(1, 'days')) {
-
-                let totalValuation = 0;
-                let totalCollectiblesCount = 0;
-                let totalComicsCount = 0;
-                let collectiblesValuation = 0;
-                let comicsValuation = 0;
-
-                const ownedTokens = await prisma.temp_wallet_token_ownership.findMany({
-                    where: {
-                        wallet_id: wallet.id,
-                        date: day.toDate(),
-                        owned: true
-                    },
-                    include: {
-                        veve_token: {
-                            select: {
-                                collectible_id: true,
-                                unique_cover_id: true
-                            }
-                        }
-                    }
-                });
-
-                for (const tokenOwnership of ownedTokens) {
-                    const token = tokenOwnership.veve_token;
-                    if (token.collectible_id) {
-                        const valuation = await calculateCollectibleValuation(token.collectible_id, day);
-                        totalValuation += valuation;
-                        collectiblesValuation += valuation;
-                    } else if (token.unique_cover_id) {
-                        const valuation = await calculateComicValuation(token.unique_cover_id, day);
-                        totalValuation += valuation;
-                        comicsValuation += valuation;
-                    }
-                }
-
-                console.log(`Calculating valuations for wallet ${wallet.id} on ${day.format('YYYY-MM-DD')}...`);
-
-                await prisma.veve_wallets_valuations.upsert({
-                    where: {
-                        wallet_id_timestamp: {
-                            wallet_id: wallet.id,
-                            timestamp: day.toDate()
-                        }
-                    },
-                    update: {
-                        total_valuation: totalValuation,
-                        collectibles_valuation: collectiblesValuation,
-                        comics_valuation: comicsValuation,
-                        total_collectibles: totalCollectiblesCount,
-                        total_comics: totalComicsCount,
-                        total_count: totalCollectiblesCount + totalComicsCount
-                    },
-                    create: {
-                        wallet_id: wallet.id,
-                        timestamp: day.toDate(),
-                        total_valuation: totalValuation,
-                        total_collectibles: totalCollectiblesCount,
-                        total_comics: totalComicsCount,
-                        collectibles_valuation: collectiblesValuation,
-                        comics_valuation: comicsValuation,
-                        total_count: totalCollectiblesCount + totalComicsCount
-                    },
-                });
-
-                saveProgress(wallet.id, day)
-                console.log(`Completed calculations for wallet ${wallet.id} on ${day.format('YYYY-MM-DD')}. Total ${totalValuation}. Collectibles ${collectiblesValuation}. Comics: ${comicsValuation}`);
-
-            }
-            saveProgress(wallet.id);
-        }
-
-        lastProcessedWalletIndex += walletsBatch.length;
-
-    }
-
-    console.log('All wallet valuations calculations are complete.');
+    // const twentyFourMonthsAgo = moment().subtract(24, 'months').startOf('day');
+    //
+    // let lastProcessedWalletIndex = 0;
+    //
+    // let startFromDate = twentyFourMonthsAgo;
+    // const lastProgress = readLastProgress();
+    //
+    // if (lastProgress) {
+    //     const lastProcessedWallet = await prisma.veve_wallets.findUnique({
+    //         where: { id: lastProgress.walletId }
+    //     });
+    //
+    //     if (lastProcessedWallet) {
+    //         const allWalletsUpToLastProgress = await prisma.veve_wallets.findMany({
+    //             where: {
+    //                 first_activity_date: {
+    //                     lte: lastProcessedWallet.first_activity_date
+    //                 }
+    //             },
+    //             orderBy: {
+    //                 first_activity_date: 'asc'
+    //             }
+    //         });
+    //         lastProcessedWalletIndex = allWalletsUpToLastProgress.length - 1;
+    //     }
+    // }
+    //
+    // while (true) {
+    //     const walletsBatch = await prisma.veve_wallets.findMany({
+    //         skip: lastProcessedWalletIndex,
+    //         take: batchSize
+    //     });
+    //     console.log(`Found ${walletsBatch.length} wallets to process.`);
+    //
+    //     if (walletsBatch.length === 0) break;
+    //
+    //     for (const wallet of walletsBatch) {
+    //         console.log(`Starting wallet valuation for ${wallet.id}`);
+    //
+    //         lastCollectibleData = { valuation: 0, count: 0 };
+    //         lastComicData = { valuation: 0, count: 0 };
+    //
+    //         for (let day = moment(startFromDate); day.isBefore(moment()); day.add(1, 'days')) {
+    //
+    //             let totalValuation = 0;
+    //             let totalCollectiblesCount = 0;
+    //             let totalComicsCount = 0;
+    //             let collectiblesValuation = 0;
+    //             let comicsValuation = 0;
+    //
+    //             const ownedTokens = await prisma.temp_wallet_token_ownership.findMany({
+    //                 where: {
+    //                     wallet_id: wallet.id,
+    //                     date: day.toDate(),
+    //                     owned: true
+    //                 },
+    //                 include: {
+    //                     veve_token: {
+    //                         select: {
+    //                             collectible_id: true,
+    //                             unique_cover_id: true
+    //                         }
+    //                     }
+    //                 }
+    //             });
+    //
+    //             for (const tokenOwnership of ownedTokens) {
+    //                 const token = tokenOwnership.veve_token;
+    //                 if (token.collectible_id) {
+    //                     const valuation = await calculateCollectibleValuation(token.collectible_id, day);
+    //                     totalValuation += valuation;
+    //                     collectiblesValuation += valuation;
+    //                 } else if (token.unique_cover_id) {
+    //                     const valuation = await calculateComicValuation(token.unique_cover_id, day);
+    //                     totalValuation += valuation;
+    //                     comicsValuation += valuation;
+    //                 }
+    //             }
+    //
+    //             console.log(`Calculating valuations for wallet ${wallet.id} on ${day.format('YYYY-MM-DD')}...`);
+    //
+    //             await prisma.veve_wallets_valuations.upsert({
+    //                 where: {
+    //                     wallet_id_timestamp: {
+    //                         wallet_id: wallet.id,
+    //                         timestamp: day.toDate()
+    //                     }
+    //                 },
+    //                 update: {
+    //                     total_valuation: totalValuation,
+    //                     collectibles_valuation: collectiblesValuation,
+    //                     comics_valuation: comicsValuation,
+    //                     total_collectibles: totalCollectiblesCount,
+    //                     total_comics: totalComicsCount,
+    //                     total_count: totalCollectiblesCount + totalComicsCount
+    //                 },
+    //                 create: {
+    //                     wallet_id: wallet.id,
+    //                     timestamp: day.toDate(),
+    //                     total_valuation: totalValuation,
+    //                     total_collectibles: totalCollectiblesCount,
+    //                     total_comics: totalComicsCount,
+    //                     collectibles_valuation: collectiblesValuation,
+    //                     comics_valuation: comicsValuation,
+    //                     total_count: totalCollectiblesCount + totalComicsCount
+    //                 },
+    //             });
+    //
+    //             saveProgress(wallet.id, day)
+    //             console.log(`Completed calculations for wallet ${wallet.id} on ${day.format('YYYY-MM-DD')}. Total ${totalValuation}. Collectibles ${collectiblesValuation}. Comics: ${comicsValuation}`);
+    //
+    //         }
+    //         saveProgress(wallet.id);
+    //     }
+    //
+    //     lastProcessedWalletIndex += walletsBatch.length;
+    //
+    // }
+    //
+    // console.log('All wallet valuations calculations are complete.');
 }
 
 async function calculateCollectibleValuation(walletId, day) {
@@ -285,6 +314,10 @@ async function calculateComicValuation(walletId, day) {
 
 }
 
-VEVE_WALLET_VALUATIONS()
-    .then(() => console.log('Valuation calculation complete.'))
-    .catch(err => console.error('Error calculating valuations:', err));
+POPULATE_TABLE(machineNumber, totalMachines)
+    .then(() => console.log('Temporary table populated.'))
+    .catch(err => console.error('Something went wrong:', err));
+
+// VEVE_WALLET_VALUATIONS()
+//     .then(() => console.log('Valuation calculation complete.'))
+//     .catch(err => console.error('Error calculating valuations:', err));
