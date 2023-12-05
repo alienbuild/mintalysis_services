@@ -42,8 +42,7 @@ function saveProgress(walletId, day) {
     fs.writeFileSync(progressFilePath, JSON.stringify(progressData), 'utf8');
 }
 
-
-const excludedWalletIds = ['0x7be178ba43a9828c22997a3ec3640497d88d2fd3'];
+const excludedWalletIds = ['0x7be178ba43a9828c22997a3ec3640497d88d2fd3', '0x39e3816a8c549ec22cd1a34a8cf7034b3941d8b1', '0x1400d3c5918187e0f1ac663c17c48acf0c6b12fc'];
 
 const machineNumber = parseInt(process.argv[2]) || 1;
 const totalMachines = parseInt(process.argv[3]) || 100;
