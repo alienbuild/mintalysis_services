@@ -2,9 +2,9 @@ import fetch from 'node-fetch'
 import { customAlphabet } from 'nanoid/non-secure'
 import slugify from 'slugify'
 import * as Queries from "../../queries/getVevelatestCollectiblesQuery.js";
+import {prisma, slack} from "../../index.js";
 
-export const VEVE_GET_LATEST_COLLECTIBLES = async (prisma) => {
-    console.log(`[ALICE][VEVE] - [GET LATEST COLLECTIBLES]`)
+export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
 
     await fetch(`https://web.api.prod.veve.me/graphql`, {
         method: 'POST',
@@ -27,13 +27,15 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async (prisma) => {
             const nanoid = customAlphabet('1234567890abcdef', 5)
 
             for (const collectible of collectibleTypeList) {
+
+                const currentTime = new Date();
+
                 const slug = slugify(`${collectible.node.name} ${collectible.node.rarity} ${collectible.node.editionType} ${nanoid()}`,{ lower: true, strict: true })
                 const mcp_base_value = 1
                 const mcp_rarity_value = collectible.node.rarity === 'COMMON' ? 0 : collectible.node.rarity === 'UNCOMMON' ? 0 : collectible.node.rarity === 'RARE' ? .25 : collectible.node.rarity === 'ULTRA_RARE' ? .5 : collectible.node.rarity === 'SECRET_RARE' ? 5.0 : NULL
                 const title_case_rarity = collectible.node.rarity === 'COMMON' ? 'Common' : collectible.node.rarity === 'UNCOMMON' ? 'Uncommon' : collectible.node.rarity === 'RARE' ? 'Rare' : collectible.node.rarity === 'ULTRA_RARE' ? 'Ultra Rare' : collectible.node.rarity === 'SECRET_RARE' ? 'Secret Rare' : NULL
 
                 try {
-                    // Check if licensor exists
                     const licensorExists = await prisma.veve_licensors.findUnique({
                         where: {
                             licensor_id: collectible.node.licensor?.id,
@@ -84,8 +86,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async (prisma) => {
                         });
                     }
 
-
-                    await prisma.veve_collectibles.upsert({
+                    const result = await prisma.veve_collectibles.upsert({
                         where: {
                             collectible_id: collectible.node.id,
                         },
@@ -169,18 +170,32 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async (prisma) => {
                             slug: slug
                         }
                     })
+
+                    const timeDifference = result.updatedAt.getTime() - currentTime.getTime();
+                    if (timeDifference < 1000) {
+                        console.log(`[COLLECTIBLE CREATED] - ${collectible.node.name}`);
+                        await sendSlackMessage(collectible.node.name)
+                    }
+
+                    console.log(`[COLLECTIBLE ADDED] - ${collectible.node.name}`)
                 } catch (e) {
-                    console.log(`[FAIL][VEVE]: ${collectible.node.name} was not added to prisma db.`, e)
-                } finally {
-                    console.log(`[SUCCESS] LATEST VEVE COLLECTIBLES UPDATED: ${collectible.node.name} - ${collectibleTypeList.length}`)
+                    console.log(`[VEVE] - [GET LATEST COLLECTIBLES]: ${collectible.node.name} was not added to prisma db.`, e)
                 }
 
             }
 
-            if (latest_collectibles.data.collectibleTypeList.pageInfo?.hasNextPage){
-                console.log('next page is: ', latest_collectibles.data.collectibleTypeList.pageInfo.endCursor)
-            }
+            // if (latest_collectibles.data.collectibleTypeList.pageInfo?.hasNextPage){
+            //     console.log('next page is: ', latest_collectibles.data.collectibleTypeList.pageInfo.endCursor)
+            // }
 
         })
-        .catch(err => console.log('[ERROR][VEVE] Unable to get latest collectibles. '))
+        .catch(err => console.log('[CRITICAL ERROR][VEVE] Unable to get latest collectibles. ', err))
+}
+
+const sendSlackMessage = async (collectible) => {
+    await slack.chat.postMessage({
+        token: process.env.SLACK_BOT_TOKEN,
+        channel: "veve",
+        text: `NEW VEVE COLLECTIBLE ADDED - ${collectible}`
+    })
 }

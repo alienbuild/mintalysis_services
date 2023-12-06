@@ -1,4 +1,6 @@
-export const VEVE_CALCULATE_SERIES_METRICS = async (prisma) => {
+import {prisma} from "../../index.js";
+
+export const VEVE_CALCULATE_SERIES_METRICS = async () => {
     try {
         const seriesX = await prisma.veve_series.findMany({
             include: {
@@ -103,7 +105,5 @@ export const VEVE_CALCULATE_SERIES_METRICS = async (prisma) => {
         }
     } catch (error) {
         console.error('Error calculating licensors metrics:', error);
-    } finally {
-        console.log('[SUCCESS] VEVE SERIES METRICS UPDATED')
     }
 }

@@ -1,10 +1,9 @@
 import fetch from 'node-fetch'
 import slugify from 'slugify'
 import * as Queries from "../../queries/getVeveLatestBrandsQuery.js";
+import {prisma} from "../../index.js";
 
-export const VEVE_GET_LATEST_BRANDS = async (prisma) => {
-    console.log(`[ALICE][VEVE] - [GET LATEST BRANDS]`)
-    let count = 0
+export const VEVE_GET_LATEST_BRANDS = async () => {
     await fetch(`https://web.api.prod.veve.me/graphql`, {
         method: 'POST',
         headers: {
@@ -25,7 +24,6 @@ export const VEVE_GET_LATEST_BRANDS = async (prisma) => {
             const brandList = latest_brands.data.brandList.edges
             brandList.map(async (brand) => {
                 try {
-                    console.log(`Brand name is ${brand.node.name}. id: ${brand.node.id}`)
                     await prisma.veve_brands.upsert({
                         where: {
                             brand_id: brand.node.id,
@@ -115,14 +113,11 @@ export const VEVE_GET_LATEST_BRANDS = async (prisma) => {
                         }
                     })
                 } catch (e) {
-                    console.log(`[FAIL][VEVE][BRAND]: ${brand.node.name} was not added to prisma db.`, latest_brands.data.brandList.pageInfo.endCursor)
-                } finally {
-                    count += 1
-                    console.log(`[SUCCESS] VEVE LATEST BRANDS UPDATED: ${brand.node.name} - ${count}/${brandList.length}`)
+                    console.log(`[ALICE][VEVE] - [GET LATEST BRANDS]: ${brand.node.name} was not added to prisma db.`, e)
                 }
             })
 
         })
-        .catch(err => console.log('[ERROR][VEVE][BRANDS] Unable to get latest brands. ', err))
+        .catch(err => console.log('[CRITICAL ERROR][VEVE][BRANDS] Unable to get latest brands. ', err))
 
 }
