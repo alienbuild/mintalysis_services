@@ -527,7 +527,6 @@ const updateMintalysis = async (comic) => {
         } catch (e) {
             console.log(`[ERROR] Unable to update mintalysis - Name: ${comic.comicType.name}. Id: ${comic.image.id}`)
         }
-        console.log('[SUCCESS][COLLECTIBLE]: Mintalysis updated.')
         resolve()
     })
 

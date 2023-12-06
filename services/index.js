@@ -26,6 +26,7 @@ import {VEVE_CALCULATE_SERIES_METRICS} from "./VEVE/VEVE_CALCULATE_SERIES_METRIC
 // }
 
 const scheduledHourlyJobs = async () => {
+
     schedule.scheduleJob('01 */30 * * * *', async () => {
         try {
 
