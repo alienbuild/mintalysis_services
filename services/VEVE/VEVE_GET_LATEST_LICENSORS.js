@@ -1,10 +1,9 @@
 import fetch from 'node-fetch'
 import slugify from 'slugify'
 import * as Queries from "../../queries/getVeveLatestLicensorsQuery.js";
+import {prisma} from "../../index.js";
 
-export const VEVE_GET_LATEST_LICENSORS = async (prisma) => {
-    console.log(`[ALICE][VEVE] - [GET LATEST LICENSORS]`)
-
+export const VEVE_GET_LATEST_LICENSORS = async () => {
     await fetch(`https://web.api.prod.veve.me/graphql`, {
         method: 'POST',
         headers: {
@@ -114,14 +113,12 @@ export const VEVE_GET_LATEST_LICENSORS = async (prisma) => {
                         }
                     })
                 } catch (e) {
-                    console.log(`[FAIL][VEVE][LICENSORS]: ${licensor.node.name} was not added to prisma db.`)
-                } finally {
-                    console.log(`[SUCCESS] VEVE LATEST LICENSORS UPDATED: ${licensor.node.name} - ${licensorList.length}`)
+                    console.log(`[VEVE] - [GET LATEST LICENSORS]: ${licensor.node.name} was not added to prisma db.`, e)
                 }
 
             })
 
         })
-        .catch(err => console.log('[ERROR][VEVE][LICENSORS] Unable to get latest licensors. ', err))
+        .catch(err => console.log('[CRITICAL ERROR][VEVE][LICENSORS] Unable to get latest licensors. ', err))
 
 }

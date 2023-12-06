@@ -5,6 +5,7 @@ import MarketPrice from "../../models/MarketPrice.js"
 import {VEVE_CALCULATE_SERIES_METRICS} from "./VEVE_CALCULATE_SERIES_METRICS.js";
 import {VEVE_CALCULATE_BRANDS_METRICS} from "./VEVE_CALCULATE_BRANDS_METRICS.js";
 import {VEVE_CALCULATE_LICENSORS_METRICS} from "./VEVE_CALCULATE_LICENSORS_METRICS.js";
+import {prisma} from "../../index.js";
 
 const getVeveCollectibleFloorsQuery = () => {
     return `query collectibleTypeList {
@@ -159,7 +160,7 @@ const updateTimeSeries = (collectible) => {
     })
 }
 
-const updateMintalysis = async (collectible, prisma) => {
+const updateMintalysis = async (collectible) => {
 
     try {
         let collectibleMetrics = await CollectiblePrice.aggregate([
@@ -686,12 +687,12 @@ const updateMintalysis = async (collectible, prisma) => {
             resolve()
         })
     } catch (e) {
-        console.log(`FFS: collectible id is ${collectible.id}` , e)
+        console.log(`[MINTALYSIS VEVE COLLECTIBLE UPDATE FAILED]:Could not update mintalysis is ${collectible.id}` , e)
     }
 
 }
 
-export const VEVE_GET_COLLECTIBLE_FLOORS = async (prisma) => {
+export const VEVE_GET_COLLECTIBLE_FLOORS = async () => {
 
     console.log(`[ALICE][VEVE] - [COLLECTIBLE FLOORS]`)
     await fetch(`https://web.api.prod.veve.me/graphql`, {
@@ -713,22 +714,13 @@ export const VEVE_GET_COLLECTIBLE_FLOORS = async (prisma) => {
 
             try {
                 const edges = collectible_floors.data.collectibleTypeList.edges
-                await edges.map(async (collectible, index) => {
-                    try {
-                        await updateTimeSeries(collectible.node)
-                        await updateMintalysis(collectible.node, prisma)
-                        // await updateLegacyShit(collectible.node)
-                    } catch (e) {
-                        console.log('[FAILED] : ', e)
-                    }
+                await edges.map(async (collectible) => {
+                    await updateTimeSeries(collectible.node)
+                    await updateMintalysis(collectible.node)
                 })
             } catch (e) {
-                console.log('[ERROR] Failed updating floors ', e)
-            } finally {
-                await VEVE_CALCULATE_BRANDS_METRICS(prisma)
-                await VEVE_CALCULATE_LICENSORS_METRICS(prisma)
-                await VEVE_CALCULATE_SERIES_METRICS(prisma)
+                console.log('[ERROR] Could not update colectible floors ', e)
             }
         })
-        .catch(err => console.log(`[ERROR][VEVE] Unable to get collectible floors`, err))
+        .catch(err => console.log(`[CRITICAL ERROR][VEVE] Unable to get collectible floors`, err))
 }

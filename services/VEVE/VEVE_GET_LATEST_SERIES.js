@@ -1,8 +1,9 @@
 import fetch from 'node-fetch'
 import slugify from 'slugify'
 import * as Queries from "../../queries/getVeveLatestSeriesQuery.js";
+import {prisma} from "../../index.js";
 
-export const VEVE_GET_LATEST_SERIES = async (prisma) => {
+export const VEVE_GET_LATEST_SERIES = async () => {
 
     await fetch(`https://web.api.prod.veve.me/graphql`, {
         method: 'POST',
@@ -20,9 +21,10 @@ export const VEVE_GET_LATEST_SERIES = async (prisma) => {
     })
         .then(latest_series => latest_series.json())
         .then(async latest_series => {
-
             const seriesList = latest_series.data.seriesList.edges
             seriesList.map(async (series) => {
+
+                const timestamp = Date.now();
 
                 try {
                     await prisma.veve_series.upsert({
@@ -71,7 +73,7 @@ export const VEVE_GET_LATEST_SERIES = async (prisma) => {
                             square_image_direction: series.node.squareImage?.direction,
                             licensor_id: series.node.licensor?.id,
                             brand_id: series.node.brand?.id,
-                            slug: slugify(`${series.node.name}` ,{ lower: true, strict: true })
+                            slug: slugify(`${series.node.name}-${timestamp}`,{ lower: true, strict: true })
                         },
                         create: {
                             series_id: series.node.id,
@@ -116,18 +118,14 @@ export const VEVE_GET_LATEST_SERIES = async (prisma) => {
                             square_image_direction: series.node.squareImage?.direction,
                             licensor_id: series.node.licensor?.id,
                             brand_id: series.node.brand?.id,
-                            slug: slugify(`${series.node.name}` ,{ lower: true, strict: true })
+                            slug: slugify(`${series.node.name}-${timestamp}`,{ lower: true, strict: true })
                         }
                     })
                 } catch (e) {
-                    console.log(`[FAIL][VEVE][SERIES]: ${series.node.name} was not added to prisma db.`)
-                } finally {
-                    console.log(`[SUCCESS] VEVE SERIES UPDATED: ${series.node.name}`)
+                    console.log(`[VEVE] - [GET LATEST SERIES]: ${series.node.name} was not added to prisma db.`, e)
                 }
-
             })
-
         })
-        .catch(err => console.log('[ERROR][VEVE][SERIES] Unable to get latest series. ', err))
+        .catch(err => console.log('[CRITICAL ERROR][VEVE][SERIES] Unable to get latest series. ', err))
 }
 
