@@ -1,4 +1,6 @@
-export const VEVE_CALCULATE_BRANDS_METRICS = async (prisma) => {
+import {prisma} from "../../index.js";
+
+export const VEVE_CALCULATE_BRANDS_METRICS = async () => {
     try {
         const brands = await prisma.veve_brands.findMany({
             include: {
@@ -103,7 +105,5 @@ export const VEVE_CALCULATE_BRANDS_METRICS = async (prisma) => {
         }
     } catch (error) {
         console.error('Error calculating brand metrics:', error);
-    } finally {
-        console.log('[SUCCESS] VEVE BRANDS METRICS UPDATED')
     }
 }

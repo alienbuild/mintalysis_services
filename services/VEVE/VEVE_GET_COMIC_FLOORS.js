@@ -1,6 +1,7 @@
 import fetch from 'node-fetch'
 import ComicPrice from "../../models/ComicPrices.js"
 import * as Queries from "../../queries/getVeveComicFloorsQuery.js";
+import {prisma} from "../../index.js";
 
 const updateTimeSeries = (comic) => {
     try {
@@ -17,7 +18,7 @@ const updateTimeSeries = (comic) => {
                 .exec((err, history) => {
                     if (err) {
                         console.error('Unable to get timeseries data:', err);
-                        return reject(err); // Properly reject the promise on error
+                        return reject(err);
                     }
 
                     if (!history) {
@@ -67,18 +68,17 @@ const updateTimeSeries = (comic) => {
 
                     ComicPrice.insertMany(newArr)
                         .then((success) => {
-                            console.log('[SUCCESS][COMIC]: Time series updated.')
                             resolve()
                         })
-                        .catch((error) => console.log(`[ERROR] Unable to insertMany on ${comic.image.id}`))
+                        .catch((error) => console.log(`[ERROR] Unable to update time series - insertMany on ${comic.image.id}`, error))
                 })
         })
     } catch (e) {
-        console.log('[ERROR] ' , e)
+        console.log('[CRITICAL TIMESERIES ERROR][COMICS]' , e)
     }
 }
 
-const updateMintalysis = async (comic, prisma) => {
+const updateMintalysis = async (comic) => {
     let comicMetrics = await ComicPrice.aggregate([
         {
             '$match': {
@@ -527,13 +527,12 @@ const updateMintalysis = async (comic, prisma) => {
         } catch (e) {
             console.log(`[ERROR] Unable to update mintalysis - Name: ${comic.comicType.name}. Id: ${comic.image.id}`)
         }
-        console.log('[SUCCESS][COLLECTIBLE]: Mintalysis updated.')
         resolve()
     })
 
 }
 
-export const VEVE_GET_COMIC_FLOORS = async (prisma) => {
+export const VEVE_GET_COMIC_FLOORS = async () => {
     console.log(`[ALICE][VEVE] - [COMIC FLOORS]`)
 
     await fetch(`https://web.api.prod.veve.me/graphql`, {
@@ -561,13 +560,11 @@ export const VEVE_GET_COMIC_FLOORS = async (prisma) => {
                 // if (index > 0) return
                 try {
                     await updateTimeSeries(comic.node)
-                    await updateMintalysis(comic.node, prisma)
+                    await updateMintalysis(comic.node)
                 } catch (e) {
-                    // console.log('[ERROR] Unable to get comic floor prices')
-                } finally {
-                    console.log('[SUCCESS] VEVE LATEST COMIC FLOORS UPDATED')
+                    console.log('[ERROR] Unable to get comic floor prices', e)
                 }
             })
         })
-        .catch(err => console.log(`[ERROR][VEVE] Unable to get comic floors. `, err))
+        .catch(err => console.log(`[CRITICAL ERROR][VEVE] Unable to get comic floors. `, err))
 }

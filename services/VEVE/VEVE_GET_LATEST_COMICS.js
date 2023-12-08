@@ -2,10 +2,9 @@ import fetch from 'node-fetch'
 import { customAlphabet } from 'nanoid/non-secure'
 import slugify from 'slugify'
 import * as Queries from "../../queries/getVevelatestComicsQuery.js";
+import {prisma} from "../../index.js";
 
-export const VEVE_GET_LATEST_COMICS = async (prisma) => {
-    console.log('GETTING LATEST COMICS')
-    console.log(`[ALICE][VEVE] - [GET ALL COMICS]`)
+export const VEVE_GET_LATEST_COMICS = async () => {
 
     await fetch(`https://web.api.prod.veve.me/graphql`, {
         method: 'POST',
@@ -146,10 +145,10 @@ export const VEVE_GET_LATEST_COMICS = async (prisma) => {
                         }
                     })
                 } catch (e) {
-                    console.log(`[FAIL][VEVE][COMIC]: ${comic.node.comicType.name} was not added to prisma db.`, e)
+                    console.log(`[VEVE] - [GET ALL COMICS]: ${comic.node.comicType.name} was not added to prisma db.`, e)
                 }
             })
         })
-        .catch(err => console.log('[ERROR][VEVE] Unable to get latest comics. ', err))
+        .catch(err => console.log('[CRITICAL ERROR][VEVE] Unable to get latest comics. ', err))
 
 }
