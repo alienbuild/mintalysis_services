@@ -1276,6 +1276,16 @@ model veve_top_wallet_metrics {
   @@index([wallet_id], map: "veve_top_wallet_metrics_wallet_id_fkey")
 }
 
+model veve_wallet_token_counts {
+  id              Int       @id @default(autoincrement())
+  wallet_id       String    @unique
+  collectible_id  String?
+  unique_cover_id String?
+  count           Int?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime? @updatedAt
+}
+
 // schemas/projects/veve/licensors.prisma
 // Veve Licensors
 
@@ -1350,12 +1360,12 @@ model veve_licensors_metrics {
 // VeVe MCP Calculation
 
 model veve_mcp_daily_pts {
-  id            Int      @id @default(autoincrement())
-  wallet_id     String   @unique
+  id            Int       @id @default(autoincrement())
+  wallet_id     String    @unique
   mcp_daily_pts Json?
-  mcp_total_pts Decimal? @default(0)
-  updatedAt     DateTime @updatedAt
-  created_at    DateTime @default(now())
+  mcp_total_pts Decimal?  @default(0)
+  updated_at    DateTime? @updatedAt
+  created_at    DateTime  @default(now())
 }
 
 model veve_mcp_staging {
@@ -1383,8 +1393,8 @@ model veve_mcp_staging {
   coll_dup_value     Decimal?  @db.Decimal(10, 2)
   coll_rarity_value  Decimal?  @db.Decimal(10, 2)
   coll_low_ed_limit  Int?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime? @updatedAt
+  created_at         DateTime  @default(now())
+  updated_at         DateTime? @updatedAt
 }
 
 model veve_mcp_completed_sets {
@@ -1395,18 +1405,18 @@ model veve_mcp_completed_sets {
   completed_count Int
   date_set_broken DateTime?
   completed_set   Boolean
-  updatedAt       DateTime  @updatedAt
+  updated_at      DateTime? @updatedAt
   created_at      DateTime  @default(now())
 }
 
 model veve_mcp_staging_sets {
-  id             Int      @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   wallet_id      String
   series_id      String
   collectible_id String
   count          Int
-  updatedAt      DateTime @updatedAt
-  created_at     DateTime @default(now())
+  updated_at     DateTime? @updatedAt
+  created_at     DateTime  @default(now())
 }
 
 model veve_mcp_staging_csv_import {
@@ -1419,7 +1429,7 @@ model veve_mcp_staging_csv_import {
   buyer_username  String?
   seller_username String?
   gem_amount      Float?
-  updatedAt       DateTime  @updatedAt
+  updated_at      DateTime? @updatedAt
   created_at      DateTime  @default(now())
 }
 
@@ -1432,12 +1442,12 @@ model veve_mcp_staging_csv_import_sets {
   daily_mcp_pts      Float?
   date_set_completed DateTime
   date_set_broken    DateTime?
-  updatedAt          DateTime  @updatedAt
+  updated_at         DateTime  @updatedAt
   created_at         DateTime  @default(now())
 }
 
 model veve_mcp_output {
-  id                 Int      @id @default(autoincrement())
+  id                 Int       @id @default(autoincrement())
   mcp_date           DateTime
   wallet_id          String
   mint_count         Int?
@@ -1461,30 +1471,30 @@ model veve_mcp_output {
   omi_mcp_pts        Float?
   total_col_pts      Float?
   total_comic_pts    Float?
-  total_daily_pts    Float?   @default(0)
-  total__mcp_pts     Float?   @default(0)
+  total_daily_pts    Float?    @default(0)
+  total__mcp_pts     Float?    @default(0)
   mcp_level          String?
   mcp_rank           String?
-  updatedAt          DateTime @updatedAt
-  created_at         DateTime @default(now())
+  updated_at         DateTime? @updatedAt
+  created_at         DateTime  @default(now())
 }
 
 model veve_mcp_rank {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   rank       String
   min_points Int
   max_points Int
-  updatedAt  DateTime @updatedAt
-  created_at DateTime @default(now())
+  updated_at DateTime? @updatedAt
+  created_at DateTime  @default(now())
 }
 
 model veve_mcp_level {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   level      String
   min_points Int
   max_points Int
-  updatedAt  DateTime @updatedAt
-  created_at DateTime @default(now())
+  updated_at DateTime? @updatedAt
+  created_at DateTime  @default(now())
 }
 
 // schemas/projects/veve/profile.prisma
