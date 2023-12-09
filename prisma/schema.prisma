@@ -1240,15 +1240,15 @@ model veve_comics_translations {
 // Veve Leaderboards
 
 model veve_leaderboard {
-  id           Int          @id @default(autoincrement())
-  leader_type  String
-  wallet_id    String
-  count        Int
-  datetime     String?
-  createdAt    DateTime     @default(now())
-  last_updated DateTime?    @db.DateTime(0)
-  tag          String?
-  wallet       veve_wallets @relation(fields: [wallet_id], references: [id])
+  id          Int          @id @default(autoincrement())
+  leader_type String
+  wallet_id   String
+  count       Int
+  datetime    String?
+  created_at  DateTime     @default(now())
+  updated_at  DateTime?    @updatedAt
+  tag         String?
+  wallet      veve_wallets @relation(fields: [wallet_id], references: [id])
 
   @@index([wallet_id], map: "veve_leaderboard_wallet_id_fkey")
 }
@@ -1277,13 +1277,14 @@ model veve_top_wallet_metrics {
 }
 
 model veve_wallet_token_counts {
-  id              Int       @id @default(autoincrement())
-  wallet_id       String    @unique
-  collectible_id  String?
-  unique_cover_id String?
-  count           Int?
-  created_at      DateTime  @default(now())
-  updated_at      DateTime? @updatedAt
+  id                Int       @id @default(autoincrement())
+  wallet_id         String    @unique
+  collectible_id    String?
+  unique_cover_id   String?
+  collectible_count Int?
+  comic_count       Int?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime? @updatedAt
 }
 
 // schemas/projects/veve/licensors.prisma
