@@ -21,6 +21,7 @@ model article {
   updatedAt    DateTime               @updatedAt
   slug         String                 @unique
   project_id   String?
+  to_process   Boolean?               @default(false)
   author       User?                  @relation(fields: [author_id], references: [id])
   project      projects?              @relation(fields: [project_id], references: [id])
   translations article_translations[]
