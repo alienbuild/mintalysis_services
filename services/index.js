@@ -10,6 +10,7 @@ import {VEVE_GET_LATEST_COMICS} from "./VEVE/VEVE_GET_LATEST_COMICS.js";
 import {VEVE_CALCULATE_BRANDS_METRICS} from "./VEVE/VEVE_CALCULATE_BRANDS_METRICS.js";
 import {VEVE_CALCULATE_LICENSORS_METRICS} from "./VEVE/VEVE_CALCULATE_LICENSORS_METRICS.js";
 import {VEVE_CALCULATE_SERIES_METRICS} from "./VEVE/VEVE_CALCULATE_SERIES_METRICS.js";
+import {GET_SOCIAL_STATS, SCRAPE_X_DOT_COM} from "./SOCIAL/index.js";
 
 // import {GET_SOCIAL_STATS, SCRAPE_X_DOT_COM, X_DAILY_SNAPSHOT} from "./SOCIAL";
 
@@ -26,14 +27,13 @@ import {VEVE_CALCULATE_SERIES_METRICS} from "./VEVE/VEVE_CALCULATE_SERIES_METRIC
 // }
 
 const scheduledHourlyJobs = async () => {
-
     schedule.scheduleJob('01 */30 * * * *', async () => {
         try {
 
             // UPDATE YOUTUBE/INSTA SOCIAL STATS
             // await GET_SOCIAL_STATS()
-
-            // GET LATEST X POSTS
+            //
+            // // GET LATEST X POSTS
             // await SCRAPE_X_DOT_COM()
 
             // VEVE GET LATEST LICENSORS

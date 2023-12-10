@@ -1,11 +1,12 @@
 // MAIN CALLERS (EXPORTED) ARE THE BOTTOM OF THE PAGE
 
-const puppeteer = require('puppeteer');
+import puppeteer from "puppeteer";
+import {prisma} from "../../index.js";
 
 // FUNCTIONS
-const getYouTubeStats = async (prisma, project_id, channel_id) => {
+const getYouTubeStats = async (project_id, channel_id) => {
     try {
-        const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channel_id}&key=${process.env.YOUTUBE_API_KEY}`);
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=UC6psiYgowNPQbodOphinq1A&key=AIzaSyC7tTTS1HHnurm95jhZ2YIaDuzWxsC6TO4`);
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
 
@@ -82,7 +83,7 @@ const loginToX = async (page) => {
     await page.waitForSelector('a[data-testid="SideNav_NewTweet_Button"]');
 }
 
-const scrapeXAccount = async (page, accountHandle, prisma) => {
+const scrapeXAccount = async (page, accountHandle) => {
 
     await prisma.x_posts.deleteMany({
         where:{
@@ -239,13 +240,13 @@ const saveXInfo = async (accountHandle, saveObj, prisma) => {
 }
 
 // GENERIC SOCIAL JOBS
-export const GET_SOCIAL_STATS = async (prisma) => {
+export const GET_SOCIAL_STATS = async () => {
 
     const PROJECT_ID_VEVE = "de2180a8-4e26-402a-aed1-a09a51e6e33d"
     const PROJECT_ID_MCFARLANE = "99ff1ba5-706d-4d15-9f3d-de4247ac3a7b"
 
     // GET VEVE SOCIAL STATS
-    await getYouTubeStats(prisma, PROJECT_ID_VEVE, "UC6psiYgowNPQbodOphinq1A")
+    await getYouTubeStats(PROJECT_ID_VEVE, "UC6psiYgowNPQbodOphinq1A")
     // await getInstagramStats(prisma, PROJECT_ID_VEVE, '')
 
     // GET MCFARLANE SOCIAL STATS
@@ -253,7 +254,7 @@ export const GET_SOCIAL_STATS = async (prisma) => {
 }
 
 // X.COM (FORMERLY TWITTER)
-export const SCRAPE_X_DOT_COM = async (prisma) => {
+export const SCRAPE_X_DOT_COM = async () => {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
 
@@ -262,8 +263,8 @@ export const SCRAPE_X_DOT_COM = async (prisma) => {
     const veveHandle = 'veve_official';
     const mcfarlaneHandle = 'mcfarlanetoys';
 
-    await scrapeXAccount(page, veveHandle, prisma);
-    await scrapeXAccount(page, mcfarlaneHandle, prisma);
+    await scrapeXAccount(page, veveHandle);
+    // await scrapeXAccount(page, mcfarlaneHandle, prisma);
 
     await browser.close();
 }
