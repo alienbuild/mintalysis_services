@@ -1278,7 +1278,7 @@ model veve_top_wallet_metrics {
 
 model veve_wallet_token_counts {
   id                Int       @id @default(autoincrement())
-  wallet_id         String    @unique
+  wallet_id         String?
   collectible_id    String?
   unique_cover_id   String?
   collectible_count Int?
@@ -1496,6 +1496,22 @@ model veve_mcp_level {
   max_points Int
   updated_at DateTime? @updatedAt
   created_at DateTime  @default(now())
+}
+
+model tmp_veve_news {
+  id            Int       @id @default(autoincrement())
+  original_link String
+  content       String
+  title         String
+  subtitle      String?
+  published_at  DateTime
+  image         String?
+  tags          String?
+  slug          String?
+  author_id     String?   @default("771849d5-5701-452a-b4ae-a67ddfe92fe3")
+  project_id    String?   @default("de2180a8-4e26-402a-aed1-a09a51e6e33d")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @updatedAt
 }
 
 // schemas/projects/veve/profile.prisma
