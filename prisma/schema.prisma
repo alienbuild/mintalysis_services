@@ -153,21 +153,22 @@ model imx_withdrawals {
 }
 
 model imx_stats {
-  project_id                String   @unique
-  token_count               Int
-  wallet_count              Int
-  transaction_count         Int
-  unique_owners_count       Int
-  mint_count                Int
-  transfer_count            Int
-  mint_count_daily          Int
-  transfer_count_daily      Int
-  wallet_count_daily        Int
-  burn_count_total          Int
-  burn_count_daily          Int
-  active_wallet_count_daily Int
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
+  project_id           String   @unique
+  token_count          Int?
+  wallet_count         Int?
+  transaction_count    Int?
+  unique_owners_count  Int?
+  mint_count           Int?
+  transfer_count       Int?
+  comic_count          Int?
+  collectible_count    Int?
+  mint_count_daily     Int?
+  transfer_count_daily Int?
+  wallet_count_daily   Int?
+  burn_count_total     Int?
+  burn_count_daily     Int?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 // schemas/characters.prisma
@@ -845,19 +846,16 @@ model veve_wallets {
   tagsId                  Int?
   first_activity_date     DateTime?
   last_activity_date      DateTime?
-  token_count             Int?
-  collectibles_count      Int?
-  comics_count            Int?
-  completed_sets          Int?
   lgcy_veve_id            String?
   lgcy_veve_username      String?
   active                  Boolean?                  @default(false)
   has_kyc                 Boolean?                  @default(false)
+  mintalysis_note         String?
   veve_leaderboard        veve_leaderboard[]
   veve_tokens             veve_tokens[]
   wallet_tags             wallet_tags?              @relation(fields: [tagsId], references: [id])
   veve_wallets_valuations veve_wallets_valuations[]
-  veve_top_wallet_metrics veve_top_wallet_metrics?
+  veve_wallet_metrics     veve_wallet_metrics?
 
   @@index([last_activity_date])
   @@index([first_activity_date])
@@ -899,6 +897,7 @@ model veve_tokens {
   element_id            String?
   comic_image_url_id    String?                @db.VarChar(50)
   mint_order            Int?
+  rarity_mint_order     Int?
   mcp_ed_bonus          Boolean?               @default(false)
   to_process            Boolean?               @default(false)
   is_invalid            Boolean?               @default(false)
@@ -906,6 +905,8 @@ model veve_tokens {
   no_meta               Boolean?               @default(false)
   is_premint            Boolean?               @default(false)
   has_full_meta         Boolean?               @default(false)
+  mintalysis_note       String?
+  tag                   String?
   veve_brands           veve_brands?           @relation(fields: [brand_id], references: [brand_id])
   veve_wallets          veve_wallets?          @relation(fields: [wallet_id], references: [id], map: "veve_tokens_ibfk_1")
   veve_licensors        veve_licensors?        @relation(fields: [licensor_id], references: [licensor_id])
@@ -957,6 +958,7 @@ model veve_transfers {
   timestamp_dt    DateTime? @db.DateTime(6)
   txn_type        String?
   is_burned       Boolean?  @default(false)
+  mintalysis_note String?
 
   @@index([createdAt])
   @@index([timestamp_dt])
@@ -965,16 +967,18 @@ model veve_transfers {
 }
 
 model veve_mints {
-  id            Int       @id
-  wallet_id     String?
-  timestamp     String?   @db.Text
-  token_id      Int
-  to_process    Boolean?  @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime?
-  timestamp_dt  DateTime? @db.DateTime(6)
-  is_burned     Boolean?  @default(false)
-  is_redemption Boolean?  @default(false)
+  id              Int       @id
+  wallet_id       String?
+  timestamp       String?   @db.Text
+  token_id        Int
+  to_process      Boolean?  @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  timestamp_dt    DateTime? @db.DateTime(6)
+  is_burned       Boolean?  @default(false)
+  is_redemption   Boolean?  @default(false)
+  transfer_count  Int?      @default(0)
+  mintalysis_note String?
 
   @@index([createdAt])
   @@index([timestamp_dt])
@@ -1104,6 +1108,9 @@ model veve_collectibles {
   mcp_total_value                      Decimal?                         @db.Decimal(5, 2)
   is_name_unique                       Boolean?                         @default(false)
   total_burned                         Int?
+  mintalysis_note                      String?
+  veve_held_edition_count              Int?
+  licensor_held_edition_count          Int?
   tmp_veve_tokens_collectibles         tmp_veve_tokens_collectibles[]
   brand                                veve_brands?                     @relation(fields: [brand_id], references: [brand_id])
   licensor                             veve_licensors?                  @relation(fields: [licensor_id], references: [licensor_id])
@@ -1165,59 +1172,62 @@ model veve_collectibles_metrics {
 // Veve Comics
 
 model veve_comics {
-  unique_cover_id           String                     @id
-  name                      String
-  rarity                    String?
-  description               String?                    @db.Text
-  comic_series_id           String?
-  drop_date                 DateTime?
-  store_price               Decimal?                   @db.Decimal(10, 2)
-  publisher_id              String?
-  market_fee                Decimal?                   @db.Decimal(10, 3)
-  createdAt                 DateTime                   @default(now())
-  updatedAt                 DateTime
-  all_time_high             Decimal?                   @db.Decimal(10, 2)
-  all_time_low              Decimal?                   @db.Decimal(10, 2)
-  comic_number              Int?
-  drop_method               String?
-  floor_price               Decimal?                   @db.Decimal(10, 2)
-  is_free                   Boolean?                   @default(false)
-  is_unlimited              Boolean?                   @default(false)
-  market_cap                Decimal?                   @db.Decimal(10, 2)
-  one_day_change            Decimal?                   @db.Decimal(10, 2)
-  one_mo_change             Decimal?                   @db.Decimal(10, 2)
-  one_wk_change             Decimal?                   @db.Decimal(10, 2)
-  one_year_change           Decimal?                   @db.Decimal(10, 2)
-  page_count                Int?
-  six_mo_change             Decimal?                   @db.Decimal(10, 2)
-  start_year                Int?
-  three_mo_change           Decimal?                   @db.Decimal(10, 2)
-  total_available           Int?
-  total_issued              Int?
-  total_listings            Int?
-  image_direction           String?
-  image_full_resolution_url String?
-  image_high_resolution_url String?
-  image_low_resolution_url  String?
-  image_med_resolution_url  String?
-  image_thumbnail           String?
-  all_time_change           Decimal?                   @db.Decimal(10, 2)
-  minimum_age               Int?
-  slug                      String?                    @unique
-  comic_id                  String?
-  unique_holders            BigInt?
-  first_public_mint         Int?
-  mcp_low_ed_limit          Int?
-  mcp_rarity_value          Decimal?                   @db.Decimal(10, 2)
-  comic_image_url_id        String?                    @unique @db.VarChar(50)
-  total_burned              Int?
-  pre_imx_unique_name       Boolean?                   @default(false)
-  translations              veve_comics_translations[]
-  veve_watchlist            veve_watchlist[]
-  artists                   artists[]                  @relation("artistsToveve_comics")
-  characters                characters[]               @relation("charactersToveve_comics")
-  writers                   writers[]                  @relation("veve_comicsTowriters")
-  veveTokenComics           veveTokenComic[]
+  unique_cover_id             String                     @id
+  name                        String
+  rarity                      String?
+  description                 String?                    @db.Text
+  comic_series_id             String?
+  drop_date                   DateTime?
+  store_price                 Decimal?                   @db.Decimal(10, 2)
+  publisher_id                String?
+  market_fee                  Decimal?                   @db.Decimal(10, 3)
+  createdAt                   DateTime                   @default(now())
+  updatedAt                   DateTime
+  all_time_high               Decimal?                   @db.Decimal(10, 2)
+  all_time_low                Decimal?                   @db.Decimal(10, 2)
+  comic_number                Int?
+  drop_method                 String?
+  floor_price                 Decimal?                   @db.Decimal(10, 2)
+  is_free                     Boolean?                   @default(false)
+  is_unlimited                Boolean?                   @default(false)
+  market_cap                  Decimal?                   @db.Decimal(10, 2)
+  one_day_change              Decimal?                   @db.Decimal(10, 2)
+  one_mo_change               Decimal?                   @db.Decimal(10, 2)
+  one_wk_change               Decimal?                   @db.Decimal(10, 2)
+  one_year_change             Decimal?                   @db.Decimal(10, 2)
+  page_count                  Int?
+  six_mo_change               Decimal?                   @db.Decimal(10, 2)
+  start_year                  Int?
+  three_mo_change             Decimal?                   @db.Decimal(10, 2)
+  total_available             Int?
+  total_issued                Int?
+  total_listings              Int?
+  image_direction             String?
+  image_full_resolution_url   String?
+  image_high_resolution_url   String?
+  image_low_resolution_url    String?
+  image_med_resolution_url    String?
+  image_thumbnail             String?
+  all_time_change             Decimal?                   @db.Decimal(10, 2)
+  minimum_age                 Int?
+  slug                        String?                    @unique
+  comic_id                    String?
+  unique_holders              BigInt?
+  first_public_mint           Int?
+  mcp_low_ed_limit            Int?
+  mcp_rarity_value            Decimal?                   @db.Decimal(10, 2)
+  comic_image_url_id          String?                    @unique @db.VarChar(50)
+  total_burned                Int?
+  pre_imx_unique_name         Boolean?                   @default(false)
+  veve_held_edition_count     Int?
+  licensor_held_edition_count Int?
+  mintalysis_note             String?
+  translations                veve_comics_translations[]
+  veve_watchlist              veve_watchlist[]
+  artists                     artists[]                  @relation("artistsToveve_comics")
+  characters                  characters[]               @relation("charactersToveve_comics")
+  writers                     writers[]                  @relation("veve_comicsTowriters")
+  veveTokenComics             veveTokenComic[]
 
   @@index([unique_cover_id], map: "unique_cover_id")
   @@index([comic_image_url_id], map: "comic_image_url_id")
@@ -1254,32 +1264,42 @@ model veve_leaderboard {
   @@index([wallet_id], map: "veve_leaderboard_wallet_id_fkey")
 }
 
-model veve_top_wallet_metrics {
-  id            Int          @id @default(autoincrement())
-  datetime      DateTime?    @db.DateTime(0)
-  rank          Int?         @unique
-  prev_rank     Int?         @unique
-  rank_change   Int?
-  wallet_id     String       @unique
-  tokens        Int?
-  comics        Int?
-  collectibles  Int?
-  artist_proofs Int?
-  omi_balance   Float?
-  mints         Int?
-  purchases     Int?
-  sales         Int?
-  net_accum     Int?
-  created_at    DateTime     @default(now())
-  updated_at    DateTime?    @updatedAt
-  wallet        veve_wallets @relation(fields: [wallet_id], references: [id])
+model veve_wallet_metrics {
+  id                 Int          @id @default(autoincrement())
+  datetime           DateTime?    @db.DateTime(0)
+  rank               Int?         @unique
+  prev_rank          Int?         @unique
+  rank_change        Int?
+  wallet_id          String       @unique
+  token_count        Int?
+  comics_count       Int?
+  collectibles_count Int?
+  artist_proofs      Int?
+  omi_balance        Float?
+  mints_count        Int?
+  purchase_count     Int?
+  sale_count         Int?
+  net_accum          Int?
+  total_comic_sets   Int?
+  total_coll_sets    Int?
+  total_mints        Int?
+  total_purchases    Int?
+  total_sales        Int?
+  total_burned       Int?
+  total_mcp_pts      Float?
+  daily_mcp_pts      Float?
+  mcp_level          Int?
+  mcp_rank           String?
+  created_at         DateTime     @default(now())
+  updated_at         DateTime?    @updatedAt
+  wallet             veve_wallets @relation(fields: [wallet_id], references: [id])
 
-  @@index([wallet_id], map: "veve_top_wallet_metrics_wallet_id_fkey")
+  @@index([wallet_id], map: "veve_wallet_metrics_wallet_id_fkey")
 }
 
 model veve_wallet_token_counts {
   id                Int       @id @default(autoincrement())
-  wallet_id         String?
+  wallet_id         String
   collectible_id    String?
   unique_cover_id   String?
   collectible_count Int?
@@ -1372,6 +1392,7 @@ model veve_mcp_daily_pts {
 
 model veve_mcp_staging {
   id                 Int       @id @default(autoincrement())
+  username           String?
   wallet_id          String?
   transaction_id     Int?
   token_id           Int?
@@ -1431,7 +1452,6 @@ model veve_mcp_staging_csv_import {
   buyer_username  String?
   seller_username String?
   gem_amount      Float?
-  updated_at      DateTime? @updatedAt
   created_at      DateTime  @default(now())
 }
 
@@ -1474,7 +1494,7 @@ model veve_mcp_output {
   total_col_pts      Float?
   total_comic_pts    Float?
   total_daily_pts    Float?    @default(0)
-  total__mcp_pts     Float?    @default(0)
+  total_mcp_pts      Float?    @default(0)
   mcp_level          String?
   mcp_rank           String?
   updated_at         DateTime? @updatedAt
@@ -1499,20 +1519,88 @@ model veve_mcp_level {
   created_at DateTime  @default(now())
 }
 
-model tmp_veve_news {
-  id            Int       @id @default(autoincrement())
-  original_link String
-  content       String    @db.Text
-  title         String
-  subtitle      String?   @db.Text
-  published_at  DateTime
-  image         String?
-  tags          String?
-  slug          String?   @unique
-  author_id     String?   @default("771849d5-5701-452a-b4ae-a67ddfe92fe3")
-  project_id    String?   @default("de2180a8-4e26-402a-aed1-a09a51e6e33d")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime? @updatedAt
+// schemas/projects/veve/omi.prisma
+// OMI Transactions
+
+model omi_vault_transactions {
+  id               Int       @id @default(autoincrement())
+  blockchain       String?
+  transaction_hash String?
+  from_address     String?
+  to_address       String?
+  date_time        DateTime?
+  omi_amount       Float?
+  omi_price        Float?
+  usd_value        Float?
+  updated_at       DateTime? @updatedAt
+  created_at       DateTime? @default(now())
+}
+
+model omi_burn_sheet {
+  id               Int       @id @default(autoincrement())
+  date             DateTime?
+  day_order        Int?
+  omi_price        Float?
+  omi_usd          Float?
+  pri_omi_burns    Float?
+  sec_omi_burns    Float?
+  pri_usd_value    Float?
+  sec_usd_value    Float?
+  gem_omi_burns    Float?
+  gem_usd_value    Float?
+  total_omi_burns  Float?
+  pct_omi_burns    Float?
+  total_gems_usd   Float?
+  pct_gems_usd     Float?
+  gems_in_app      Float?
+  gem_growth_ratio Int?
+  total_purch_fees Float?
+  drop_type        String?
+  drop_name        String?
+  updated_at       DateTime? @updatedAt
+  created_at       DateTime? @default(now())
+}
+
+model omi_metrics {
+  id                  Int       @id @default(autoincrement())
+  date                DateTime?
+  omi_price           Float?
+  active_circ_supply  Float?
+  maximum_supply      Float?
+  active_circ_mkt_cap Float?
+  max_supply_mkt_cap  Float?
+  vault_l1_omi        Float?
+  vault_l2_omi        Float?
+  vault_l1_stg_omi    Float?
+  reserve_l1_omi      Float?
+  reserve_l2_omi      Float?
+  reserve_l1_stg_omi  Float?
+  burn_l1_omi         Float?
+  burn_l2_omi         Float?
+  burn_l1_stg_omi     Float?
+  pct_omi_burns       Float?
+  locked__l1_omi      Float?
+  pct_locked_omi      Float?
+  omi_holders_l2      Int?
+  omi_held_l2         Float?
+  omi_holders_l1      Int?
+  omi_held_l1         Float?
+  omi_holders_gochain Int?
+  omi_held_gochain    Float?
+  omi_24h_vol         Float?
+  omi_24h_low         Float?
+  omi_24h_high        Float?
+  omi_24h_change      Float?
+  omi_7d_change       Float?
+  omi_30d_change      Float?
+  omi_90d_change      Float?
+  omi_180d_change     Float?
+  omi_365d_change     Float?
+  omi_all_time_high   Float?
+  omi_all_time_low    Float?
+  updated_at          DateTime? @updatedAt
+  created_at          DateTime? @default(now())
+
 }
 
 // schemas/projects/veve/profile.prisma
