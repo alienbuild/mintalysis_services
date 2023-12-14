@@ -177,8 +177,8 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
 
             }
 
-            await checkDescriptions()
-            await checkSeoTags()
+            // await checkDescriptions()
+            // await checkSeoTags()
 
             // if (latest_collectibles.data.collectibleTypeList.pageInfo?.hasNextPage){
             //     console.log('next page is: ', latest_collectibles.data.collectibleTypeList.pageInfo.endCursor)
@@ -234,7 +234,7 @@ const checkDescriptions = async () => {
             image: ${collectible.image_url}
             description: ${collectible.description}
             store price: $${collectible.store_price}
-            total available: ${collectible.total_available}
+            total available at drop: ${collectible.total_issued}
             drop date: ${collectible.drop_date}
             edition type: ${collectible.edition_type}
             rarity: ${collectible.rarity}
