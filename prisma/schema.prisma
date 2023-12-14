@@ -722,22 +722,6 @@ model odb_tokens {
   @@index([wallet_id])
 }
 
-model omi_transfers {
-  id             Int       @id @default(autoincrement())
-  transaction_id Int
-  status         String
-  user           String
-  receiver       String
-  token_address  String
-  decimals       Int
-  quantity       String
-  timestamp      DateTime
-  createdAt      DateTime?
-  to_process     Boolean?  @default(true)
-
-  @@index([transaction_id])
-}
-
 model veve_imx_status {
   id             Int       @id @default(autoincrement())
   last_timestamp String?
@@ -1425,9 +1409,8 @@ model veve_mcp_completed_sets {
   wallet_id       String
   series_id       String
   date_completed  DateTime
-  completed_count Int
+  completed_count Int?
   date_set_broken DateTime?
-  completed_set   Boolean
   updated_at      DateTime? @updatedAt
   created_at      DateTime  @default(now())
 }
@@ -1435,9 +1418,9 @@ model veve_mcp_completed_sets {
 model veve_mcp_staging_sets {
   id             Int       @id @default(autoincrement())
   wallet_id      String
-  series_id      String
-  collectible_id String
-  count          Int
+  series_id      String?
+  collectible_id String?
+  count          Int?
   updated_at     DateTime? @updatedAt
   created_at     DateTime  @default(now())
 }
@@ -1462,9 +1445,9 @@ model veve_mcp_staging_csv_import_sets {
   series_name        String?
   nbr_of_items       Int?
   daily_mcp_pts      Float?
-  date_set_completed DateTime
+  date_set_completed DateTime?
   date_set_broken    DateTime?
-  updated_at         DateTime  @updatedAt
+  updated_at         DateTime? @updatedAt
   created_at         DateTime  @default(now())
 }
 
@@ -1522,10 +1505,26 @@ model veve_mcp_level {
 // schemas/projects/veve/omi.prisma
 // OMI Transactions
 
+model omi_transfers {
+  id             Int      @id @default(autoincrement())
+  transaction_id Int      @unique
+  status         String
+  user           String
+  receiver       String
+  token_address  String
+  decimals       Int
+  quantity       String
+  timestamp      DateTime
+  createdAt      DateTime @default(now())
+  to_process     Boolean? @default(true)
+
+  @@index([transaction_id])
+}
+
 model omi_vault_transactions {
   id               Int       @id @default(autoincrement())
   blockchain       String?
-  transaction_hash String?
+  transaction_hash String?   @unique
   from_address     String?
   to_address       String?
   date_time        DateTime?
@@ -1534,6 +1533,7 @@ model omi_vault_transactions {
   usd_value        Float?
   updated_at       DateTime? @updatedAt
   created_at       DateTime? @default(now())
+  to_process       Boolean?  @default(true)
 }
 
 model omi_burn_sheet {
