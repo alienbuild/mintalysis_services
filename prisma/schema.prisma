@@ -213,6 +213,7 @@ model characters_translations {
   seo_title       String?    @db.Text
   og_title        String?    @db.Text
   og_description  String?    @db.Text
+  grails          String?    @db.Text
   character       characters @relation(fields: [character_id], references: [character_id])
 
   @@id([language, character_id])
