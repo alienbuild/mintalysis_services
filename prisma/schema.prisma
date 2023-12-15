@@ -47,12 +47,13 @@ model article_translations {
 // Artists
 
 model artists {
-  artist_id    String                 @id
-  name         String
-  slug         String?                @unique
-  image        String?
-  veve_comics  veve_comics[]          @relation("artistsToveve_comics")
-  translations artists_translations[]
+  artist_id      String                 @id
+  name           String
+  slug           String?                @unique
+  image          String?
+  veve_comics    veve_comics[]          @relation("artistsToveve_comics")
+  translations   artists_translations[]
+  artists_grails artists_grails[]
 }
 
 model artists_translations {
@@ -70,6 +71,21 @@ model artists_translations {
 
   @@id([language, artist_id])
   @@index([language])
+}
+
+model artists_grails {
+  id              Int          @id @default(autoincrement())
+  title           String
+  description     String?      @db.Text
+  year            Int
+  number          String
+  unique_cover_id String?
+  artist_id       String
+  artist          artists      @relation(fields: [artist_id], references: [artist_id])
+  comic           veve_comics? @relation(fields: [unique_cover_id], references: [unique_cover_id])
+
+  @@index([artist_id])
+  @@index([unique_cover_id])
 }
 
 // schemas/blockchains/immutable.prisma
@@ -1266,6 +1282,7 @@ model veve_comics {
   characters                  characters[]               @relation("charactersToveve_comics")
   writers                     writers[]                  @relation("veve_comicsTowriters")
   veveTokenComics             veveTokenComic[]
+  artists_grails              artists_grails[]
   characters_grails           characters_grails[]
 
   @@index([unique_cover_id], map: "unique_cover_id")
