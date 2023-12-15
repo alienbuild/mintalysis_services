@@ -207,8 +207,9 @@ const VEVE_GENERATE_CHARACTER_DESCRIPTIONS = async () => {
             const og_description = await chatgpt.sendMessage(get_og_description)
             console.log(`[OG DESC] received for ${character.name}`)
 
-            const get_highlights = `what are some of the most notable "grail" comics that feature ${character.name}`
-            const highlights = await chatgpt.sendMessage(get_highlights)
+            // const get_grails = `return only a json object of the most notable comics that feature ${character.name}. include the comic book title, comic book number, comic book year and description. only return the array of objects.`
+            // const grails = await chatgpt.sendMessage(get_grails)
+            // console.log(`[GRAILS] received for ${character.name}`)
 
             const exisitingTranslation = await prisma.characters_translations.findUnique({
                 where: {
@@ -235,7 +236,7 @@ const VEVE_GENERATE_CHARACTER_DESCRIPTIONS = async () => {
                         seo_title: seo_title.text,
                         og_title: og_title.text,
                         og_description: og_description.text,
-                        highlights: highlights.text
+                        // grails: grails.text
                     }
                 })
             } else {
@@ -249,7 +250,7 @@ const VEVE_GENERATE_CHARACTER_DESCRIPTIONS = async () => {
                         seo_title: seo_title.text,
                         og_title: og_title.text,
                         og_description: og_description.text,
-                        highlights: highlights.text,
+                        // grails: grails.text,
                         language: "EN"
                     }
                 })
