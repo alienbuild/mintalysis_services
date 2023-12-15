@@ -194,12 +194,13 @@ model imx_stats {
 // Characters
 
 model characters {
-  character_id String                    @id
-  name         String
-  slug         String?                   @unique
-  image        String?
-  veve_comics  veve_comics[]             @relation("charactersToveve_comics")
-  translations characters_translations[]
+  character_id      String                    @id
+  name              String
+  slug              String?                   @unique
+  image             String?
+  veve_comics       veve_comics[]             @relation("charactersToveve_comics")
+  translations      characters_translations[]
+  characters_grails characters_grails[]
 }
 
 model characters_translations {
@@ -218,6 +219,21 @@ model characters_translations {
 
   @@id([language, character_id])
   @@index([language])
+}
+
+model characters_grails {
+  id           Int          @id @default(autoincrement())
+  title        String
+  description  String?      @db.Text
+  year         Int
+  number       String
+  comic_id     String?
+  character_id String
+  character    characters   @relation(fields: [character_id], references: [character_id])
+  comic        veve_comics? @relation(fields: [comic_id], references: [unique_cover_id])
+
+  @@index([character_id])
+  @@index([comic_id])
 }
 
 //// schemas/community.prisma
@@ -1251,6 +1267,7 @@ model veve_comics {
   characters                  characters[]               @relation("charactersToveve_comics")
   writers                     writers[]                  @relation("veve_comicsTowriters")
   veveTokenComics             veveTokenComic[]
+  characters_grails           characters_grails[]
 
   @@index([unique_cover_id], map: "unique_cover_id")
   @@index([comic_image_url_id], map: "comic_image_url_id")
