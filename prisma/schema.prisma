@@ -221,18 +221,18 @@ model characters_translations {
 }
 
 model characters_grails {
-  id           Int          @id @default(autoincrement())
-  title        String
-  description  String?      @db.Text
-  year         Int
-  number       String
-  comic_id     String?
-  character_id String
-  character    characters   @relation(fields: [character_id], references: [character_id])
-  comic        veve_comics? @relation(fields: [comic_id], references: [unique_cover_id])
+  id              Int          @id @default(autoincrement())
+  title           String
+  description     String?      @db.Text
+  year            Int
+  number          String
+  unique_cover_id String?
+  character_id    String
+  character       characters   @relation(fields: [character_id], references: [character_id])
+  comic           veve_comics? @relation(fields: [unique_cover_id], references: [unique_cover_id])
 
   @@index([character_id])
-  @@index([comic_id])
+  @@index([unique_cover_id])
 }
 
 //// schemas/community.prisma
