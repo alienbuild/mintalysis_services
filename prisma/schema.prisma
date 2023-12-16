@@ -2259,11 +2259,11 @@ model profile {
 // Writers
 
 model writers {
-  author_id            String                 @id
-  name                 String
-  slug                 String?                @unique
-  veve_comics          veve_comics[]          @relation("veve_comicsTowriters")
-  writers_translations writers_translations[]
+  author_id    String                 @id
+  name         String
+  slug         String?                @unique
+  veve_comics  veve_comics[]          @relation("veve_comicsTowriters")
+  translations writers_translations[]
 }
 
 model writers_translations {
