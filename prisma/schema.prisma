@@ -2267,7 +2267,7 @@ model writers {
 }
 
 model writers_translations {
-  author_id       String   @id
+  author_id       String
   language        Language
   title           String?
   content         String?  @db.Text
@@ -2278,6 +2278,9 @@ model writers_translations {
   og_title        String?  @db.Text
   og_description  String?  @db.Text
   author          writers  @relation(fields: [author_id], references: [author_id])
+
+  @@id([author_id, language])
+  @@index([language])
 }
 
 // schemas/_enums.prisma
