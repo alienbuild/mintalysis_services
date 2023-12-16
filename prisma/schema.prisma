@@ -1284,6 +1284,7 @@ model veve_comics {
   veveTokenComics             veveTokenComic[]
   artists_grails              artists_grails[]
   characters_grails           characters_grails[]
+  writers_grails              writers_grails[]
 
   @@index([unique_cover_id], map: "unique_cover_id")
   @@index([comic_image_url_id], map: "comic_image_url_id")
@@ -2259,11 +2260,12 @@ model profile {
 // Writers
 
 model writers {
-  author_id    String                 @id
-  name         String
-  slug         String?                @unique
-  veve_comics  veve_comics[]          @relation("veve_comicsTowriters")
-  translations writers_translations[]
+  author_id      String                 @id
+  name           String
+  slug           String?                @unique
+  veve_comics    veve_comics[]          @relation("veve_comicsTowriters")
+  translations   writers_translations[]
+  writers_grails writers_grails[]
 }
 
 model writers_translations {
@@ -2279,8 +2281,23 @@ model writers_translations {
   og_description  String?  @db.Text
   author          writers  @relation(fields: [author_id], references: [author_id])
 
-  @@id([author_id, language])
+  @@id([language, author_id])
   @@index([language])
+}
+
+model writers_grails {
+  id              Int          @id @default(autoincrement())
+  title           String
+  description     String?      @db.Text
+  year            Int
+  number          String
+  unique_cover_id String?
+  author_id       String
+  writer          writers      @relation(fields: [author_id], references: [author_id])
+  comic           veve_comics? @relation(fields: [unique_cover_id], references: [unique_cover_id])
+
+  @@index([author_id])
+  @@index([unique_cover_id])
 }
 
 // schemas/_enums.prisma
