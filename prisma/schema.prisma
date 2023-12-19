@@ -1019,6 +1019,8 @@ model veve_transfers {
   @@index([token_id, createdAt])
   @@index([token_id, from_wallet, to_wallet])
   @@index([to_wallet, from_wallet])
+  @@index([from_wallet])
+  @@index([to_wallet])
 }
 
 model veve_mints {
