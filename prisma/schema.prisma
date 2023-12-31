@@ -2272,7 +2272,7 @@ model User {
   sent_direct_messages            direct_message[]                 @relation("sender")
   received_direct_messages        direct_message[]                 @relation("receiver")
   channel_messages                channel_message[]
-  roles                           UserToRoles[]                    @relation("user_to_roles")
+  UserToRoles                     UserToRoles[]                    @relation("user_to_roles")
   message                         message[]
   conversation                    conversation[]
   conversation_participant        conversation_participant[]
