@@ -735,6 +735,39 @@ model channel_read_receipt {
   @@id([userId, channelId])
 }
 
+model role {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  users_roles UserToRoles[]
+}
+
+model UserToRoles {
+  id     Int    @id @default(autoincrement())
+  userId String
+  roleId Int
+  user   User   @relation("user_to_roles", fields: [userId], references: [id])
+  role   role   @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model user_badges {
+  user_id  String
+  badge_id Int
+  user     User   @relation(fields: [user_id], references: [id])
+  badge    badge  @relation(fields: [badge_id], references: [id])
+
+  @@id([user_id, badge_id])
+}
+
+model badge {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  users       user_badges[]
+}
+
 enum ChannelType {
   TEXT
   AUDIO
@@ -1221,6 +1254,19 @@ model veve_collectibles_metrics {
   volume             Decimal?          @db.Decimal(10, 2)
   circulating_supply Decimal?          @db.Decimal(10, 2)
   collectible        veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+}
+
+model veve_collectibles_listings {
+  id             Int       @id @default(autoincrement())
+  collectible_id String
+  listing_id     String?
+  issue_number   Int?
+  listing_type   String
+  price          Decimal?
+  seller_name    String?
+  seller_id      String?
+  ending_at      DateTime?
+  bid_count      Int?
 }
 
 // schemas/projects/veve/comics.prisma
@@ -2219,6 +2265,7 @@ model User {
   sent_direct_messages            direct_message[]                 @relation("sender")
   received_direct_messages        direct_message[]                 @relation("receiver")
   channel_messages                channel_message[]
+  roles                           UserToRoles[]                    @relation("user_to_roles")
   message                         message[]
   conversation                    conversation[]
   conversation_participant        conversation_participant[]
@@ -2226,6 +2273,7 @@ model User {
   server_member                   server_member[]
   ChannelMember                   ChannelMember[]
   channel_read_receipt            channel_read_receipt[]
+  user_badges                     user_badges[]
 
   @@index([email], map: "email")
   @@index([username], map: "username")
