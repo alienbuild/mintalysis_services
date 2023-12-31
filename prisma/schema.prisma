@@ -188,22 +188,18 @@ model imx_withdrawals {
 }
 
 model imx_stats {
-  project_id           String   @unique
-  token_count          Int?
-  wallet_count         Int?
-  transaction_count    Int?
-  unique_owners_count  Int?
-  mint_count           Int?
-  transfer_count       Int?
-  comic_count          Int?
-  collectible_count    Int?
-  mint_count_daily     Int?
-  transfer_count_daily Int?
-  wallet_count_daily   Int?
-  burn_count_total     Int?
-  burn_count_daily     Int?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  project_id          String   @unique
+  mint_count          Int?
+  transfer_count      Int?
+  transaction_count   Int?
+  token_count         Int?
+  comic_count         Int?
+  collectible_count   Int?
+  burn_count          Int?
+  wallet_count        Int?
+  unique_owners_count Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 // schemas/characters.prisma
@@ -598,58 +594,57 @@ model marketplace_product_offers {
   @@index([product_id])
 }
 
-//// schemas/messaging.prisma
-//// Messaging and Conversations
-//
-//model message {
-//  id                   String         @id @default(uuid())
-//  conversationId       String
-//  senderId             String
-//  body                 String         @db.Text
-//  createdAt            DateTime       @default(now())
-//  updatedAt            DateTime       @updatedAt
-//  type                 message_type   @default(TEXT)
-//  status               message_status @default(SENT)
-//  marketplace_offer_id String?
-//  is_latest_in         conversation?  @relation("latest_conversation_message")
-//  conversation         conversation   @relation(fields: [conversationId], references: [id])
-//  sender               User           @relation(fields: [senderId], references: [id])
-//  offer                offers[]
-//
-//  @@index([conversationId], map: "message_conversationId_fkey")
-//  @@index([senderId], map: "message_senderId_fkey")
-//}
-//
-//model conversation {
-//  id                String                     @id @default(uuid())
-//  createdAt         DateTime                   @default(now())
-//  updatedAt         DateTime                   @updatedAt
-//  latest_message_id String?                    @unique
-//  owner_id          String?
-//  latest_message    message?                   @relation("latest_conversation_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-//  owner             User?                      @relation(fields: [owner_id], references: [id])
-//  participants      conversation_participant[]
-//  messages          message[]
-//
-//  @@index([latest_message_id], map: "latest_message_id")
-//  @@index([owner_id], map: "conversation_owner_id_fkey")
-//}
-//
-//model conversation_participant {
-//  id                      String       @id @default(uuid())
-//  user_id                 String
-//  conversation_id         String
-//  createdAt               DateTime     @default(now())
-//  has_seen_latest_message Boolean
-//  updatedAt               DateTime     @updatedAt
-//  conversation            conversation @relation(fields: [conversation_id], references: [id])
-//  user                    User         @relation(fields: [user_id], references: [id])
-//
-//  @@index([has_seen_latest_message], map: "has_seen_latest_message")
-//  @@index([conversation_id], map: "conversation_participant_conversation_id_fkey")
-//  @@index([user_id], map: "conversation_participant_user_id_fkey")
-//}
-//
+// schemas/messaging.prisma
+// Messaging and Conversations
+
+model message {
+  id                   String         @id @default(uuid())
+  conversationId       String
+  senderId             String
+  body                 String         @db.Text
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  type                 message_type   @default(TEXT)
+  status               message_status @default(SENT)
+  marketplace_offer_id String?
+  is_latest_in         conversation?  @relation("latest_conversation_message")
+  conversation         conversation   @relation(fields: [conversationId], references: [id])
+  sender               User           @relation(fields: [senderId], references: [id])
+  //  offer                offers[]
+
+  @@index([conversationId], map: "message_conversationId_fkey")
+  @@index([senderId], map: "message_senderId_fkey")
+}
+
+model conversation {
+  id                String                     @id @default(uuid())
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  latest_message_id String?                    @unique
+  owner_id          String?
+  latest_message    message?                   @relation("latest_conversation_message", fields: [latest_message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  owner             User?                      @relation(fields: [owner_id], references: [id])
+  participants      conversation_participant[]
+  messages          message[]
+
+  @@index([latest_message_id], map: "latest_message_id")
+  @@index([owner_id], map: "conversation_owner_id_fkey")
+}
+
+model conversation_participant {
+  id                      String       @id @default(uuid())
+  user_id                 String
+  conversation_id         String
+  createdAt               DateTime     @default(now())
+  has_seen_latest_message Boolean
+  updatedAt               DateTime     @updatedAt
+  conversation            conversation @relation(fields: [conversation_id], references: [id])
+  user                    User         @relation(fields: [user_id], references: [id])
+
+  @@index([has_seen_latest_message], map: "has_seen_latest_message")
+  @@index([conversation_id], map: "conversation_participant_conversation_id_fkey")
+  @@index([user_id], map: "conversation_participant_user_id_fkey")
+}
 
 model direct_message {
   id          Int         @id @default(autoincrement())
@@ -697,6 +692,7 @@ model server {
   members       User[]          @relation("server_members")
   channels      channel[]
   is_public     Boolean         @default(false)
+  roles         role[]
   server_member server_member[]
 }
 
@@ -715,8 +711,9 @@ model channel {
 model server_member {
   userId   String
   serverId Int
-  user     User   @relation(fields: [userId], references: [id])
-  server   server @relation(fields: [serverId], references: [id])
+  user     User          @relation(fields: [userId], references: [id])
+  server   server        @relation(fields: [serverId], references: [id])
+  roles    UserToRoles[] @relation("user_roles")
 
   @@id([userId, serverId])
 }
@@ -738,6 +735,44 @@ model channel_read_receipt {
   user      User     @relation(fields: [userId], references: [id])
 
   @@id([userId, channelId])
+}
+
+model role {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  serverId    Int
+  server      server        @relation(fields: [serverId], references: [id])
+  members     UserToRoles[]
+}
+
+model UserToRoles {
+  id                      Int           @id @default(autoincrement())
+  userId                  String
+  roleId                  Int
+  server_member_user_id   String
+  server_member_server_id Int
+  user                    User          @relation("user_to_roles", fields: [userId], references: [id])
+  role                    role          @relation(fields: [roleId], references: [id])
+  server_member           server_member @relation("user_roles", fields: [server_member_user_id, server_member_server_id], references: [userId, serverId])
+
+  @@unique([userId, roleId])
+}
+
+model user_badges {
+  user_id  String
+  badge_id Int
+  user     User   @relation(fields: [user_id], references: [id])
+  badge    badge  @relation(fields: [badge_id], references: [id])
+
+  @@id([user_id, badge_id])
+}
+
+model badge {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  users       user_badges[]
 }
 
 enum ChannelType {
@@ -802,10 +837,11 @@ model veve_imx_status {
 }
 
 model newsletter_subscribers {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  ip_address String?
-  createdAt  DateTime @default(now())
+  id                  Int                   @id @default(autoincrement())
+  email               String                @unique
+  ip_address          String?
+  createdAt           DateTime              @default(now())
+  project_newsletters project_newsletters[]
 }
 
 // schemas/notifications.prisma
@@ -904,6 +940,7 @@ model veve_wallets {
   lgcy_veve_username      String?
   active                  Boolean?                  @default(false)
   has_kyc                 Boolean?                  @default(false)
+  has_kyc_2023            Boolean?                  @default(false)
   mintalysis_note         String?
   veve_leaderboard        veve_leaderboard[]
   veve_tokens             veve_tokens[]
@@ -1018,6 +1055,9 @@ model veve_transfers {
   @@index([timestamp_dt])
   @@index([token_id, createdAt])
   @@index([token_id, from_wallet, to_wallet])
+  @@index([to_wallet, from_wallet])
+  @@index([from_wallet])
+  @@index([to_wallet])
 }
 
 model veve_mints {
@@ -1156,6 +1196,7 @@ model veve_collectibles {
   slug                                 String?                          @unique
   unique_holders                       BigInt?
   first_public_mint                    Int?
+  first_public_rarity_mint             Int?
   mcp_low_ed_limit                     Int?
   mcp_base_value                       Int?
   mcp_rarity_value                     Decimal?                         @db.Decimal(4, 2)
@@ -1222,6 +1263,19 @@ model veve_collectibles_metrics {
   collectible        veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
 }
 
+model veve_collectibles_listings {
+  id             Int       @id @default(autoincrement())
+  collectible_id String
+  listing_id     String?
+  issue_number   Int?
+  listing_type   String
+  price          Decimal?
+  seller_name    String?
+  seller_id      String?
+  ending_at      DateTime?
+  bid_count      Int?
+}
+
 // schemas/projects/veve/comics.prisma
 // Veve Comics
 
@@ -1268,6 +1322,7 @@ model veve_comics {
   comic_id                    String?
   unique_holders              BigInt?
   first_public_mint           Int?
+  first_public_rarity_mint    Int?
   mcp_low_ed_limit            Int?
   mcp_rarity_value            Decimal?                   @db.Decimal(10, 2)
   comic_image_url_id          String?                    @unique @db.VarChar(50)
@@ -1322,34 +1377,39 @@ model veve_leaderboard {
 }
 
 model veve_wallet_metrics {
-  id                 Int          @id @default(autoincrement())
-  datetime           DateTime?    @db.DateTime(0)
-  rank               Int?         @unique
-  prev_rank          Int?         @unique
-  rank_change        Int?
-  wallet_id          String       @unique
-  token_count        Int?
-  comics_count       Int?
-  collectibles_count Int?
-  artist_proofs      Int?
-  omi_balance        Float?
-  mints_count        Int?
-  purchase_count     Int?
-  sale_count         Int?
-  net_accum          Int?
-  total_comic_sets   Int?
-  total_coll_sets    Int?
-  total_mints        Int?
-  total_purchases    Int?
-  total_sales        Int?
-  total_burned       Int?
-  total_mcp_pts      Float?
-  daily_mcp_pts      Float?
-  mcp_level          Int?
-  mcp_rank           String?
-  created_at         DateTime     @default(now())
-  updated_at         DateTime?    @updatedAt
-  wallet             veve_wallets @relation(fields: [wallet_id], references: [id])
+  id                  Int          @id @default(autoincrement())
+  datetime            DateTime?    @db.DateTime(0)
+  rank                Int?         @unique
+  prev_rank           Int?         @unique
+  rank_change         Int?
+  wallet_id           String       @unique
+  mint_count          Int?
+  purchase_count      Int?
+  sale_count          Int?
+  net_accum           Int?
+  transfer_count      Int?
+  total_tokens        Int?
+  total_comics        Int?
+  total_collectibles  Int?
+  total_artist_proofs Int?
+  total_C             Int?
+  total_UC            Int?
+  total_R             Int?
+  total_UR            Int?
+  total_SR            Int?
+  comic_set_count     Int?
+  unique_comic_sets   Int?
+  coll_set_count      Int?
+  unique_coll_sets    Int?
+  total_burned        Int?
+  omi_balance         Float?
+  total_mcp_pts       Float?
+  daily_mcp_pts       Float?
+  mcp_level           Int?
+  mcp_rank            String?
+  created_at          DateTime     @default(now())
+  updated_at          DateTime?    @updatedAt
+  wallet              veve_wallets @relation(fields: [wallet_id], references: [id])
 
   @@index([wallet_id], map: "veve_wallet_metrics_wallet_id_fkey")
 }
@@ -1499,16 +1559,16 @@ model veve_mcp_staging_sets {
 }
 
 model veve_mcp_staging_csv_import {
-  id              Int       @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   wallet_id       String?
-  txn_date        DateTime?
+  txn_date        String?
   txn_type        String?
   item_name       String?
-  edition         Int?
+  edition         String?
   buyer_username  String?
   seller_username String?
-  gem_amount      Float?
-  created_at      DateTime  @default(now())
+  gem_amount      String?
+  created_at      DateTime @default(now())
 }
 
 model veve_mcp_staging_csv_import_sets {
@@ -1801,19 +1861,20 @@ model veve_watchlist {
 // Projects
 
 model projects {
-  id                String              @id @default(uuid())
-  name              String?             @unique
-  abbr              String?             @unique
-  active            Boolean             @default(false)
+  id                String                @id @default(uuid())
+  name              String?               @unique
+  abbr              String?               @unique
+  active            Boolean               @default(false)
   icon              String?
-  slug              String?             @unique
-  sort              Int                 @default(10)
+  slug              String?               @unique
+  sort              Int                   @default(10)
   tile              String?
   motiff_url        String?
   article           article[]
   notifications     notifications[]
   price_alerts      price_alerts[]
   metrics           projects_metrics[]
+  newsletters       project_newsletters[]
   x_account         x_account[]
   youtube_account   youtube_account?
   instagram_account instagram_account[]
@@ -1837,6 +1898,16 @@ model projects_metrics {
   all_time_change Decimal? @db.Decimal(10, 2)
   volume          Decimal? @db.Decimal(10, 2)
   project         projects @relation(fields: [project_id], references: [id])
+}
+
+model project_newsletters {
+  id            Int                    @id @default(autoincrement())
+  project_id    String
+  subscriber_id Int
+  projects      projects               @relation(fields: [project_id], references: [id])
+  subscribers   newsletter_subscribers @relation(fields: [subscriber_id], references: [id])
+
+  @@unique([project_id, subscriber_id])
 }
 
 model UserToprojects {
@@ -2201,10 +2272,15 @@ model User {
   sent_direct_messages            direct_message[]                 @relation("sender")
   received_direct_messages        direct_message[]                 @relation("receiver")
   channel_messages                channel_message[]
+  roles                           UserToRoles[]                    @relation("user_to_roles")
+  message                         message[]
+  conversation                    conversation[]
+  conversation_participant        conversation_participant[]
   server                          server[]
   server_member                   server_member[]
   ChannelMember                   ChannelMember[]
   channel_read_receipt            channel_read_receipt[]
+  user_badges                     user_badges[]
 
   @@index([email], map: "email")
   @@index([username], map: "username")
