@@ -692,6 +692,7 @@ model server {
   members       User[]          @relation("server_members")
   channels      channel[]
   is_public     Boolean         @default(false)
+  roles         role[]
   server_member server_member[]
 }
 
@@ -710,8 +711,9 @@ model channel {
 model server_member {
   userId   String
   serverId Int
-  user     User   @relation(fields: [userId], references: [id])
-  server   server @relation(fields: [serverId], references: [id])
+  user     User          @relation(fields: [userId], references: [id])
+  server   server        @relation(fields: [serverId], references: [id])
+  roles    UserToRoles[] @relation("user_roles")
 
   @@id([userId, serverId])
 }
@@ -739,15 +741,20 @@ model role {
   id          Int           @id @default(autoincrement())
   name        String
   description String
-  users_roles UserToRoles[]
+  serverId    Int
+  server      server        @relation(fields: [serverId], references: [id])
+  members     UserToRoles[]
 }
 
 model UserToRoles {
-  id     Int    @id @default(autoincrement())
-  userId String
-  roleId Int
-  user   User   @relation("user_to_roles", fields: [userId], references: [id])
-  role   role   @relation(fields: [roleId], references: [id])
+  id                      Int           @id @default(autoincrement())
+  userId                  String
+  roleId                  Int
+  server_member_user_id   String
+  server_member_server_id Int
+  user                    User          @relation("user_to_roles", fields: [userId], references: [id])
+  role                    role          @relation(fields: [roleId], references: [id])
+  server_member           server_member @relation("user_roles", fields: [server_member_user_id, server_member_server_id], references: [userId, serverId])
 
   @@unique([userId, roleId])
 }
