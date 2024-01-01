@@ -694,6 +694,7 @@ model server {
   is_public     Boolean         @default(false)
   roles         role[]
   server_member server_member[]
+  Mute          Mute[]
 }
 
 model channel {
@@ -701,11 +702,14 @@ model channel {
   slug                 String?                @unique
   name                 String
   type                 ChannelType            @default(TEXT)
+  topic                String?
+  slowModeDelay        Int?
   server_id            Int
   server               server                 @relation(fields: [server_id], references: [id])
   messages             channel_message[]
   ChannelMember        ChannelMember[]
   channel_read_receipt channel_read_receipt[]
+  Mute                 Mute[]
 }
 
 model server_member {
@@ -773,6 +777,17 @@ model badge {
   name        String
   description String
   users       user_badges[]
+}
+
+model Mute {
+  id        Int       @id @default(autoincrement())
+  userId    String
+  serverId  Int
+  channelId Int?
+  muteEnd   DateTime?
+  user      User      @relation(fields: [userId], references: [id])
+  server    server    @relation(fields: [serverId], references: [id])
+  channel   channel?  @relation(fields: [channelId], references: [id])
 }
 
 enum ChannelType {
@@ -2281,6 +2296,7 @@ model User {
   ChannelMember                   ChannelMember[]
   channel_read_receipt            channel_read_receipt[]
   user_badges                     user_badges[]
+  Mute                            Mute[]
 
   @@index([email], map: "email")
   @@index([username], map: "username")
