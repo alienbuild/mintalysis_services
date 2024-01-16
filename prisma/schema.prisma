@@ -851,6 +851,10 @@ model veve_imx_status {
   updatedAt      DateTime? @updatedAt
 }
 
+model numbers {
+  number Int @id
+}
+
 model newsletter_subscribers {
   id                  Int                   @id @default(autoincrement())
   email               String                @unique
@@ -962,6 +966,7 @@ model veve_wallets {
   wallet_tags             wallet_tags?              @relation(fields: [tagsId], references: [id])
   veve_wallets_valuations veve_wallets_valuations[]
   veve_wallet_metrics     veve_wallet_metrics?
+  veve_x_tracker          veve_x_tracker[]
 
   @@index([last_activity_date])
   @@index([first_activity_date])
@@ -1440,6 +1445,20 @@ model veve_wallet_token_counts {
   updated_at        DateTime? @updatedAt
 }
 
+model veve_x_tracker {
+  id          Int          @id @default(autoincrement())
+  wallet_id   String
+  date        DateTime?
+  created_at  DateTime     @default(now())
+  sales       Int?
+  purchases   Int?
+  mints       Int?
+  token_count Int?
+  wallet      veve_wallets @relation(fields: [wallet_id], references: [id])
+
+  @@index([wallet_id], map: "veve_x_tracker_wallet_id_fkey")
+}
+
 // schemas/projects/veve/licensors.prisma
 // Veve Licensors
 
@@ -1556,6 +1575,7 @@ model veve_mcp_completed_sets {
   id              Int       @id @default(autoincrement())
   wallet_id       String
   series_id       String
+  nbr_of_items    Int?
   date_completed  DateTime
   completed_count Int?
   date_set_broken DateTime?
