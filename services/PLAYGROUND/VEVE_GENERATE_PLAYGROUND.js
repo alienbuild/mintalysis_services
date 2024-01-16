@@ -588,6 +588,254 @@ const VEVE_GENERATE_WRITER_DESCRIPTIONS = async () => {
     }
 }
 
+const VEVE_GENERATE_WRITER_GRAILS = async () => {
+    console.log('Lets get them GRAILS!')
+
+    const chatgpt = new ChatGPTAPI({
+        apiKey: chatGptKey,
+        completionParams: {
+            model: 'gpt-4',
+        }
+    })
+
+    const batchSize = 10;
+    let skip = 0;
+
+    while(true) {
+        const writers = await prisma.writers.findMany({
+            skip,
+            take: batchSize
+        })
+        console.log('writers is: ', writers)
+        if (writers.length === 0) break
+        for(const writer of writers) {
+            console.log(`Calling ChatGPT 4 for ${writer.name} grails`)
+
+            const message = `
+                Write a list of the most notable comics that the author ${writer.name} contributed to. Descriptions should be around 350 characters in length. Each item should be an object with the following properties: "title" (string), "number" (integer), "year" (integer), and "description" (string). Here's an example:
+                
+                {
+                  "title": "The comic title",
+                  "number": 1,
+                  "year": 2000,
+                  "description": "Short description of the comic book"
+                }
+                
+                Please ensure these objects are in an array.
+                `
+
+            const grailsResponse = await chatgpt.sendMessage(message)
+            console.log(`[GRAILS] received for ${writer.name}`)
+
+            const responseText = grailsResponse.text;
+            const openingBracket = responseText.indexOf('[');
+            const closingBracket = responseText.lastIndexOf(']');
+
+            const jsonArray = responseText.slice(openingBracket, closingBracket + 1);
+            let grails;
+            try {
+                grails = JSON.parse(jsonArray);
+                if (Array.isArray(grails)) {
+                    if (!grails.every((grail) => typeof grail === "object")) {
+                        console.error("The array contains non-object elements for " + writer.name);
+                        continue;
+                    }
+                } else {
+                    console.error("Received response is not an array for " + writer.name);
+                    continue;
+                }
+            } catch (err) {
+                console.error("Failed to parse response for " + writer.name);
+                continue;
+            }
+
+            for (let grail of grails) {
+
+                const comic = await prisma.veve_comics.findFirst({
+                    where: {
+                        AND: [
+                            {
+                                name: {
+                                    equals: grail.title,
+                                },
+                            },
+                            {
+                                comic_number: parseInt(grail.number),
+                            },
+                        ],
+                    },
+                });
+
+                if (comic && comic.length > 0) console.log(`[${artist.name}][MATCHED] - [GRAIL TITLE] ${grail.title} - [COMIC NAME] ${comic.name}`)
+
+                try {
+                    await prisma.writers_grails.create({
+                        data: {
+                            title: grail.title,
+                            description: grail.description,
+                            year: grail.year,
+                            number: String(grail.number),
+                            author_id: writer.author_id,
+                            unique_cover_id: comic?.unique_cover_id
+                        }
+                    });
+                } catch (e) {
+                    console.log('[ERROR] Unable to save grails for writer: ', writer.name)
+                }
+
+            }
+
+            console.log(`[SAVED][GRAILS] for the character ${writer.name}`)
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+        }
+        skip += batchSize;
+    }
+}
+
+const HTML_FIX_ARTISTS_TRANSLATIONS = async () => {
+    console.log('Lets fix them ARTIST descriptions!')
+
+    const chatgpt = new ChatGPTAPI({
+        apiKey: chatGptKey,
+        completionParams: {
+            model: 'gpt-3.5-turbo',
+        }
+    })
+
+    const batchSize = 10;
+    let skip = 27;
+
+    while (true) {
+        const artists = await prisma.artists.findMany({
+            include: {
+                translations: { where: { language: "EN" } }
+            },
+            skip: skip,
+            take: batchSize
+        })
+
+        console.log('artists is: ', artists)
+        if (artists.length === 0) break
+        for (const artist of artists) {
+            console.log(`Calling ChatGPT 3.5 for ${artist.name}`);
+
+            const get_html_elements = `
+            Convert the following text into HTML format using appropriate elements such as headers, 
+            paragraphs, lists, etc. However, do not include elements for html, head, body, main, 
+            or article. Start the HTML code after this sentence: "${artist.translations[0].content}"`
+
+            const fullMessage = await chatgpt.sendMessage(get_html_elements);
+
+            const fullText = fullMessage.text;
+
+            const htmlCodeStart = 'sentence: "';
+            const start = fullText.indexOf(htmlCodeStart) + htmlCodeStart.length;
+            const htmlOpeningBracket = fullText.indexOf(':', start) + 2;  // Adjust to account for colon and space
+            const end = fullText.length;
+
+            const htmlCode = fullText.slice(htmlOpeningBracket, end);
+
+            // Update the artists_translations table with the new htmlCode
+            await prisma.artists_translations.update({
+                where: {
+                    language_artist_id: {
+                        language: "EN",
+                        artist_id: artist.artist_id
+                    }
+                },
+                data: {
+                    content: htmlCode
+                }
+            });
+            console.log(`[UPDATED] Updated HTML content for the artist ${artist.name}`);
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+        }
+        skip += batchSize;
+
+    }
+}
+
+const HTML_FIX_CHARACTERS_TRANSLATIONS = async () => {
+    console.log('Lets fix them CHARACTER descriptions!')
+
+    const chatgpt = new ChatGPTAPI({
+        apiKey: chatGptKey,
+        completionParams: {
+            model: 'gpt-3.5-turbo',
+        }
+    })
+
+    const batchSize = 10;
+    let skip = 27;
+
+    while (true) {
+        const characters = await prisma.characters.findMany({
+            include: {
+                translations: { where: { language: "EN" } }
+            },
+            skip: skip,
+            take: batchSize
+        })
+
+        // Break if there are no characters left to process
+        if (characters.length === 0) break;
+
+        for (const character of characters) {
+            // Check if character's content is already in HTML format
+            const notUpdated = character.translations.some(translation =>
+                translation.content && !translation.content.includes('<p>')
+            );
+
+            if (notUpdated) {
+                console.log(`Calling ChatGPT 3.5 for ${character.name}`);
+
+                const get_html_elements = `
+                Convert the following text into HTML format using appropriate elements such as headers, 
+                paragraphs, lists, etc. However, do not include elements for html, head, body, main, 
+                or article. Start the HTML code after this sentence: "${character.translations[0].content}"`
+
+                const fullMessage = await chatgpt.sendMessage(get_html_elements);
+
+                const fullText = fullMessage.text;
+
+                const htmlCodeStart = 'sentence: "';
+                const start = fullText.indexOf(htmlCodeStart) + htmlCodeStart.length;
+                const htmlOpeningBracket = fullText.indexOf(':', start) + 2;
+                const end = fullText.length;
+
+                const htmlCode = fullText.slice(htmlOpeningBracket, end);
+
+                // Update the characters_translations table with the new htmlCode
+                await prisma.characters_translations.update({
+                    where: {
+                        language_character_id: {
+                            language: "EN",
+                            character_id: character.character_id
+                        }
+                    },
+                    data: {
+                        content: htmlCode
+                    }
+                });
+
+                console.log(`[UPDATED] Updated HTML content for the character ${character.name}`);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        skip += batchSize;
+    }
+}
+
+// HTML_FIX_ARTISTS_TRANSLATIONS().then(r => console.log('[FINISHED]'))
+
+HTML_FIX_CHARACTERS_TRANSLATIONS().then(r => console.log('[FINISHED]'))
+
 // VEVE_GENERATE_ARTISTS_DESCRIPTIONS().then(r => console.log('[FINISHED]'))
 
 // VEVE_GENERATE_CHARACTER_DESCRIPTIONS().then(r => console.log('[FINISHED]'))
@@ -596,4 +844,6 @@ const VEVE_GENERATE_WRITER_DESCRIPTIONS = async () => {
 
 // VEVE_GENERATE_ARTISTS_GRAILS().then(r => console.log('[FINISHED]'))
 
-VEVE_GENERATE_WRITER_DESCRIPTIONS().then(r => console.log('[FINISHED]'))
+// VEVE_GENERATE_WRITER_DESCRIPTIONS().then(r => console.log('[FINISHED]'))
+
+// VEVE_GENERATE_WRITER_GRAILS().then(r => console.log('[FINISHED]'))
