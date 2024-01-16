@@ -694,6 +694,7 @@ model server {
   is_public     Boolean         @default(false)
   roles         role[]
   server_member server_member[]
+  Mute          Mute[]
 }
 
 model channel {
@@ -701,11 +702,14 @@ model channel {
   slug                 String?                @unique
   name                 String
   type                 ChannelType            @default(TEXT)
+  topic                String?
+  slowModeDelay        Int?
   server_id            Int
   server               server                 @relation(fields: [server_id], references: [id])
   messages             channel_message[]
   ChannelMember        ChannelMember[]
   channel_read_receipt channel_read_receipt[]
+  Mute                 Mute[]
 }
 
 model server_member {
@@ -775,6 +779,17 @@ model badge {
   users       user_badges[]
 }
 
+model Mute {
+  id        Int       @id @default(autoincrement())
+  userId    String
+  serverId  Int
+  channelId Int?
+  muteEnd   DateTime?
+  user      User      @relation(fields: [userId], references: [id])
+  server    server    @relation(fields: [serverId], references: [id])
+  channel   channel?  @relation(fields: [channelId], references: [id])
+}
+
 enum ChannelType {
   TEXT
   AUDIO
@@ -834,6 +849,10 @@ model veve_imx_status {
   table_name     String?   @unique
   next_cursor    String?   @db.Text
   updatedAt      DateTime? @updatedAt
+}
+
+model numbers {
+  number Int @id
 }
 
 model newsletter_subscribers {
@@ -947,6 +966,7 @@ model veve_wallets {
   wallet_tags             wallet_tags?              @relation(fields: [tagsId], references: [id])
   veve_wallets_valuations veve_wallets_valuations[]
   veve_wallet_metrics     veve_wallet_metrics?
+  veve_x_tracker          veve_x_tracker[]
 
   @@index([last_activity_date])
   @@index([first_activity_date])
@@ -1425,6 +1445,20 @@ model veve_wallet_token_counts {
   updated_at        DateTime? @updatedAt
 }
 
+model veve_x_tracker {
+  id          Int          @id @default(autoincrement())
+  wallet_id   String
+  date        DateTime?
+  created_at  DateTime     @default(now())
+  sales       Int?
+  purchases   Int?
+  mints       Int?
+  token_count Int?
+  wallet      veve_wallets @relation(fields: [wallet_id], references: [id])
+
+  @@index([wallet_id], map: "veve_x_tracker_wallet_id_fkey")
+}
+
 // schemas/projects/veve/licensors.prisma
 // Veve Licensors
 
@@ -1541,6 +1575,7 @@ model veve_mcp_completed_sets {
   id              Int       @id @default(autoincrement())
   wallet_id       String
   series_id       String
+  nbr_of_items    Int?
   date_completed  DateTime
   completed_count Int?
   date_set_broken DateTime?
@@ -2272,7 +2307,7 @@ model User {
   sent_direct_messages            direct_message[]                 @relation("sender")
   received_direct_messages        direct_message[]                 @relation("receiver")
   channel_messages                channel_message[]
-  roles                           UserToRoles[]                    @relation("user_to_roles")
+  UserToRoles                     UserToRoles[]                    @relation("user_to_roles")
   message                         message[]
   conversation                    conversation[]
   conversation_participant        conversation_participant[]
@@ -2281,6 +2316,7 @@ model User {
   ChannelMember                   ChannelMember[]
   channel_read_receipt            channel_read_receipt[]
   user_badges                     user_badges[]
+  Mute                            Mute[]
 
   @@index([email], map: "email")
   @@index([username], map: "username")
