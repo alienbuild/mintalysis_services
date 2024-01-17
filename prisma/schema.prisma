@@ -709,6 +709,7 @@ model channel {
   messages             channel_message[]
   ChannelMember        ChannelMember[]
   channel_read_receipt channel_read_receipt[]
+  ChannelRole          ChannelRole[]
   Mute                 Mute[]
 }
 
@@ -761,6 +762,37 @@ model UserToRoles {
   server_member           server_member @relation("user_roles", fields: [server_member_user_id, server_member_server_id], references: [userId, serverId])
 
   @@unique([userId, roleId])
+}
+
+model ChannelRole {
+  id        Int             @id @default(autoincrement())
+  userId    String
+  channelId Int
+  role      ChannelRoleType
+  user      User            @relation(fields: [userId], references: [id])
+  channel   channel         @relation(fields: [channelId], references: [id])
+
+  @@unique([userId, channelId])
+}
+
+enum ChannelRoleType {
+  HOST
+  CO_HOST
+  SPEAKER
+  LISTENER
+}
+
+model speak_request {
+  id        Int                @id @default(autoincrement())
+  userId    String
+  channelId Int
+  status    SpeakRequestStatus
+}
+
+enum SpeakRequestStatus {
+  PENDING
+  APPROVED
+  DENIED
 }
 
 model user_badges {
@@ -2315,6 +2347,7 @@ model User {
   server_member                   server_member[]
   ChannelMember                   ChannelMember[]
   channel_read_receipt            channel_read_receipt[]
+  ChannelRole                     ChannelRole[]
   user_badges                     user_badges[]
   Mute                            Mute[]
 
