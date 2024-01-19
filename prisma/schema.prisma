@@ -724,10 +724,12 @@ model server_member {
 }
 
 model ChannelMember {
-  userId    String
-  channelId Int
-  user      User    @relation(fields: [userId], references: [id])
-  channel   channel @relation(fields: [channelId], references: [id])
+  userId        String
+  channelId     Int
+  user          User         @relation(fields: [userId], references: [id])
+  channel       channel      @relation(fields: [channelId], references: [id])
+  channelRole   ChannelRole? @relation(fields: [channelRoleId], references: [id])
+  channelRoleId Int?
 
   @@id([userId, channelId])
 }
@@ -765,12 +767,13 @@ model UserToRoles {
 }
 
 model ChannelRole {
-  id        Int             @id @default(autoincrement())
-  userId    String
-  channelId Int
-  role      ChannelRoleType
-  user      User            @relation(fields: [userId], references: [id])
-  channel   channel         @relation(fields: [channelId], references: [id])
+  id            Int             @id @default(autoincrement())
+  userId        String
+  channelId     Int
+  role          ChannelRoleType
+  user          User            @relation(fields: [userId], references: [id])
+  channel       channel         @relation(fields: [channelId], references: [id])
+  ChannelMember ChannelMember[]
 
   @@unique([userId, channelId])
 }
