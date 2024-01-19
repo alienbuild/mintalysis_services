@@ -724,12 +724,12 @@ model server_member {
 }
 
 model ChannelMember {
-  userId        String
-  channelId     Int
-  user          User         @relation(fields: [userId], references: [id])
-  channel       channel      @relation(fields: [channelId], references: [id])
-  channelRole   ChannelRole? @relation(fields: [channelRoleId], references: [id])
-  channelRoleId Int?
+  userId    String
+  channelId Int
+  user      User    @relation(fields: [userId], references: [id])
+  channel   channel @relation(fields: [channelId], references: [id])
+  role      role?   @relation(fields: [roleId], references: [id])
+  roleId    Int? // Optional, can be null if the member has no specific role
 
   @@id([userId, channelId])
 }
@@ -745,12 +745,13 @@ model channel_read_receipt {
 }
 
 model role {
-  id          Int           @id @default(autoincrement())
-  name        String
-  description String
-  serverId    Int
-  server      server        @relation(fields: [serverId], references: [id])
-  members     UserToRoles[]
+  id            Int             @id @default(autoincrement())
+  name          String
+  description   String
+  serverId      Int
+  server        server          @relation(fields: [serverId], references: [id])
+  members       UserToRoles[]
+  ChannelMember ChannelMember[]
 }
 
 model UserToRoles {
@@ -767,13 +768,12 @@ model UserToRoles {
 }
 
 model ChannelRole {
-  id            Int             @id @default(autoincrement())
-  userId        String
-  channelId     Int
-  role          ChannelRoleType
-  user          User            @relation(fields: [userId], references: [id])
-  channel       channel         @relation(fields: [channelId], references: [id])
-  ChannelMember ChannelMember[]
+  id        Int             @id @default(autoincrement())
+  userId    String
+  channelId Int
+  role      ChannelRoleType
+  user      User            @relation(fields: [userId], references: [id])
+  channel   channel         @relation(fields: [channelId], references: [id])
 
   @@unique([userId, channelId])
 }
