@@ -707,7 +707,6 @@ model channel {
   server_id            Int
   server               server                 @relation(fields: [server_id], references: [id])
   messages             channel_message[]
-  ChannelMember        ChannelMember[]
   channel_read_receipt channel_read_receipt[]
   ChannelRole          ChannelRole[]
   Mute                 Mute[]
@@ -723,16 +722,16 @@ model server_member {
   @@id([userId, serverId])
 }
 
-model ChannelMember {
-  userId    String
-  channelId Int
-  user      User    @relation(fields: [userId], references: [id])
-  channel   channel @relation(fields: [channelId], references: [id])
-  role      role?   @relation(fields: [roleId], references: [id])
-  roleId    Int? // Optional, can be null if the member has no specific role
+// model ChannelMember {
+//   userId    String
+//   channelId Int
+//   user      User    @relation(fields: [userId], references: [id])
+//   channel   channel @relation(fields: [channelId], references: [id])
+//   role      role    @relation(fields: [roleId], references: [id])
+//   roleId    Int    // Optional, can be null if the member has no specific role
 
-  @@id([userId, channelId])
-}
+//   @@id([userId, channelId])
+// }
 
 model channel_read_receipt {
   userId    String
@@ -745,13 +744,12 @@ model channel_read_receipt {
 }
 
 model role {
-  id            Int             @id @default(autoincrement())
-  name          String
-  description   String
-  serverId      Int
-  server        server          @relation(fields: [serverId], references: [id])
-  members       UserToRoles[]
-  ChannelMember ChannelMember[]
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  serverId    Int
+  server      server        @relation(fields: [serverId], references: [id])
+  members     UserToRoles[]
 }
 
 model UserToRoles {
@@ -994,7 +992,7 @@ model veve_wallets {
   lgcy_veve_username      String?
   active                  Boolean?                  @default(false)
   has_kyc                 Boolean?                  @default(false)
-  has_kyc_2023            Boolean?                  @default(false)
+  is_pre_imx              Boolean?                  @default(false)
   mintalysis_note         String?
   veve_leaderboard        veve_leaderboard[]
   veve_tokens             veve_tokens[]
@@ -1483,12 +1481,13 @@ model veve_wallet_token_counts {
 model veve_x_tracker {
   id          Int          @id @default(autoincrement())
   wallet_id   String
-  date        DateTime?
-  created_at  DateTime     @default(now())
+  date        DateTime     @db.Date
   sales       Int?
   purchases   Int?
   mints       Int?
   token_count Int?
+  omi_change  Float?
+  created_at  DateTime     @default(now())
   wallet      veve_wallets @relation(fields: [wallet_id], references: [id])
 
   @@index([wallet_id], map: "veve_x_tracker_wallet_id_fkey")
@@ -2348,7 +2347,6 @@ model User {
   conversation_participant        conversation_participant[]
   server                          server[]
   server_member                   server_member[]
-  ChannelMember                   ChannelMember[]
   channel_read_receipt            channel_read_receipt[]
   ChannelRole                     ChannelRole[]
   user_badges                     user_badges[]
