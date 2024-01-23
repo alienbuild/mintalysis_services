@@ -1929,24 +1929,28 @@ model veve_watchlist {
 // schemas/projects.prisma
 // Projects
 
+//TODO: Rename projects to collection and comb apply changes throughout the typedefs and resolvers + fe
 model projects {
-  id                String                @id @default(uuid())
-  name              String?               @unique
-  abbr              String?               @unique
-  active            Boolean               @default(false)
-  icon              String?
-  slug              String?               @unique
-  sort              Int                   @default(10)
-  tile              String?
-  motiff_url        String?
-  article           article[]
-  notifications     notifications[]
-  price_alerts      price_alerts[]
-  metrics           projects_metrics[]
-  newsletters       project_newsletters[]
-  x_account         x_account[]
-  youtube_account   youtube_account?
-  instagram_account instagram_account[]
+  id                  String                @id @default(uuid())
+  name                String?               @unique
+  abbr                String?               @unique
+  active              Boolean               @default(false)
+  icon                String?
+  slug                String?               @unique
+  sort                Int                   @default(10)
+  valuation           Decimal?              @db.Decimal(20, 2)
+  valuation_with_fees Decimal?              @db.Decimal(20, 2)
+  tile                String?
+  motiff_url          String?
+  article             article[]
+  notifications       notifications[]
+  price_alerts        price_alerts[]
+  metrics             projects_metrics[]
+  newsletters         project_newsletters[]
+  UserToProjects      UserToProjects[]
+  x_account           x_account[]
+  youtube_account     youtube_account?
+  instagram_account   instagram_account[]
 }
 
 model projects_metrics {
@@ -1979,13 +1983,13 @@ model project_newsletters {
   @@unique([project_id, subscriber_id])
 }
 
-model UserToprojects {
-  A String
-  B String
+model UserToProjects {
+  userId       String
+  collectionId String
+  user         User     @relation(fields: [userId], references: [id])
+  project      projects @relation(fields: [collectionId], references: [id])
 
-  @@unique([A, B], map: "_UserToprojects_AB_unique")
-  @@index([B], map: "_UserToprojects_B_index")
-  @@map("_UserToprojects")
+  @@id([userId, collectionId])
 }
 
 // schemas/session.prisma
@@ -2311,10 +2315,13 @@ model User {
   role                            Role                             @default(BASIC)
   username                        String?                          @unique
   avatar                          String?
+  collector_type                  CollectorType                    @default(GUEST)
   last_seen                       DateTime?                        @default(now())
   activated                       Boolean                          @default(false)
   stripe_customer_id              String?
   onboarded                       Boolean                          @default(false)
+  projects                        UserToProjects[]
+  totalValuation                  Decimal?                         @db.Decimal(20, 2)
   name                            String?
   impressions                     Int?
   viewed_profile                  Int?
@@ -2400,6 +2407,13 @@ model profile {
   veve_wallet_address  String?
   mcfarlane_wallets    mcfarlane_wallets?
   users                User               @relation(fields: [user_id], references: [id])
+}
+
+enum CollectorType {
+  PHYSICAL_COLLECTOR
+  DIGITAL_COLLECTOR
+  HYBRID
+  GUEST
 }
 
 // schemas/writers.prisma
