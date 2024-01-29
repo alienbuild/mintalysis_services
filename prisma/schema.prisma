@@ -888,6 +888,11 @@ model numbers {
   number Int @id
 }
 
+model meili_script_logs {
+  script_name   String   @id
+  last_run_date DateTime
+}
+
 model newsletter_subscribers {
   id                  Int                   @id @default(autoincrement())
   email               String                @unique
