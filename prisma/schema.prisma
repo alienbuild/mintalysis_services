@@ -1327,6 +1327,8 @@ model veve_collectible_tags {
   name           String
   collectible_id String
   collectible    veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+  User           User?             @relation(fields: [userId], references: [id])
+  userId         String?
 
   @@index([collectible_id], name: "idx_collectible_tags")
 }
@@ -2364,6 +2366,7 @@ model User {
   received_direct_messages        direct_message[]                 @relation("receiver")
   channel_messages                channel_message[]
   UserToRoles                     UserToRoles[]                    @relation("user_to_roles")
+  tags                            veve_collectible_tags[]
   message                         message[]
   conversation                    conversation[]
   conversation_participant        conversation_participant[]
