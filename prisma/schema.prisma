@@ -1273,6 +1273,7 @@ model veve_collectibles {
   veve_watchlist                       veve_watchlist[]
   //veve_tokens                          veve_tokens[]                    @relation("veve_collectiblesToveve_tokens")
   veveTokenCollectibles                veveTokenCollectible[]
+  veve_collectible_tags                veve_collectible_tags[]
   veve_profile                         veve_profile[]
 
   @@index([brand_id], map: "collectibles_brand_id_fkey")
@@ -1319,6 +1320,15 @@ model veve_collectibles_metrics {
   volume             Decimal?          @db.Decimal(10, 2)
   circulating_supply Decimal?          @db.Decimal(10, 2)
   collectible        veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+}
+
+model veve_collectible_tags {
+  tag_id         Int               @id @default(autoincrement())
+  name           String
+  collectible_id String
+  collectible    veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+
+  @@index([collectible_id], name: "idx_collectible_tags")
 }
 
 model veve_collectibles_listings {
