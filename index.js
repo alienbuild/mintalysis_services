@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client"
 import {scheduledHourlyJobs} from "./services/index.js";
 import mongoose from "mongoose";
 import Slack from "@slack/bolt";
+import {MeiliSearch} from "meilisearch";
 
 export const prisma = new PrismaClient()
 
@@ -13,6 +14,11 @@ console.log('[ALICE IS WAITING FOR INSTRUCTION]')
 export const slack = new Slack.App({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
     token: process.env.SLACK_BOT_TOKEN
+});
+
+export const meili = new MeiliSearch({
+    host: 'http://67.225.248.251:7700',
+    apiKey: process.env.MEILISEARCH_KEY
 });
 
 const initializeMongoose = async () => {

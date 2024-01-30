@@ -1,10 +1,11 @@
 import fetch from 'node-fetch'
-import { customAlphabet } from 'nanoid/non-secure'
+import {customAlphabet} from 'nanoid/non-secure'
 import slugify from 'slugify'
 import * as Queries from "../../queries/getVevelatestCollectiblesQuery.js";
 import {prisma} from "../../index.js";
+import {ChatGPTAPI} from 'chatgpt'
+
 const chatGptKey = "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"
-import { ChatGPTAPI } from 'chatgpt'
 
 export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
 
@@ -32,8 +33,25 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
 
                 const slug = slugify(`${collectible.node.name} ${collectible.node.rarity} ${collectible.node.editionType} ${nanoid()}`,{ lower: true, strict: true })
                 const mcp_base_value = 1
-                const mcp_rarity_value = collectible.node.rarity === 'COMMON' ? 0 : collectible.node.rarity === 'UNCOMMON' ? 0 : collectible.node.rarity === 'RARE' ? .25 : collectible.node.rarity === 'ULTRA_RARE' ? .5 : collectible.node.rarity === 'SECRET_RARE' ? 5.0 : NULL
-                const title_case_rarity = collectible.node.rarity === 'COMMON' ? 'Common' : collectible.node.rarity === 'UNCOMMON' ? 'Uncommon' : collectible.node.rarity === 'RARE' ? 'Rare' : collectible.node.rarity === 'ULTRA_RARE' ? 'Ultra Rare' : collectible.node.rarity === 'SECRET_RARE' ? 'Secret Rare' : NULL
+                // const mcp_rarity_value = collectible.node.rarity === 'COMMON' ? 0 : collectible.node.rarity === 'UNCOMMON' ? 0 : collectible.node.rarity === 'RARE' ? .25 : collectible.node.rarity === 'ULTRA_RARE' ? .5 : collectible.node.rarity === 'SECRET_RARE' ? 5.0 : NULL
+                // const title_case_rarity = collectible.node.rarity === 'COMMON' ? 'Common' : collectible.node.rarity === 'UNCOMMON' ? 'Uncommon' : collectible.node.rarity === 'RARE' ? 'Rare' : collectible.node.rarity === 'ULTRA_RARE' ? 'Ultra Rare' : collectible.node.rarity === 'SECRET_RARE' ? 'Secret Rare' : null
+
+                const title_case_rarity = () => {
+                    switch (collectible.node.rarity) {
+                        case 'COMMON':
+                            return 'Common'
+                        case 'UNCOMMON':
+                            return 'Uncommon'
+                        case 'RARE':
+                            return 'Rare'
+                        case 'ULTRA_RARE':
+                            return 'Ultra Rare'
+                        case 'SECRET_RARE':
+                            return 'Secret Rare'
+                        default:
+                            return 'Artist Proof'
+                    }
+                }
 
                 try {
                     const licensorExists = await prisma.veve_licensors.findUnique({
@@ -93,8 +111,8 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
                         update: {
                             name: collectible.node.name,
                             mcp_base_value: mcp_base_value,
-                            mcp_rarity_value: mcp_rarity_value,
-                            mcp_total_value: mcp_base_value + mcp_rarity_value,
+                            // mcp_rarity_value: mcp_rarity_value,
+                            // mcp_total_value: mcp_base_value + mcp_rarity_value,
                             updatedAt: new Date(),
                             total_likes: collectible.node.totalLikes,
                             is_free: collectible.node.isFree,
@@ -103,7 +121,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
                             total_issued: collectible.node.totalIssued,
                             total_available: collectible.node.totalAvailable,
                             description: collectible.node.description,
-                            rarity: title_case_rarity,
+                            rarity: title_case_rarity(),
                             variety: collectible.node.variety,
                             edition_type: collectible.node.editionType,
                             drop_method: collectible.node.dropMethod,
@@ -133,8 +151,8 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
                             collectible_id: collectible.node.id,
                             name: collectible.node.name,
                             mcp_base_value: mcp_base_value,
-                            mcp_rarity_value: mcp_rarity_value,
-                            mcp_total_value: mcp_base_value + mcp_rarity_value,
+                            // mcp_rarity_value: mcp_rarity_value,
+                            // mcp_total_value: mcp_base_value + mcp_rarity_value,
                             updatedAt: new Date(),
                             total_likes: collectible.node.totalLikes,
                             is_free: collectible.node.isFree,
@@ -143,7 +161,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
                             total_issued: collectible.node.totalIssued,
                             total_available: collectible.node.totalAvailable,
                             description: collectible.node.description,
-                            rarity: title_case_rarity,
+                            rarity: title_case_rarity(),
                             variety: collectible.node.variety,
                             edition_type: collectible.node.editionType,
                             drop_method: collectible.node.dropMethod,

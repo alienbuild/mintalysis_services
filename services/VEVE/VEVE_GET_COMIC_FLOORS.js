@@ -4,22 +4,6 @@ import * as Queries from "../../queries/getVeveComicFloorsQuery.js";
 import {prisma} from "../../index.js";
 import mysql from "mysql";
 
-// const connection = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: '',
-//     database: 'mintalysis_local',
-// });
-//
-// connection.connect((err) => {
-//     if (err) {
-//         console.error('Error connecting to the database:', err);
-//         return;
-//     }
-//     console.log('Connected to the database');
-// })
-
-
 const updateTimeSeries = (comic) => {
     try {
         return new Promise((resolve, reject) => {
@@ -547,22 +531,6 @@ const updateMintalysis = async (comic) => {
         resolve()
     })
 
-}
-
-async function insertFloorPriceIntoLocalDatabase(uniqueCoverId, floorPrice) {
-    try {
-        const query = `INSERT INTO veve_comics (unique_cover_id, floor_price) VALUES (?, ?)`;
-        const values = [uniqueCoverId, floorPrice];
-        connection.query(query, values, (error, results) => {
-            if (error) {
-                console.error(`Error inserting floor price for collectible ${uniqueCoverId} into local database:`, error);
-            } else {
-                console.log(`Inserted floor price for collectible ${uniqueCoverId} into local database.`);
-            }
-        });
-    } catch (error) {
-        console.error(`Error inserting floor price for collectible ${uniqueCoverId} into local database:`, error);
-    }
 }
 
 export const VEVE_GET_COMIC_FLOORS = async () => {

@@ -1,6 +1,6 @@
 export const getVevelatestCollectiblesQuery = () => {
     return `query collectibleTypeList {
-        collectibleTypeList(first: 15, sortOptions: {sortBy: DROP_DATE, sortDirection: DESCENDING} ){
+        collectibleTypeList(first: 20, filterOptions: { category: ALL }, sortOptions: {sortBy: DROP_DATE, sortDirection: DESCENDING} ){
             pageInfo {
                 hasNextPage
                 hasPreviousPage

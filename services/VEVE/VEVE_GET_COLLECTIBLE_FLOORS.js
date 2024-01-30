@@ -8,21 +8,6 @@ import {VEVE_CALCULATE_LICENSORS_METRICS} from "./VEVE_CALCULATE_LICENSORS_METRI
 import {prisma} from "../../index.js";
 import mysql from "mysql";
 
-// const connection = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: '',
-//     database: 'mintalysis_local',
-// });
-//
-// connection.connect((err) => {
-//     if (err) {
-//         console.error('Error connecting to the database:', err);
-//         return;
-//     }
-//     console.log('Connected to the database');
-// })
-
 const getVeveCollectibleFloorsQuery = () => {
     return `query collectibleTypeList {
     collectibleTypeList(first: 2000) {
@@ -635,22 +620,6 @@ const updateMintalysis = async (collectible) => {
 
 }
 
-async function insertFloorPriceIntoLocalDatabase(collectibleId, floorPrice) {
-    try {
-        const query = `INSERT INTO veve_collectibles (collectible_id, floor_price) VALUES (?, ?)`;
-        const values = [collectibleId, floorPrice];
-        connection.query(query, values, (error, results) => {
-            if (error) {
-                console.error(`Error inserting floor price for collectible ${collectibleId} into local database:`, error);
-            } else {
-                console.log(`Inserted floor price for collectible ${collectibleId} into local database.`);
-            }
-        });
-    } catch (error) {
-        console.error(`Error inserting floor price for collectible ${collectibleId} into local database:`, error);
-    }
-}
-
 export const VEVE_GET_COLLECTIBLE_FLOORS = async () => {
 
     console.log(`[ALICE][VEVE] - [COLLECTIBLE FLOORS]`)
@@ -684,76 +653,3 @@ export const VEVE_GET_COLLECTIBLE_FLOORS = async () => {
         })
         .catch(err => console.log(`[CRITICAL ERROR][VEVE] Unable to get collectible floors`, err))
 }
-
-// const updateLegacyShit = async (collectible) => {
-//     // TODO: DELETE THIS FUNCTION WHEN ECOMIWIKI IS DEAD
-//
-//     const collectibleMeta = await prisma.veve_collectibles.findUnique({where: {collectible_id: collectible.id}})
-//     const calcMetrics = await getCollectibleStats(collectible.id)
-//     if (!collectibleMeta || !collectibleMeta.total_issued) return
-//
-//     const collectibleMarketData = {
-//         "collectibleId": collectible.id,
-//         "name": collectible.name,
-//         "slug": slugify(collectible.name),
-//         "totalIssued": collectibleMeta.total_issued,
-//         "rarity": collectibleMeta.rarity,
-//         "brand": {
-//             "name": 'Unknown',
-//             "id": 'Unknown',
-//             "squareImage": {
-//                 "thumbnailUrl": collectibleMeta.image_thumbnail_url ? collectibleMeta.image_thumbnail_url : 'https://via.placeholder.com/150',
-//             }
-//         },
-//         "image": {
-//             "direction": collectibleMeta.image_direction,
-//             "thumbnailUrl": collectibleMeta.image_thumbnail_url ? collectibleMeta.image_thumbnail_url : 'https://via.placeholder.com/150',
-//             "url": collectibleMeta.image_high_resolution_url,
-//             "lowResolutionUrl": collectibleMeta.image_low_resolution_url,
-//             "medResolutionUrl": collectibleMeta.image_med_resolution_url,
-//         },
-//         "storePrice": collectibleMeta.store_price,
-//         "edition_type": collectibleMeta.edition_type,
-//         "createdAt": collectibleMeta.drop_date,
-//         "metrics": {
-//             "marketCapFullyDiluted": Number(collectible.floorMarketPrice) * Number(collectibleMeta.total_issued),
-//             "lowestPrice": collectible.floorMarketPrice,
-//             "totalListings": collectible.totalMarketListings,
-//             "updatedAt": new Date(),
-//             "prevSoldArr" : [
-//                 {
-//                     "node" : {
-//                         "status" : "CLOSED",
-//                         "currentPrice" : "0",
-//                         "createdAt" : "2022-11-30T06:05:57.550Z",
-//                         "listingType" : "FIXED",
-//                         "element" : {
-//                             "issueNumber" : 0,
-//                             "collectibleType" : {
-//                                 "id" : "3c76162d-7198-411c-ac08-64853daa07eb",
-//                                 "name" : collectible.name,
-//                                 "rarity" : "ULTRA_RARE",
-//                                 "editionType" : "FE",
-//                                 "totalIssued" : 0
-//                             }
-//                         }
-//                     }
-//                 },
-//             ],
-//             "ath": calcMetrics[0].all_time[0]?.max !== "undefined" && calcMetrics[0].all_time[0]?.max !== null ? calcMetrics[0].all_time[0]?.max : null,
-//             "atl": calcMetrics[0].all_time[0]?.min !== "undefined" && calcMetrics[0].all_time[0]?.min !== null ? calcMetrics[0].all_time[0]?.min : null,
-//             "at_avg": calcMetrics[0].all_time[0]?.avg !== "undefined" && calcMetrics[0].all_time[0]?.avg !== null ? calcMetrics[0].all_time[0]?.avg : null,
-//         },
-//         change: calcMetrics
-//     }
-//
-//     MarketPrice.findOneAndUpdate({collectibleId: collectible._id}, collectibleMarketData,{
-//         upsert: true,
-//         new: true
-//     })
-//         .exec((err, success) => {
-//             if (err) console.log('Error saving/updating market price. ', err)
-//             if (success) console.log(`[LEGACY] Updated ${collectible.name}`)
-//         })
-//
-// }
