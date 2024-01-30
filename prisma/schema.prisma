@@ -51,6 +51,8 @@ model artists {
   name           String
   slug           String?                @unique
   image          String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime?              @updatedAt
   veve_comics    veve_comics[]          @relation("artistsToveve_comics")
   translations   artists_translations[]
   artists_grails artists_grails[]
@@ -210,6 +212,8 @@ model characters {
   name              String
   slug              String?                   @unique
   image             String?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime?                 @updatedAt
   veve_comics       veve_comics[]             @relation("charactersToveve_comics")
   translations      characters_translations[]
   characters_grails characters_grails[]
@@ -2442,6 +2446,8 @@ model writers {
   author_id      String                 @id
   name           String
   slug           String?                @unique
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime?              @updatedAt
   veve_comics    veve_comics[]          @relation("veve_comicsTowriters")
   translations   writers_translations[]
   writers_grails writers_grails[]
