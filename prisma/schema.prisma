@@ -1412,12 +1412,15 @@ model veve_comics {
   characters                  characters[]               @relation("charactersToveve_comics")
   writers                     writers[]                  @relation("veve_comicsTowriters")
   veveTokenComics             veveTokenComic[]
+  project_id                  String?
+  project                     projects?                  @relation(fields: [project_id], references: [id])
   artists_grails              artists_grails[]
   characters_grails           characters_grails[]
   writers_grails              writers_grails[]
 
   @@index([unique_cover_id], map: "unique_cover_id")
   @@index([comic_image_url_id], map: "comic_image_url_id")
+  @@index([project_id], map: "veve_comics_project_id_fkey")
 }
 
 model veve_comics_translations {
@@ -1968,6 +1971,7 @@ model projects {
   metrics           projects_metrics[]
   newsletters       project_newsletters[]
   veveCollectibles  veve_collectibles[]
+  veveComics        veve_comics[]
   UserToProjects    UserToProjects[]
   x_account         x_account[]
   youtube_account   youtube_account?
