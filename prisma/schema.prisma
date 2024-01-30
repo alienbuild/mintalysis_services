@@ -2446,6 +2446,7 @@ model writers {
   author_id      String                 @id
   name           String
   slug           String?                @unique
+  image          String?
   createdAt      DateTime               @default(now())
   updatedAt      DateTime?              @updatedAt
   veve_comics    veve_comics[]          @relation("veve_comicsTowriters")
