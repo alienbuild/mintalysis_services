@@ -1060,7 +1060,7 @@ model veve_tokens {
   has_full_meta         Boolean?               @default(false)
   mintalysis_note       String?
   tag                   String?
-  veve_brands           veve_brands?           @relation(fields: [brand_id], references: [brand_id])
+  veve_brands           brands?                @relation(fields: [brand_id], references: [brand_id])
   veve_wallets          veve_wallets?          @relation(fields: [wallet_id], references: [id], map: "veve_tokens_ibfk_1")
   veve_licensors        veve_licensors?        @relation(fields: [licensor_id], references: [licensor_id])
   veve_series           veve_series?           @relation(fields: [series_id], references: [series_id])
@@ -1146,74 +1146,53 @@ model veve_mints {
 // schemas/projects/veve/brands.prisma
 // Veve Brands
 
-model veve_brands {
-  brand_id                                   String                @id
-  name                                       String?
-  description                                String?               @db.Text
-  theme_logo_image_url                       String?
-  theme_logo_image_thumbnail_url             String?
-  theme_logo_image_low_resolution_url        String?
-  theme_logo_image_med_resolution_url        String?
-  theme_logo_image_full_resolution_url       String?
-  theme_logo_image_high_resolution_url       String?
-  theme_logo_image_direction                 String?
-  theme_background_image_url                 String?
-  theme_background_image_thumbnail_url       String?
-  theme_background_image_low_resolution_url  String?
-  theme_background_image_med_resolution_url  String?
-  theme_background_image_full_resolution_url String?
-  theme_background_image_high_resolution_url String?
-  theme_background_image_direction           String?
-  theme_footer_image_url                     String?
-  theme_footer_image_thumbnail_url           String?
-  theme_footer_image_low_resolution_url      String?
-  theme_footer_image_med_resolution_url      String?
-  theme_footer_image_full_resolution_url     String?
-  theme_footer_image_high_resolution_url     String?
-  theme_footer_image_direction               String?
-  landscape_image_url                        String?
-  landscape_image_thumbnail_url              String?
-  landscape_image_low_resolution_url         String?
-  landscape_image_med_resolution_url         String?
-  landscape_image_full_resolution_url        String?
-  landscape_image_high_resolution_url        String?
-  landscape_image_direction                  String?
-  square_image_url                           String?
-  square_image_thumbnail_url                 String?
-  square_image_low_resolution_url            String?
-  square_image_med_resolution_url            String?
-  square_image_full_resolution_url           String?
-  square_image_high_resolution_url           String?
-  square_image_direction                     String?
-  licensor_id                                String
-  slug                                       String?               @unique
-  sort                                       Int?
-  veve_collectibles                          veve_collectibles[]
-  veve_tokens                                veve_tokens[]
-  createdAt                                  DateTime              @default(now())
-  updatedAt                                  DateTime?             @updatedAt
-  metrics                                    veve_brands_metrics[]
+model brands {
+  brand_id                            String                @id
+  name                                String?
+  description                         String?               @db.Text
+  landscape_image_url                 String?
+  landscape_image_thumbnail_url       String?
+  landscape_image_low_resolution_url  String?
+  landscape_image_med_resolution_url  String?
+  landscape_image_full_resolution_url String?
+  landscape_image_high_resolution_url String?
+  landscape_image_direction           String?
+  square_image_url                    String?
+  square_image_thumbnail_url          String?
+  square_image_low_resolution_url     String?
+  square_image_med_resolution_url     String?
+  square_image_full_resolution_url    String?
+  square_image_high_resolution_url    String?
+  square_image_direction              String?
+  licensor_id                         String
+  slug                                String?               @unique
+  sort                                Int?
+  veve_collectibles                   veve_collectibles[]
+  veve_tokens                         veve_tokens[]
+  createdAt                           DateTime              @default(now())
+  updatedAt                           DateTime?             @updatedAt
+  veve_metrics                        veve_brands_metrics[]
 
   @@index([licensor_id], map: "brands_licensor_id_fkey")
 }
 
 model veve_brands_metrics {
-  brand_id           String      @id
-  all_time_high      Decimal?    @db.Decimal(10, 2)
-  all_time_low       Decimal?    @db.Decimal(10, 2)
-  floor_price        Decimal?    @db.Decimal(10, 2)
-  market_cap         Decimal?    @db.Decimal(10, 2)
-  one_day_change     Decimal?    @db.Decimal(10, 2)
-  one_mo_change      Decimal?    @db.Decimal(10, 2)
-  one_wk_change      Decimal?    @db.Decimal(10, 2)
-  one_year_change    Decimal?    @db.Decimal(10, 2)
-  six_mo_change      Decimal?    @db.Decimal(10, 2)
-  three_mo_change    Decimal?    @db.Decimal(10, 2)
+  brand_id           String   @id
+  all_time_high      Decimal? @db.Decimal(10, 2)
+  all_time_low       Decimal? @db.Decimal(10, 2)
+  floor_price        Decimal? @db.Decimal(10, 2)
+  market_cap         Decimal? @db.Decimal(10, 2)
+  one_day_change     Decimal? @db.Decimal(10, 2)
+  one_mo_change      Decimal? @db.Decimal(10, 2)
+  one_wk_change      Decimal? @db.Decimal(10, 2)
+  one_year_change    Decimal? @db.Decimal(10, 2)
+  six_mo_change      Decimal? @db.Decimal(10, 2)
+  three_mo_change    Decimal? @db.Decimal(10, 2)
   total_listings     Int?
-  all_time_change    Decimal?    @db.Decimal(10, 2)
-  volume             Decimal?    @db.Decimal(10, 2)
-  circulating_supply Decimal?    @db.Decimal(10, 2)
-  brand              veve_brands @relation(fields: [brand_id], references: [brand_id])
+  all_time_change    Decimal? @db.Decimal(10, 2)
+  volume             Decimal? @db.Decimal(10, 2)
+  circulating_supply Decimal? @db.Decimal(10, 2)
+  brand              brands   @relation(fields: [brand_id], references: [brand_id])
 }
 
 // schemas/projects/veve/collectibles.prisma
@@ -1270,7 +1249,7 @@ model veve_collectibles {
   veve_held_edition_count              Int?
   licensor_held_edition_count          Int?
   tmp_veve_tokens_collectibles         tmp_veve_tokens_collectibles[]
-  brand                                veve_brands?                     @relation(fields: [brand_id], references: [brand_id])
+  brand                                brands?                          @relation(fields: [brand_id], references: [brand_id])
   licensor                             veve_licensors?                  @relation(fields: [licensor_id], references: [licensor_id])
   series                               veve_series?                     @relation(fields: [series_id], references: [series_id])
   metrics                              veve_collectibles_metrics?
