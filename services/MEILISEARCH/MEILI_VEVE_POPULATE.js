@@ -6,7 +6,7 @@ const BATCH_SIZE = 100;
 // Generic function to fetch updated batch
 async function fetchUpdatedBatch(model, selectConfig, lastRunDate, skip, take) {
     return await prisma[model].findMany({
-        where: { updatedAt: { gt: lastRunDate } },
+        // where: { updatedAt: { gt: lastRunDate } },
         skip,
         take,
         select: selectConfig
@@ -85,6 +85,24 @@ export const MEILI_VEVE_POPULATE = async () => {
         square_image_thumbnail_url: true
     };
 
+    const veveArtistsConfig = {
+        artist_id: true,
+        name: true,
+        image: true
+    };
+
+    const veveCharactersConfig = {
+        character_id: true,
+        name: true,
+        image: true
+    };
+
+    const veveWritersConfig = {
+        author_id: true,
+        name: true,
+        image: true
+    };
+
     const veveCollectiblesConfig = {
         collectible_id: true,
         name: true,
@@ -106,10 +124,49 @@ export const MEILI_VEVE_POPULATE = async () => {
         }
     };
 
+    const veveComicsConfig = {
+        unique_cover_id: true,
+        name: true,
+        image_low_resolution_url: true,
+        comic_number: true,
+        rarity: true,
+        writers: {
+            select: {
+                name: true
+            }
+        },
+        characters: {
+            select: {
+                name: true
+            }
+        },
+        artists: {
+            select: {
+                name: true
+            }
+        },
+        // tags: {
+        //     select: {
+        //         name: true
+        //     }
+        // },
+        project: {
+            select: {
+                id: true,
+                name: true,
+                motiff_url: true
+            }
+        }
+    };
+
     // await populateModel('veve_collectibles_indexing', 'veve_collectibles', 'veve_collectibles', 'collectible_id', veveCollectiblesConfig);
-    // await populateModel('veve_brands_indexing', 'veve_brands', 'veve_brands', 'brand_id', veveBrandsConfig);
+    await populateModel('veve_comics_indexing', 'veve_comics', 'veve_comics', 'unique_cover_id', veveComicsConfig);
+    // await populateModel('brands_indexing', 'brands', 'brands', 'brand_id', veveBrandsConfig);
     // await populateModel('veve_series_indexing', 'veve_series', 'veve_series', 'series_id', veveSeriesConfig);
-    // await populateModel('veve_licensors_indexing', 'veve_licensors', 'veve_licensors', 'licensor_id', veveLicensorsConfig);
+    // await populateModel('licensors_indexing', 'licensors', 'licensors', 'licensor_id', veveLicensorsConfig);
+    // await populateModel('artists_indexing', 'artists', 'artists', 'artist_id', veveArtistsConfig);
+    // await populateModel('characters_indexing', 'characters', 'characters', 'character_id', veveCharactersConfig);
+    // await populateModel('writers_indexing', 'writers', 'writers', 'author_id', veveWritersConfig);
 };
 
 const emptyIndex = async (indexName) => {

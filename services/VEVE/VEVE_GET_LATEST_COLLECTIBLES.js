@@ -54,7 +54,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
                 }
 
                 try {
-                    const licensorExists = await prisma.veve_licensors.findUnique({
+                    const licensorExists = await prisma.licensors.findUnique({
                         where: {
                             licensor_id: collectible.node.licensor?.id,
                         },
@@ -62,7 +62,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
 
                     // Create licensor if it doesn't exist
                     if (!licensorExists) {
-                        await prisma.veve_licensors.create({
+                        await prisma.licensors.create({
                             data: {
                                 licensor_id: collectible.node.licensor?.id,
                             },
@@ -70,7 +70,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
                     }
 
                     // Check if brand exists
-                    const brandExists = await prisma.veve_brands.findUnique({
+                    const brandExists = await prisma.brands.findUnique({
                         where: {
                                 brand_id: collectible.node.brand?.id,
                         },
@@ -78,7 +78,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
 
                     // Create brand if it doesn't exist
                     if (!brandExists) {
-                        await prisma.veve_brands.create({
+                        await prisma.brands.create({
                             data: {
                                 licensor_id: collectible.node.licensor?.id,
                                 brand_id: collectible.node.brand?.id,

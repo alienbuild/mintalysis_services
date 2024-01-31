@@ -11,33 +11,6 @@ export const getVeveLatestBrandsQuery = () => `query brandList {
                 id
                 name
                 description
-                themeLogoImage {
-                    url
-                    thumbnailUrl
-                    lowResolutionUrl
-                    medResolutionUrl
-                    fullResolutionUrl
-                    highResolutionUrl
-                    direction
-                }
-                themeBackgroundImage {
-                    url
-                    thumbnailUrl
-                    lowResolutionUrl
-                    medResolutionUrl
-                    fullResolutionUrl
-                    highResolutionUrl
-                    direction
-                }
-                themeFooterImage {
-                    url
-                    thumbnailUrl
-                    lowResolutionUrl
-                    medResolutionUrl
-                    fullResolutionUrl
-                    highResolutionUrl
-                    direction
-                }
                 landscapeImage {
                     url
                     thumbnailUrl
