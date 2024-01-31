@@ -1342,6 +1342,7 @@ model veve_comics {
   page_count                  Int?
   start_year                  Int?
   total_available             Int?
+  total_issued                Int?
   image_direction             String?
   image_full_resolution_url   String?
   image_high_resolution_url   String?
