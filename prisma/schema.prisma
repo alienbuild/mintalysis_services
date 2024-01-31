@@ -1335,32 +1335,19 @@ model veve_comics {
   market_fee                  Decimal?                   @db.Decimal(10, 3)
   createdAt                   DateTime                   @default(now())
   updatedAt                   DateTime
-  all_time_high               Decimal?                   @db.Decimal(10, 2)
-  all_time_low                Decimal?                   @db.Decimal(10, 2)
   comic_number                Int?
   drop_method                 String?
-  floor_price                 Decimal?                   @db.Decimal(10, 2)
   is_free                     Boolean?                   @default(false)
   is_unlimited                Boolean?                   @default(false)
-  market_cap                  Decimal?                   @db.Decimal(10, 2)
-  one_day_change              Decimal?                   @db.Decimal(10, 2)
-  one_mo_change               Decimal?                   @db.Decimal(10, 2)
-  one_wk_change               Decimal?                   @db.Decimal(10, 2)
-  one_year_change             Decimal?                   @db.Decimal(10, 2)
   page_count                  Int?
-  six_mo_change               Decimal?                   @db.Decimal(10, 2)
   start_year                  Int?
-  three_mo_change             Decimal?                   @db.Decimal(10, 2)
   total_available             Int?
-  total_issued                Int?
-  total_listings              Int?
   image_direction             String?
   image_full_resolution_url   String?
   image_high_resolution_url   String?
   image_low_resolution_url    String?
   image_med_resolution_url    String?
   image_thumbnail             String?
-  all_time_change             Decimal?                   @db.Decimal(10, 2)
   minimum_age                 Int?
   slug                        String?                    @unique
   comic_id                    String?
@@ -1383,8 +1370,10 @@ model veve_comics {
   veveTokenComics             veveTokenComic[]
   project_id                  String?
   project                     projects?                  @relation(fields: [project_id], references: [id])
+  tags                        veve_comic_tags[]
   artists_grails              artists_grails[]
   characters_grails           characters_grails[]
+  veve_comics_metrics         veve_comics_metrics[]
   writers_grails              writers_grails[]
 
   @@index([unique_cover_id], map: "unique_cover_id")
@@ -1396,6 +1385,11 @@ model veve_comics_translations {
   unique_cover_id        String
   name                   String?
   description            String?     @db.Text
+  seo_description        String?     @db.Text
+  seo_keywords           String?     @db.Text
+  seo_title              String?     @db.Text
+  og_title               String?     @db.Text
+  og_description         String?     @db.Text
   rarity_formatted       String?
   edition_type_formatted String?
   language               Language
@@ -1404,6 +1398,35 @@ model veve_comics_translations {
   @@id([language, unique_cover_id])
   @@index([language])
   @@index([unique_cover_id], map: "veve_comics_translations_unique_cover_id_fkey")
+}
+
+model veve_comics_metrics {
+  unique_cover_id    String      @id
+  all_time_high      Decimal?    @db.Decimal(10, 2)
+  all_time_low       Decimal?    @db.Decimal(10, 2)
+  floor_price        Decimal?    @db.Decimal(10, 2)
+  market_cap         Decimal?    @db.Decimal(10, 2)
+  one_day_change     Decimal?    @db.Decimal(10, 2)
+  one_mo_change      Decimal?    @db.Decimal(10, 2)
+  one_wk_change      Decimal?    @db.Decimal(10, 2)
+  one_year_change    Decimal?    @db.Decimal(10, 2)
+  six_mo_change      Decimal?    @db.Decimal(10, 2)
+  three_mo_change    Decimal?    @db.Decimal(10, 2)
+  total_listings     Int?
+  total_issued       Int?
+  all_time_change    Decimal?    @db.Decimal(10, 2)
+  volume             Decimal?    @db.Decimal(10, 2)
+  circulating_supply Decimal?    @db.Decimal(10, 2)
+  comic              veve_comics @relation(fields: [unique_cover_id], references: [unique_cover_id])
+}
+
+model veve_comic_tags {
+  tag_id          Int         @id @default(autoincrement())
+  name            String
+  unique_cover_id String
+  comic           veve_comics @relation(fields: [unique_cover_id], references: [unique_cover_id])
+
+  @@index([unique_cover_id], name: "idx_comic_tags")
 }
 
 // schemas/projects/veve/leaderboards.prisma
