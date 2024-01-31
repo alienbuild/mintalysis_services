@@ -2,7 +2,7 @@ import {prisma} from "../../index.js";
 
 export const VEVE_CALCULATE_LICENSORS_METRICS = async () => {
     try {
-        const licensors = await prisma.veve_licensors.findMany({
+        const licensors = await prisma.licensors.findMany({
             include: {
                 veve_collectibles: {
                     include: {

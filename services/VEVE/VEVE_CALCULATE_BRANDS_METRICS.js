@@ -2,7 +2,7 @@ import {prisma} from "../../index.js";
 
 export const VEVE_CALCULATE_BRANDS_METRICS = async () => {
     try {
-        const brands = await prisma.veve_brands.findMany({
+        const brands = await prisma.brands.findMany({
             include: {
                 veve_collectibles: {
                     include: {
