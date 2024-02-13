@@ -303,6 +303,45 @@ model characters_grails {
   @@index([unique_cover_id])
 }
 
+// schemas/collectibles.prisma
+// Users Collectibles
+
+model user_collection {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  image_url   String?
+  user_id     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  collectibles physical_collectible[]
+}
+
+model physical_collectible {
+  id                      String                      @id @default(uuid())
+  name                    String
+  description             String?
+  collection_id           String
+  category                String?
+  notes                   String?
+  condition               String?
+  acquired_at             DateTime?
+  origin                  String?
+  release_year            Int?
+  manufacturer            String?
+  images                  image[]                     @relation("CollectibleImages")
+  acquisition_price       Decimal?                    @db.Decimal(10, 2)
+  current_estimated_value Decimal?                    @db.Decimal(10, 2)
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
+  tags                    physical_collectible_tags[]
+  is_public               Boolean                     @default(false)
+  storage_location        String?
+
+  collection user_collection @relation(fields: [collection_id], references: [id])
+}
+
 //// schemas/community.prisma
 //// Community
 //
@@ -562,6 +601,20 @@ model characters_grails {
 //  users          User[]
 //
 //}
+
+model image {
+  id             String   @id @default(uuid())
+  url            String
+  title          String?
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  collectible_id String
+
+  collectible physical_collectible @relation("CollectibleImages", fields: [collectible_id], references: [id])
+
+  @@index([collectible_id], name: "idx_image_collectible_id")
+}
 
 // schemas/logs.prisma
 // Logging and Errors
@@ -998,15 +1051,17 @@ model price_alerts {
 // Blockchain (Tokens, Transfers and Mints)
 
 model mcfarlane_wallets {
-  id                  String       @id
-  user_id             String?      @unique
-  mcfarlane_username  String?      @unique
-  mcfarlane_id        String?
-  tagsId              Int?
-  first_activity_date DateTime?
-  last_activity_date  DateTime?
-  tags                wallet_tags? @relation(fields: [tagsId], references: [id])
-  user                profile?     @relation(fields: [user_id], references: [user_id])
+  id                    String                  @id
+  user_id               String?                 @unique
+  mcfarlane_username    String?                 @unique
+  mcfarlane_id          String?
+  tagsId                Int?
+  first_activity_date   DateTime?
+  last_activity_date    DateTime?
+  user                  profile?                @relation(fields: [user_id], references: [user_id])
+  mcfarlane_wallet_tags mcfarlane_wallet_tags[]
+  wallet_tags           wallet_tags?            @relation(fields: [wallet_tagsId], references: [id])
+  wallet_tagsId         Int?
 
   @@index([tagsId], map: "mcfarlane_wallets_tagsId_fkey")
 }
@@ -1047,14 +1102,15 @@ model veve_wallets {
   mintalysis_note         String?
   veve_leaderboard        veve_leaderboard[]
   veve_tokens             veve_tokens[]
-  wallet_tags             wallet_tags?              @relation(fields: [tagsId], references: [id])
   veve_wallets_valuations veve_wallets_valuations[]
+  veve_wallet_tags        veve_wallet_tags[]
   veve_wallet_metrics     veve_wallet_metrics?
   veve_x_tracker          veve_x_tracker[]
+  wallet_tags             wallet_tags?              @relation(fields: [wallet_tagsId], references: [id])
+  wallet_tagsId           Int?
 
   @@index([last_activity_date])
   @@index([first_activity_date])
-  @@index([tagsId], map: "veve_wallets_tagsId_fkey")
   @@index([id, user_id, veve_username])
 }
 
@@ -1121,11 +1177,12 @@ model veve_tokens {
 
 model veveTokenCollectible {
   token_id          Int
-  collectible_id    String
-  veve_tokens       veve_tokens       @relation(fields: [token_id], references: [token_id])
-  veve_collectibles veve_collectibles @relation(fields: [collectible_id], references: [collectible_id])
+  collectible_id    String?
+  veve_tokens       veve_tokens        @relation(fields: [token_id], references: [token_id])
+  veve_collectibles veve_collectibles? @relation(fields: [collectible_id], references: [collectible_id], onDelete: SetNull, onUpdate: SetNull)
 
-  @@id([token_id, collectible_id])
+  @@id([token_id])
+  @@unique([token_id, collectible_id])
 }
 
 model veveTokenComic {
@@ -1991,6 +2048,16 @@ model UserToProjects {
   @@id([userId, collectionId])
 }
 
+model recent_search {
+  id          Int      @id @default(autoincrement())
+  user_id     String
+  search_term String
+  timestamp   DateTime @default(now())
+  user        User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id], name: "idx_recent_search_user_id")
+}
+
 // schemas/session.prisma
 // Session and Authentication Management
 
@@ -2129,6 +2196,47 @@ model wallet_tags {
   name              String              @unique
   mcfarlane_wallets mcfarlane_wallets[]
   veve_wallets      veve_wallets[]
+}
+
+model tag {
+  id                    String                      @id @default(uuid())
+  name                  String
+  created_at            DateTime                    @default(now())
+  updated_at            DateTime                    @updatedAt
+  physical_collectibles physical_collectible_tags[]
+  mcfarlane_wallets     mcfarlane_wallet_tags[]
+  veve_wallets          veve_wallet_tags[]
+}
+
+model physical_collectible_tags {
+  collectible_id       String
+  createdAt            DateTime             @default(now())
+  visibility           TagVisibility        @default(PUBLIC)
+  tag_id               String
+  tag                  tag                  @relation(fields: [tag_id], references: [id])
+  physical_collectible physical_collectible @relation(fields: [collectible_id], references: [id])
+
+  @@id([collectible_id, tag_id])
+}
+
+model mcfarlane_wallet_tags {
+  wallet_id  String
+  visibility TagVisibility     @default(PUBLIC)
+  tag_id     String
+  tag        tag               @relation(fields: [tag_id], references: [id])
+  wallet     mcfarlane_wallets @relation(fields: [wallet_id], references: [id])
+
+  @@id([wallet_id, tag_id])
+}
+
+model veve_wallet_tags {
+  wallet_id  String
+  visibility TagVisibility @default(PUBLIC)
+  tag_id     String
+  tag        tag           @relation(fields: [tag_id], references: [id])
+  wallet     veve_wallets  @relation(fields: [wallet_id], references: [id])
+
+  @@id([wallet_id, tag_id])
 }
 
 // schemas/tmp.prisma
@@ -2357,6 +2465,7 @@ model User {
   ChannelRole                     ChannelRole[]
   user_badges                     user_badges[]
   Mute                            Mute[]
+  recent_search                   recent_search[]
 
   @@index([email], map: "email")
   @@index([username], map: "username")
@@ -2396,16 +2505,17 @@ model follows {
 }
 
 model profile {
-  id                   Int                @id @default(autoincrement())
-  bio                  String?
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime
-  user_id              String             @unique
-  onboarded            Boolean            @default(false)
-  veve_wallet_imported Boolean            @default(false)
-  veve_wallet_address  String?
-  mcfarlane_wallets    mcfarlane_wallets?
-  users                User               @relation(fields: [user_id], references: [id])
+  id                Int                @id @default(autoincrement())
+  bio               String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  user_id           String             @unique
+  onboarded         Boolean            @default(false)
+  //  veve_wallet_imported Boolean            @default(false)
+  //  veve_wallet_address  String?
+  //  mcfarlane_wallets    mcfarlane_wallets?
+  users             User               @relation(fields: [user_id], references: [id])
+  mcfarlane_wallets mcfarlane_wallets?
 }
 
 enum CollectorType {
@@ -2586,6 +2696,11 @@ enum MessageType {
   TEXT
   EMOJI
   GIF
+}
+
+enum TagVisibility {
+  PUBLIC
+  PRIVATE
 }
 
 // END_MODELS
