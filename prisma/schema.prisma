@@ -2039,13 +2039,13 @@ model project_newsletters {
 
 model UserToProjects {
   userId              String
-  collectionId        String
+  project_id          String
   user                User     @relation(fields: [userId], references: [id])
-  project             projects @relation(fields: [collectionId], references: [id])
+  project             projects @relation(fields: [project_id], references: [id])
   valuation           Decimal? @db.Decimal(20, 2)
   valuation_with_fees Decimal? @db.Decimal(20, 2)
 
-  @@id([userId, collectionId])
+  @@id([userId, project_id])
 }
 
 model recent_search {
