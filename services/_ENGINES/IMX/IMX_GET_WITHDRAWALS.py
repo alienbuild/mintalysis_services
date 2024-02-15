@@ -1,6 +1,3 @@
-# "C:/Program Files/Python38/python.exe" "C:/Users/XXXD/Desktop/OMI BURN DAILY/Mintalysis/mintalysis_services/services/_ENGINES/IMX/IMX_GET_WITHDRAWALS.py"
-
-
 import time
 import requests
 from datetime import datetime
