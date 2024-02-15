@@ -94,7 +94,6 @@ try:
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             
-
             while True:
                 base_url_with_params = f"{BASE_URL}?status={status}&page_size={page_size}&direction={direction}&order_by={order_by}"
                 

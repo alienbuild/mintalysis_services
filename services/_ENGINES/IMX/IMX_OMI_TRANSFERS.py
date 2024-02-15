@@ -1,3 +1,5 @@
+# "C:/Program Files/Python38/python.exe" "C:/Users/XXXD/Desktop/OMI BURN DAILY/Mintalysis/mintalysis_services/services/_ENGINES/IMX/IMX_OMI_TRANSFERS.py"
+
 import requests
 import mysql.connector
 import os
