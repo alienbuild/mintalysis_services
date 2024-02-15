@@ -522,6 +522,14 @@ model physical_collectible {
 //  @@map("_users_posts_tag")
 //}
 
+model currency_rate {
+  id        Int      @id @default(autoincrement())
+  ethToUsd  Decimal  @db.Decimal(10, 2)
+  btcToUsd  Decimal  @db.Decimal(10, 2)
+  omiToUsd  Decimal  @db.Decimal(10, 2)
+  updatedAt DateTime @updatedAt
+}
+
 //// schemas/games/poker/poker.prisma
 //// Poker
 //
