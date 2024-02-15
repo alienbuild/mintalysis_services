@@ -2474,12 +2474,27 @@ model User {
   user_badges                     user_badges[]
   Mute                            Mute[]
   recent_search                   recent_search[]
+  user_preferences                user_preferences?
 
   @@index([email], map: "email")
   @@index([username], map: "username")
   @@index([stripe_customer_id], map: "stripe_customer_id")
   @@index([id], name: "userId_idx")
   @@map("users")
+}
+
+model user_preferences {
+  id                   Int      @id @default(autoincrement())
+  user_id              String   @unique
+  display_currency     Currency @default(USD)
+  theme                Theme    @default(LIGHT)
+  enable_notifications Boolean  @default(true)
+  language             Language @default(EN)
+  layout_preference    Layout   @default(STANDARD)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
 }
 
 model users_preferences_accessibility {
@@ -2582,6 +2597,13 @@ model writers_grails {
 
 // schemas/_enums.prisma
 // Enum and Setting Tables
+
+enum Currency {
+  USD
+  ETH
+  BTC
+  OMI
+}
 
 enum Language {
   EN
@@ -2709,6 +2731,17 @@ enum MessageType {
 enum TagVisibility {
   PUBLIC
   PRIVATE
+}
+
+enum Theme {
+  LIGHT
+  DARK
+}
+
+enum Layout {
+  STANDARD
+  COMPACT
+  DENSE
 }
 
 // END_MODELS
