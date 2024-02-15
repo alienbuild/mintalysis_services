@@ -2,7 +2,6 @@ import fetch from 'node-fetch'
 import ComicPrice from "../../models/ComicPrices.js"
 import * as Queries from "../../queries/getVeveComicFloorsQuery.js";
 import {prisma} from "../../index.js";
-import mysql from "mysql";
 
 const updateTimeSeries = (comic) => {
     try {
@@ -125,6 +124,9 @@ const updateMintalysis = async (comic) => {
                             },
                             'max': {
                                 '$max': '$high'
+                            },
+                            'volume': {
+                                '$avg': '$volume'
                             }
                         }
                     },
@@ -491,6 +493,7 @@ const updateMintalysis = async (comic) => {
     let total_issued = await prisma.veve_comics.findUnique({where: {unique_cover_id: comic.image.id}})
     total_issued = total_issued?.total_issued ? total_issued.total_issued : 0
 
+    let volume = 0
     const market_cap = Number(comic.floorMarketPrice) * Number(total_issued)
     const one_day_change = comicMetrics.one_day[0]?.percentage_change
     const one_wk_change = comicMetrics.one_week[0]?.percentage_change
@@ -499,6 +502,7 @@ const updateMintalysis = async (comic) => {
     const six_mo_change = comicMetrics?.six_months[0]?.percentage_change
     const one_year_change = comicMetrics?.one_year[0]?.percentage_change
     const all_time_change = comicMetrics?.all_time[0]?.percentage_change
+    volume = comicMetrics?.one_day[0]?.volume
 
     let all_time_high = await ComicPrice.find({ uniqueCoverId: comic.image.id }).sort({value: -1}).select('value').limit(1)
     all_time_high = all_time_high[0]?.value
@@ -506,19 +510,42 @@ const updateMintalysis = async (comic) => {
     let all_time_low = await ComicPrice.find({ uniqueCoverId: comic.image.id }).sort({value: 1}).select('value').limit(1)
     all_time_low = all_time_low[0]?.value
 
+    const circulating_supply = ((( Number(comic.totalMarketListings) || 0) / ( total_issued || 1)) * 100)
+
     return new Promise(async (resolve, reject) => {
         try {
-            await prisma.veve_comics.update({
-                data: {
+            await prisma.veve_comics_metrics.upsert({
+                create: {
+                    unique_cover_id: comic.image.id,
                     floor_price: Number(comic.floorMarketPrice),
                     total_listings: Number(comic.totalMarketListings),
+                    circulating_supply,
+                    volume,
                     one_day_change,
                     one_wk_change,
                     one_mo_change,
                     one_year_change,
                     six_mo_change,
                     three_mo_change,
-                    all_time_change,
+                    all_time_change: typeof all_time_change === 'number' ? all_time_change : null,
+                    all_time_high,
+                    all_time_low,
+                    market_cap,
+                },
+                update: {
+                    floor_price: Number(comic.floorMarketPrice),
+                    total_listings: Number(comic.totalMarketListings),
+                    circulating_supply,
+                    volume,
+                    one_day_change,
+                    one_wk_change,
+                    one_mo_change,
+                    one_year_change,
+                    six_mo_change,
+                    three_mo_change,
+                    all_time_change: typeof all_time_change === 'number' ? all_time_change : null,
+                    all_time_high,
+                    all_time_low,
                     market_cap,
                 },
                 where: {
@@ -541,14 +568,14 @@ export const VEVE_GET_COMIC_FLOORS = async () => {
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'cookie': "veve=s%3AAUbLV_hdwqgSds39ba-LlSIWPctzMBvz.jqXB%2BtkpAX7pk3gAPUIXNfWJbJuasxn0HNolxuGRsKI",
-            'client-name': 'veve-web-app',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-            'client-operation': 'AuthUserDetails',
-            // 'client-name': 'alice-backend',
-            // 'client-version': '...',
-            // 'user-agent': 'alice-requests',
-            // 'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
+            // 'cookie': "veve=s%3AAUbLV_hdwqgSds39ba-LlSIWPctzMBvz.jqXB%2BtkpAX7pk3gAPUIXNfWJbJuasxn0HNolxuGRsKI",
+            // 'client-name': 'veve-web-app',
+            // 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+            // 'client-operation': 'AuthUserDetails',
+            'client-name': 'alice-backend',
+            'client-version': '...',
+            'user-agent': 'alice-requests',
+            'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
         },
         body: JSON.stringify({
             query: Queries.getVeveComicFloorsQuery(),
@@ -562,7 +589,6 @@ export const VEVE_GET_COMIC_FLOORS = async () => {
                 try {
                     await updateTimeSeries(comic.node)
                     await updateMintalysis(comic.node)
-                    // await insertFloorPriceIntoLocalDatabase(comic.node.image?.id, comic.node.floorMarketPrice);
                 } catch (e) {
                     console.log('[ERROR] Unable to get comic floor prices', e)
                 }
@@ -570,3 +596,4 @@ export const VEVE_GET_COMIC_FLOORS = async () => {
         })
         .catch(err => console.log(`[CRITICAL ERROR][VEVE] Unable to get comic floors. `, err))
 }
+
