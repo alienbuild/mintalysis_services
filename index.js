@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 import { PrismaClient } from "@prisma/client"
-import {scheduledHourlyJobs} from "./services/index.js";
+import {scheduledHourlyJobs, scheduledFiveMinuteJobs} from "./services/index.js";
 import mongoose from "mongoose";
 import Slack from "@slack/bolt";
 import {MeiliSearch} from "meilisearch";
@@ -36,6 +36,7 @@ async function main() {
         await prisma.$connect();
         console.log('[CONNECTED] Prisma');
         await scheduledHourlyJobs();
+        await scheduledFiveMinuteJobs()
     } catch (error) {
         console.error('[ERROR] main.js:', error);
     }

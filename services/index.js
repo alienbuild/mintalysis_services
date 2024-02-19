@@ -21,8 +21,8 @@ import {GET_CURRENCY_RATES} from "./MINTALYSIS/GET_CURRENCY_RATES.js";
 //     startTask('./services/_ENGINES/VEVE_GET_TRANSACTIONS.js', 'GET_VEVE_TRANSACTIONS_TASK');
 // }
 
-export const scheduledMinuteJobs = async () => {
-    schedule.scheduleJob('05 * * * *', async () => {
+export const scheduledFiveMinuteJobs = async () => {
+    schedule.scheduleJob('*/5 * * * *', async () => {
         // await UPDATE_USER_STATUS()
         await GET_CURRENCY_RATES()
     })
