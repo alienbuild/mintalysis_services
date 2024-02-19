@@ -11,6 +11,7 @@ import {VEVE_CALCULATE_BRANDS_METRICS} from "./VEVE/VEVE_CALCULATE_BRANDS_METRIC
 import {VEVE_CALCULATE_LICENSORS_METRICS} from "./VEVE/VEVE_CALCULATE_LICENSORS_METRICS.js";
 import {VEVE_CALCULATE_SERIES_METRICS} from "./VEVE/VEVE_CALCULATE_SERIES_METRICS.js";
 import {GET_SOCIAL_STATS, SCRAPE_X_DOT_COM} from "./SOCIAL/index.js";
+import {GET_CURRENCY_RATES} from "./MINTALYSIS/GET_CURRENCY_RATES.js";
 
 // import {GET_SOCIAL_STATS, SCRAPE_X_DOT_COM, X_DAILY_SNAPSHOT} from "./SOCIAL";
 
@@ -20,11 +21,12 @@ import {GET_SOCIAL_STATS, SCRAPE_X_DOT_COM} from "./SOCIAL/index.js";
 //     startTask('./services/_ENGINES/VEVE_GET_TRANSACTIONS.js', 'GET_VEVE_TRANSACTIONS_TASK');
 // }
 
-// export const scheduledMinuteJobs = async (prisma) => {
-//     schedule.scheduleJob('05 * * * *', async () => {
-//         await UPDATE_USER_STATUS(prisma)
-//     })
-// }
+export const scheduledFiveMinuteJobs = async () => {
+    schedule.scheduleJob('*/5 * * * *', async () => {
+        // await UPDATE_USER_STATUS()
+        await GET_CURRENCY_RATES()
+    })
+}
 
 const scheduledHourlyJobs = async () => {
     schedule.scheduleJob('01 */30 * * * *', async () => {
