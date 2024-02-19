@@ -2433,7 +2433,9 @@ model User {
   collector_type                  CollectorType                    @default(GUEST)
   last_seen                       DateTime?                        @default(now())
   activated                       Boolean                          @default(false)
-  stripe_customer_id              String?
+  stripe_customer_id              String?                          @unique
+  stripe_subscription_id          String?                          @unique
+  subscription_status             SubscriptionStatus               @default(INACTIVE)
   onboarded                       Boolean                          @default(false)
   projects                        UserToProjects[]
   totalValuation                  Decimal?                         @db.Decimal(20, 2)
@@ -2444,6 +2446,8 @@ model User {
   status                          UserStatus?                      @default(OFFLINE)
   notification_count              Int                              @default(0)
   message_count                   Int                              @default(0)
+  is_deleted                      Boolean                          @default(false)
+  deleted_at                      DateTime?
   accounts                        Account[]
   article                         article[]
   following                       follows[]                        @relation("follower")
@@ -2531,15 +2535,26 @@ model follows {
 model profile {
   id                Int                @id @default(autoincrement())
   bio               String?
+  first_name        String?
+  last_name         String?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime
   user_id           String             @unique
   onboarded         Boolean            @default(false)
-  //  veve_wallet_imported Boolean            @default(false)
-  //  veve_wallet_address  String?
-  //  mcfarlane_wallets    mcfarlane_wallets?
   users             User               @relation(fields: [user_id], references: [id])
   mcfarlane_wallets mcfarlane_wallets?
+}
+
+model subscription_plan {
+  id                Int     @id @default(autoincrement())
+  name              String
+  price             Decimal @db.Decimal(10, 2)
+  currency          String
+  interval          String
+  description       String?
+  features          Json?
+  stripe_product_id String
+  stripe_price_id   String
 }
 
 enum CollectorType {
@@ -2743,6 +2758,13 @@ enum Layout {
   STANDARD
   COMPACT
   DENSE
+}
+
+enum SubscriptionStatus {
+  INACTIVE
+  ACTIVE
+  PAST_DUE
+  CANCELED
 }
 
 // END_MODELS
