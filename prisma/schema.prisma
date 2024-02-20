@@ -2203,6 +2203,7 @@ model subscription_plan {
   features          Json?
   stripe_product_id String
   prices            subscription_price[]
+  subscription      subscription[]
 }
 
 model subscription_price {
@@ -2216,15 +2217,17 @@ model subscription_price {
 }
 
 model subscription {
-  id                     String   @id @default(uuid())
+  id                     String            @id @default(uuid())
   user_id                String
-  stripe_subscription_id String   @unique
+  stripe_subscription_id String            @unique
   status                 String
   current_period_start   DateTime
   current_period_end     DateTime
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  user                   User     @relation(fields: [user_id], references: [id])
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  user                   User              @relation(fields: [user_id], references: [id])
+  plan_id                Int
+  subscription_plan      subscription_plan @relation(fields: [plan_id], references: [id])
 
   @@map("subscriptions")
 }
