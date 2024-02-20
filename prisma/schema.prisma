@@ -2196,6 +2196,52 @@ model instagram_account_snapshot {
   instagram    instagram_account @relation(fields: [instagram_id], references: [instagram_id])
 }
 
+model subscription_plan {
+  id                Int                  @id @default(autoincrement())
+  name              String
+  description       String?
+  features          Json?
+  stripe_product_id String
+  prices            subscription_price[]
+}
+
+model subscription_price {
+  id                Int               @id @default(autoincrement())
+  subscription_plan subscription_plan @relation(fields: [plan_id], references: [id])
+  plan_id           Int
+  stripe_price_id   String
+  currency          String
+  amount            Decimal           @db.Decimal(10, 2)
+  interval          String
+}
+
+model subscription {
+  id                     String   @id @default(uuid())
+  user_id                String
+  stripe_subscription_id String   @unique
+  status                 String
+  current_period_start   DateTime
+  current_period_end     DateTime
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  user                   User     @relation(fields: [user_id], references: [id])
+
+  @@map("subscriptions")
+}
+
+model payment {
+  id         String   @id @default(uuid())
+  invoice_id String   @unique
+  user_id    String
+  amount     Float
+  currency   String
+  paid_at    DateTime
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id])
+
+  @@map("payments")
+}
+
 // schemas/tags.prisma
 // Tags
 
@@ -2479,6 +2525,8 @@ model User {
   user_badges                     user_badges[]
   Mute                            Mute[]
   recent_search                   recent_search[]
+  subscription                    subscription[]
+  payment                         payment[]
   user_preferences                user_preferences?
 
   @@index([email], map: "email")
@@ -2543,25 +2591,6 @@ model profile {
   onboarded         Boolean            @default(false)
   users             User               @relation(fields: [user_id], references: [id])
   mcfarlane_wallets mcfarlane_wallets?
-}
-
-model subscription_plan {
-  id                Int     @id @default(autoincrement())
-  name              String
-  price             Decimal @db.Decimal(10, 2)
-  currency          String
-  interval          String
-  description       String?
-  features          Json?
-  stripe_product_id String
-  stripe_price_id   String
-}
-
-enum CollectorType {
-  PHYSICAL_COLLECTOR
-  DIGITAL_COLLECTOR
-  HYBRID
-  GUEST
 }
 
 // schemas/writers.prisma
@@ -2765,6 +2794,18 @@ enum SubscriptionStatus {
   ACTIVE
   PAST_DUE
   CANCELED
+}
+
+enum IntervalType {
+  MONTH
+  YEAR
+}
+
+enum CollectorType {
+  PHYSICAL_COLLECTOR
+  DIGITAL_COLLECTOR
+  HYBRID
+  GUEST
 }
 
 // END_MODELS
