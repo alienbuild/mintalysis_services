@@ -1625,6 +1625,33 @@ model veve_licensors_metrics {
   licensor           licensors @relation(fields: [licensor_id], references: [licensor_id])
 }
 
+// schemas/projects/veve/listings.prisma
+// Veve Listings
+
+model veve_listings {
+  id              Int       @id @default(autoincrement())
+  listing_id      String    @unique
+  listing_type    String
+  seller_id       String
+  seller_name     String
+  wallet_id       String?
+  issue_number    Int
+  ending_at       String?
+  bid_count       Int?
+  price           String
+  user_bid_status String?
+  collectible_id  String
+  token_id        Int?
+  name            String
+  rarity          String
+  edition_type    String
+  expiry_date     DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime? @updatedAt
+  is_sold         Boolean   @default(false)
+  txn_id          String?
+}
+
 // schemas/projects/veve/mcp.prisma
 // VeVe MCP Calculation
 
