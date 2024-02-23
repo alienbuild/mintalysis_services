@@ -685,7 +685,7 @@ model error_log {
   process        String?
   missing_data   Boolean?
   bad_data       Boolean?
-  error_msg      String?
+  error_msg      String?  @db.VarChar(2000)
   createdAt      DateTime @default(now())
 }
 
