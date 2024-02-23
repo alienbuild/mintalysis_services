@@ -8,6 +8,44 @@ datasource db {
 }
 
 // BEGIN_MODELS
+model rewardful_affiliate_account {
+  id               Int                       @id @default(autoincrement())
+  userId           String                    @unique
+  affiliateId      String                    @unique
+  status           String
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  referral_links   rewardful_referral_link[]
+  conversions      rewardful_conversion[]
+  rewardful_payout rewardful_payout[]
+  User             User[]
+}
+
+model rewardful_referral_link {
+  id                   Int                         @id @default(autoincrement())
+  affiliate_account_id Int
+  link                 String
+  affiliate_account    rewardful_affiliate_account @relation(fields: [affiliate_account_id], references: [id])
+}
+
+model rewardful_conversion {
+  id                   Int                         @id @default(autoincrement())
+  affiliate_account_id Int
+  saleAmount           Float
+  commission_amount    Float
+  createdAt            DateTime                    @default(now())
+  affiliate_account    rewardful_affiliate_account @relation(fields: [affiliate_account_id], references: [id])
+}
+
+model rewardful_payout {
+  id                   Int                         @id @default(autoincrement())
+  affiliate_account_id Int
+  amount               Float
+  status               String // e.g., "pending", "paid"
+  payout_date          DateTime
+  affiliate_account    rewardful_affiliate_account @relation(fields: [affiliate_account_id], references: [id])
+}
+
 // schemas/articles.prisma
 // Articles and News
 
@@ -2231,6 +2269,8 @@ model subscription_plan {
   stripe_product_id String
   prices            subscription_price[]
   subscription      subscription[]
+  feature_flag      feature_flag?        @relation(fields: [feature_flagId], references: [id])
+  feature_flagId    Int?
 }
 
 model subscription_price {
@@ -2270,6 +2310,34 @@ model payment {
   user       User     @relation(fields: [user_id], references: [id])
 
   @@map("payments")
+}
+
+model feature_flag {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  description        String?
+  enabled            Boolean              @default(false)
+  usage_limit        Int? // Null implies no limit
+  limit_period       LimitPeriod? // "daily", "weekly", "monthly", etc.
+  plans              subscription_plan[]
+  user_feature_usage user_feature_usage[]
+}
+
+model user_feature_usage {
+  id              Int      @id @default(autoincrement())
+  user_id         String
+  feature_flag_id Int
+  timestamp       DateTime @default(now())
+  usage_count     Int      @default(1)
+
+  user         User         @relation(fields: [user_id], references: [id])
+  feature_flag feature_flag @relation(fields: [feature_flag_id], references: [id])
+}
+
+enum LimitPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
 }
 
 // schemas/tags.prisma
@@ -2545,6 +2613,8 @@ model User {
   received_direct_messages        direct_message[]                 @relation("receiver")
   channel_messages                channel_message[]
   UserToRoles                     UserToRoles[]                    @relation("user_to_roles")
+  affiliate_account               rewardful_affiliate_account?     @relation(fields: [affiliate_account_id], references: [id])
+  affiliate_account_id            Int?
   message                         message[]
   conversation                    conversation[]
   conversation_participant        conversation_participant[]
@@ -2557,6 +2627,7 @@ model User {
   recent_search                   recent_search[]
   subscription                    subscription[]
   payment                         payment[]
+  user_feature_usage              user_feature_usage[]
   user_preferences                user_preferences?
 
   @@index([email], map: "email")
