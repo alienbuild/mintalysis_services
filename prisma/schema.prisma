@@ -1704,9 +1704,9 @@ model veve_listings {
   collectible_id     String?
   comic_image_url_id String?
   token_id           Int?
-  name               String
-  rarity             String
-  edition_type       String
+  name               String?
+  rarity             String?
+  edition_type       String?
   expiry_date        DateTime?
   created_at         DateTime  @default(now())
   updated_at         DateTime? @updatedAt
