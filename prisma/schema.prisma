@@ -9,17 +9,18 @@ datasource db {
 
 // BEGIN_MODELS
 model rewardful_affiliate_account {
-  id                   Int                       @id @default(autoincrement())
-  userId               String                    @unique
-  affiliate_id         String                    @unique
-  status               String
-  promotional_channels Json?
-  createdAt            DateTime                  @default(now())
-  updatedAt            DateTime                  @updatedAt
-  referral_links       rewardful_referral_link[]
-  conversions          rewardful_conversion[]
-  rewardful_payout     rewardful_payout[]
-  User                 User[]
+  id                         Int                          @id @default(autoincrement())
+  userId                     String                       @unique
+  affiliate_id               String                       @unique
+  status                     String
+  promotional_channels       Json?
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  referral_links             rewardful_referral_link[]
+  conversions                rewardful_conversion[]
+  rewardful_payout           rewardful_payout[]
+  rewardful_commission_stats rewardful_commission_stats[]
+  User                       User[]
 }
 
 model rewardful_affiliate {
@@ -28,6 +29,7 @@ model rewardful_affiliate {
   email        String
   first_name   String?
   last_name    String?
+  paypal_email String
   rewardful_id String                         @unique
   createdAt    DateTime                       @default(now())
   updatedAt    DateTime                       @updatedAt
@@ -72,6 +74,16 @@ model rewardful_payout {
   status               String // e.g., "pending", "paid"
   payout_date          DateTime
   affiliate_account    rewardful_affiliate_account @relation(fields: [affiliate_account_id], references: [id])
+}
+
+model rewardful_commission_stats {
+  id                   Int                         @id @default(autoincrement())
+  affiliate_account_id Int
+  currency             String
+  amount               Float
+  affiliate_account    rewardful_affiliate_account @relation(fields: [affiliate_account_id], references: [id])
+
+  @@unique([affiliate_account_id, currency])
 }
 
 // schemas/articles.prisma
