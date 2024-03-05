@@ -26,7 +26,7 @@ model rewardful_affiliate_account {
 model rewardful_affiliate {
   id           Int                            @id @default(autoincrement())
   user_id      String                         @unique
-  email        String
+  email        String                         @unique
   first_name   String?
   last_name    String?
   paypal_email String
@@ -71,7 +71,7 @@ model rewardful_payout {
   id                   Int                         @id @default(autoincrement())
   affiliate_account_id Int
   amount               Float
-  status               String // e.g., "pending", "paid"
+  status               String
   payout_date          DateTime
   affiliate_account    rewardful_affiliate_account @relation(fields: [affiliate_account_id], references: [id])
 }
