@@ -18,6 +18,7 @@ model rewardful_affiliate_account {
   updatedAt                  DateTime                     @updatedAt
   referral_links             rewardful_referral_link[]
   conversions                rewardful_conversion[]
+  affiliate                  rewardful_affiliate          @relation(fields: [userId], references: [user_id])
   rewardful_payout           rewardful_payout[]
   rewardful_commission_stats rewardful_commission_stats[]
   User                       User[]
@@ -34,6 +35,7 @@ model rewardful_affiliate {
   createdAt    DateTime                       @default(now())
   updatedAt    DateTime                       @updatedAt
   referrals    rewardful_affiliate_referral[]
+  account      rewardful_affiliate_account?
 }
 
 model rewardful_affiliate_referral {
