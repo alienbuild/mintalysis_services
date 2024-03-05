@@ -9,16 +9,17 @@ datasource db {
 
 // BEGIN_MODELS
 model rewardful_affiliate_account {
-  id               Int                       @id @default(autoincrement())
-  userId           String                    @unique
-  affiliate_id     String                    @unique
-  status           String
-  createdAt        DateTime                  @default(now())
-  updatedAt        DateTime                  @updatedAt
-  referral_links   rewardful_referral_link[]
-  conversions      rewardful_conversion[]
-  rewardful_payout rewardful_payout[]
-  User             User[]
+  id                   Int                       @id @default(autoincrement())
+  userId               String                    @unique
+  affiliate_id         String                    @unique
+  status               String
+  promotional_channels Json?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  referral_links       rewardful_referral_link[]
+  conversions          rewardful_conversion[]
+  rewardful_payout     rewardful_payout[]
+  User                 User[]
 }
 
 model rewardful_affiliate {
@@ -54,10 +55,14 @@ model rewardful_referral_link {
 model rewardful_conversion {
   id                   Int                         @id @default(autoincrement())
   affiliate_account_id Int
-  saleAmount           Float
+  sale_amount          Float
   commission_amount    Float
   createdAt            DateTime                    @default(now())
   affiliate_account    rewardful_affiliate_account @relation(fields: [affiliate_account_id], references: [id])
+  product              String
+  customer_identifier  String?
+  discount_applied     Float?                      @default(0)
+  location             String?
 }
 
 model rewardful_payout {
