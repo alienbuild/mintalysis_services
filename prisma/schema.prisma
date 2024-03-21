@@ -2018,6 +2018,8 @@ model veve_profile {
   collectible       veve_collectibles? @relation(fields: [collectible_id], references: [collectible_id])
   verified          Boolean            @default(false)
   requestedAt       DateTime?
+  veve_user_id      String?
+  veve_username     String?
 }
 
 // schemas/projects/veve/series.prisma
