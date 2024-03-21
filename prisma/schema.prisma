@@ -1321,7 +1321,7 @@ model veve_mints {
   token_id        Int
   to_process      Boolean?  @default(false)
   createdAt       DateTime  @default(now())
-  updatedAt       DateTime?
+  updatedAt       DateTime? @updatedAt
   timestamp_dt    DateTime? @db.DateTime(6)
   is_burned       Boolean?  @default(false)
   is_redemption   Boolean?  @default(false)
@@ -1330,6 +1330,17 @@ model veve_mints {
 
   @@index([createdAt])
   @@index([timestamp_dt])
+  @@index([wallet_id, token_id])
+  @@index([token_id])
+  @@index([wallet_id])
+}
+
+model veve_token_owner {
+  token_id  Int       @id
+  wallet_id String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
   @@index([wallet_id, token_id])
   @@index([token_id])
   @@index([wallet_id])
@@ -1636,14 +1647,13 @@ model veve_wallet_metrics {
 }
 
 model veve_wallet_token_counts {
-  id                Int       @id @default(autoincrement())
-  wallet_id         String
-  collectible_id    String?
-  unique_cover_id   String?
-  collectible_count Int?
-  comic_count       Int?
-  created_at        DateTime  @default(now())
-  updated_at        DateTime? @updatedAt
+  id              Int       @id @default(autoincrement())
+  wallet_id       String
+  collectible_id  String?
+  unique_cover_id String?
+  count           Int?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime? @updatedAt
 }
 
 model veve_x_tracker {
