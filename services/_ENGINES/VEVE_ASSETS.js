@@ -1,10 +1,12 @@
+// node services/_engines/veve_assets
+
 import { PrismaClient } from "@prisma/client";
 import fetch from "node-fetch";
 import moment from "moment";
 
 const prisma = new PrismaClient();
 
-const VEVE_PROJECT_ID = "de2180a8-4e26-402a-aed1-a09a51e6e33d";
+// const VEVE_PROJECT_ID = "de2180a8-4e26-402a-aed1-a09a51e6e33d";
 const VEVE_TOKEN_ADDRESS = "0xa7aefead2f25972d80516628417ac46b3f2604af";
 const BASE_URL = "https://api.x.immutable.com/v1/";
 const PAGE_SIZE = "200";
@@ -12,9 +14,10 @@ const ORDER_BY = "updated_at";
 const DIRECTION = "asc";
 const STATUS = "imx";
 const BURN_WALLETS = [
-    "0x39e3816a8c549ec22cd1a34a8cf7034b3941d8b1",
-    "0x1400d3c5918187e0f1ac663c17c48acf0c6b12fc",
+    "0x39e3816a8c549ec22cd1a34a8cf7034b3941d8b1", // VeVeUserBurn Wallet
+    "0x1400d3c5918187e0f1ac663c17c48acf0c6b12fc", // OG BURN WALLET
 ];
+//TODO ADD CRAFTING WALLET 
 
 let firstRun = true;
 let lastTokenTimestamp = null;
@@ -29,28 +32,22 @@ export const GET_VEVE_TOKENS = async () => {
             console.log("\n[INFO] Fetching VeVe tokens from IMX.");
             const veveAssets = await fetchFromIMX("assets", "veve_tokens");
             const allTokens = [...veveAssets.result];
-            console.log(
-                `[INFO] ${allTokens.length} VeVe tokens fetched from IMX. Processing...`
-            );
+            console.log(`[INFO] ${allTokens.length} VeVe tokens fetched from IMX. Processing...`);
+            console.log(`[INFO] Waiting for 10 seconds to ensure all tokens are inserted into veve_tokens.`);
+            await sleep(10000);
             await processAssets(allTokens);
-            console.log(
-                `[INFO] ${allTokens.length} VeVe tokens processed.`
-            );
+            console.log(`[INFO] ${allTokens.length} VeVe tokens processed.`);
         } catch (e) {
             console.log(`[ERROR] GET_VEVE_TOKENS error:`, e);
         }
 
         const elapsedTime = Date.now() - timestampStart;
-        console.log("\n[INFO] TOTAL TIME: ", elapsedTime / 1000, " seconds");
+        console.log("\n[INFO] TOTAL TIME: ", elapsedTime / 1000, " seconds. Current time: ", new Date().toISOString());
 
         // Used to ensure that any wallet used is inserted into veve_wallets first
         if (elapsedTime < MINIMUM_TIME_MS) {
             let WAIT_TIME = MINIMUM_TIME_MS - elapsedTime;
-            console.log(
-                `[INFO] Pausing for ${
-                    WAIT_TIME / 1000
-                } seconds to ensure minimum iteration time.`
-            );
+            console.log(`[INFO] Pausing for ${WAIT_TIME / 1000} seconds to ensure minimum iteration time.`);
             await sleep(WAIT_TIME);
         }
     } while (true);
@@ -77,9 +74,7 @@ const fetchFromIMX = async (endpoint, tableName) => {
             }
 
             const FULL_REQ_URL = `${BASE_URL}${endpoint}?${queryString}`;
-            console.log(
-                `\n[INFO] Requesting ${tableName} data using ${FULL_REQ_URL}\n`
-            );
+            console.log(`\n[INFO] Requesting ${tableName} data using ${FULL_REQ_URL}\n`);
 
             const response = await fetch(FULL_REQ_URL, {
                 method: "GET",
@@ -90,19 +85,15 @@ const fetchFromIMX = async (endpoint, tableName) => {
             });
 
             if (response.status === 429) {
-                console.error(
-                    "[ALERT] Rate limit reached. Pausing for 60 seconds."
-                );
-                await new Promise((resolve) => setTimeout(resolve, 60000));
+                console.error("[ALERT] Rate limit reached. Pausing for 60 seconds.");
+                await sleep(60000);
                 retryCount--;
                 continue;
             }
 
             if (!response.ok) {
                 const errorMsg = await response.text();
-                throw new Error(
-                    `[ERROR] Unable to fetch IMX ${tableName} transactions. Status: ${response.status}. Message: ${errorMsg}`
-                );
+                throw new Error(`[ERROR] Unable to fetch IMX ${tableName} transactions. Status: ${response.status}. Message: ${errorMsg}`);
             }
 
             const responseBody = await response.json();
@@ -118,10 +109,8 @@ const fetchFromIMX = async (endpoint, tableName) => {
             return responseBody;
         } catch (error) {
             if (error.message.includes("database connection")) {
-                console.error(
-                    "[ERROR] Database connection error. Pausing for 60 seconds."
-                );
-                await sleep(60);
+                console.error("[ERROR] Database connection error. Pausing for 60 seconds.");
+                await sleep(60000);
                 retryCount--;
                 continue;
             } else {
@@ -143,8 +132,7 @@ const processAssets = async (allTokens) => {
             if (token.name === null) {
                 const createdMintDate =
                     // To avoid overwriting the mint date with the incorrect created_at date from 12/15/2021 token migration
-                    // TODO Update with exact token ID when the migration was completed
-                    tokenIdNum > 3880000 ? token.created_at : null;
+                    tokenIdNum >= 3721751 ? token.created_at : null;
                 await upsertVeveToken(
                     tokenIdNum,
                     token.updated_at,
@@ -153,7 +141,7 @@ const processAssets = async (allTokens) => {
                     token.user
                 );
 
-                // HAS METADATA
+            // HAS METADATA
             } else {
                 const { type, comicOrCollectibleId } = extractUniqueId(token);
                 // Successful extraction of type and ID
@@ -166,10 +154,7 @@ const processAssets = async (allTokens) => {
                         isBurned
                     );
                 } else {
-                    console.log(
-                        "[MISSING DATA] Unable to extract type from token ID: ",
-                        tokenIdNum
-                    );
+                    console.log("[MISSING DATA] Unable to extract type from token ID: ", tokenIdNum);
                     await upsertVeveToken(
                         tokenIdNum,
                         token.updated_at,
@@ -185,11 +170,7 @@ const processAssets = async (allTokens) => {
         }
     }
 
-    console.log(
-        "\n[INFO] Processed tokens with last timestamp:",
-        lastTokenTimestamp
-    );
-
+    console.log("[INFO] Processed tokens with last timestamp:", lastTokenTimestamp);
     await setVeveImxStatus("veve_tokens", formatDateString(lastTokenTimestamp));
 };
 
@@ -201,15 +182,16 @@ const upsertVeveToken = async (
     wallet_id
 ) => {
     // Prepare the data for the 'create' operation, including 'mint_date'
-    const createData = {
-        token_id: tokenId,
-        last_updated: lastUpdated,
-        mint_date: createdMintDate,
-        wallet_id: wallet_id,
-        is_burned: isBurned,
-        to_process: true,
-        no_meta: true,
-    };
+    // This should only happen when there is a problems with mints
+    // createData = {
+    //    token_id: tokenId,
+    //    last_updated: lastUpdated,
+    //    mint_date: createdMintDate,
+    //    wallet_id: wallet_id,
+    //    is_burned: isBurned,
+    //    to_process: true,
+    //    no_meta: true,
+    //};
 
     // Prepare the data for the 'update' operation, excluding 'mint_date'
     const updateData = {
@@ -220,10 +202,9 @@ const upsertVeveToken = async (
         no_meta: true,
     };
 
-    await prisma.veve_tokens.upsert({
+    await prisma.veve_tokens.updateMany({
         where: { token_id: tokenId },
-        create: createData,
-        update: updateData,
+        data: updateData,
     });
 };
 
@@ -238,7 +219,7 @@ const processTokenByType = async (
 
     // 12/16/2021 or later - Tokens with the correct created_at date
     // TODO: Update this to exact token ID when the migration was completed
-    if (token.token_id > 3880000) {
+    if (token.token_id >= 3721751) {
         created_mint_date = moment(token.created_at).format(
             "YYYY-MM-DDTHH:mm:ss.SSS[Z]"
         );
@@ -253,18 +234,20 @@ const processTokenByType = async (
         tableToCheck = prisma.veve_comics;
         idField = "comic_image_url_id";
 
+        // Get the unique_cover_id from veve_comics using the comic_image_url_id
         const result = await prisma.veve_comics.findFirst({
             select: { unique_cover_id: true },
             where: { comic_image_url_id: comicOrCollectibleId },
         });
         const unique_cover_id = result ? result.unique_cover_id : null;
 
+        // Upserting FULL METADATA
         dataToUpsert = {
             unique_cover_id: unique_cover_id,
             comic_image_url_id: comicOrCollectibleId,
             name: token.name,
             edition: token.metadata.edition,
-            mint_date: created_mint_date,
+            // mint_date: created_mint_date,
             rarity: token.metadata.rarity,
             type: type,
             last_updated: token.updated_at,
@@ -289,7 +272,7 @@ const processTokenByType = async (
             dataToUpsert = {
                 collectible_id: comicOrCollectibleId,
                 name: token.name,
-                mint_date: created_mint_date,
+                // mint_date: created_mint_date,
                 edition: token.metadata.edition,
                 rarity: token.metadata.rarity,
                 type: type,
@@ -304,15 +287,11 @@ const processTokenByType = async (
             };
         }
     } else {
-        console.error(
-            "[ERROR] Collectible not found for type: ",
-            type,
-            "and ID:",
-            comicOrCollectibleId
-        );
+        console.error("[ERROR] Collectible not found for type: ", type, "and ID:", comicOrCollectibleId);
     }
 
-    const existingEntry = await tableToCheck.findUnique({
+// Create error log if no metadata exists in veve_comics or veve_collectibles
+const existingEntry = await tableToCheck.findUnique({
         where: { [idField]: comicOrCollectibleId },
     });
 
@@ -357,17 +336,11 @@ const extractUniqueId = (token) => {
             if (comicMatch) {
                 return { type: "comic", comicOrCollectibleId: comicMatch[1] };
             } else if (collectibleMatch) {
-                return {
-                    type: "collectible",
-                    comicOrCollectibleId: collectibleMatch[1],
-                };
+                return {type: "collectible", comicOrCollectibleId: collectibleMatch[1],};
             }
         }
     } catch (e) {
-        console.error(
-            "[ERROR] Unable to extract id from image_url for token:",
-            e
-        );
+        console.error("[ERROR] Unable to extract id from image_url for token:", e);
     }
 };
 

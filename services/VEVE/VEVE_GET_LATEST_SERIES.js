@@ -13,8 +13,9 @@ export const VEVE_GET_LATEST_SERIES = async () => {
             'client-name': 'alice-backend',
             'client-version': '...',
             'user-agent': 'alice-requests',
-            'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
-        },
+            'Csrf-Token': process.env.ALICE_CSRF_TOKEN,
+            'X-Auth-Version': '2',
+            'cookie': process.env.ALICE_COOKIE}, 
         body: JSON.stringify({
             query: Queries.getVeveLatestSeriesQuery(),
         }),

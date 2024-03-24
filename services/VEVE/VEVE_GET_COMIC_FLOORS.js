@@ -568,15 +568,13 @@ export const VEVE_GET_COMIC_FLOORS = async () => {
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            // 'cookie': "veve=s%3AAUbLV_hdwqgSds39ba-LlSIWPctzMBvz.jqXB%2BtkpAX7pk3gAPUIXNfWJbJuasxn0HNolxuGRsKI",
-            // 'client-name': 'veve-web-app',
-            // 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-            // 'client-operation': 'AuthUserDetails',
             'client-name': 'alice-backend',
             'client-version': '...',
             'user-agent': 'alice-requests',
-            'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
-        },
+            'Csrf-Token': process.env.ALICE_CSRF_TOKEN,
+            'X-Auth-Version': '2',
+            'cookie': process.env.ALICE_COOKIE
+         }, 
         body: JSON.stringify({
             query: Queries.getVeveComicFloorsQuery(),
         }),
