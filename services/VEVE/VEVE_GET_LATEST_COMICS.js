@@ -5,7 +5,7 @@ import * as Queries from "../../queries/getVevelatestComicsQuery.js";
 import {prisma} from "../../index.js";
 
 export const VEVE_GET_LATEST_COMICS = async () => {
-
+    let count = 1
     await fetch(`https://web.api.prod.veve.me/graphql`, {
         method: 'POST',
         headers: {
@@ -14,8 +14,9 @@ export const VEVE_GET_LATEST_COMICS = async () => {
             'client-name': 'alice-backend',
             'client-version': '...',
             'user-agent': 'alice-requests',
-            'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
-        },
+            'Csrf-Token': process.env.ALICE_CSRF_TOKEN,
+            'X-Auth-Version': '2',
+            'cookie': process.env.ALICE_COOKIE}, 
         body: JSON.stringify({
             query: Queries.getVevelatestComicsQuery(),
         }),
@@ -24,7 +25,8 @@ export const VEVE_GET_LATEST_COMICS = async () => {
         .then(async latest_comics => {
 
             const marketListingByComicCover = latest_comics.data.marketListingByComicCover.edges
-
+            console.log(`[VEVE] - [GET ALL COMICS]: Grabbing ${marketListingByComicCover.length} Comics`)
+            
             marketListingByComicCover.map(async (comic) => {
                 let writersArr = []
                 let artistsArr = []
@@ -50,7 +52,6 @@ export const VEVE_GET_LATEST_COMICS = async () => {
                         create: { character_id: character.node.id, name: character.node.name },
                     })
                 })
-
                 const reComic = /comic_cover\.([a-f\d-]+)\./;
                 const comicMatch = comic.node.image.fullResolutionUrl.match(reComic);
                 const comic_image_url_id = comicMatch[1];
@@ -58,7 +59,10 @@ export const VEVE_GET_LATEST_COMICS = async () => {
                 const slug = slugify(`${comic.node.comicType.name} ${comic.node.comicType.comicNumber} ${comic.node.rarity} ${comic.node.comicType.startYear} ${nanoid()}`,{ lower: true, strict: true })
                 const mcp_rarity_value = comic.node.rarity === 'COMMON' ? .25 : comic.node.rarity === 'UNCOMMON' ? .5 : comic.node.rarity === 'RARE' ? 2.0 : comic.node.rarity === 'ULTRA_RARE' ? 3.0 : comic.node.rarity === 'SECRET_RARE' ? 6.0 : NULL
                 const title_case_rarity = comic.node.rarity === 'COMMON' ? 'Common' : comic.node.rarity === 'UNCOMMON' ? 'Uncommon' : comic.node.rarity === 'RARE' ? 'Rare' : comic.node.rarity === 'ULTRA_RARE' ? 'Ultra Rare' : comic.node.rarity === 'SECRET_RARE' ? 'Secret Rare' : NULL
-
+                
+                count += 1
+                // console.log(`[VEVE] - [GET ALL COMICS]: Adding ${comic.node.comicType.name} Unique ID ${comic.node.image.id} to prisma db - ${count} of ${marketListingByComicCover.length}`)
+                
                 try {
                     await prisma.veve_comics.upsert({
                         where: {
@@ -143,12 +147,14 @@ export const VEVE_GET_LATEST_COMICS = async () => {
                             updatedAt: new Date(),
                             slug: slug
                         }
+                       
                     })
-                } catch (e) {
-                    console.log(`[VEVE] - [GET ALL COMICS]: ${comic.node.comicType.name} was not added to prisma db.`, e)
+                } catch (e) { 
+                    console.log(`[VEVE] - [GET ALL COMICS]: ${comic.node.comicType.name} Unique ID ${comic.node.image.id} was not added to prisma db.`, e)
                 }
             })
         })
         .catch(err => console.log('[CRITICAL ERROR][VEVE] Unable to get latest comics. ', err))
-
 }
+
+VEVE_GET_LATEST_COMICS()

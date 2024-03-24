@@ -8,7 +8,7 @@ import {ChatGPTAPI} from 'chatgpt'
 const chatGptKey = "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"
 
 export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
-
+    let count = 1
     await fetch(`https://web.api.prod.veve.me/graphql`, {
         method: 'POST',
         headers: {
@@ -17,8 +17,9 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
             'client-name': 'alice-backend',
             'client-version': '...',
             'user-agent': 'alice-requests',
-            'cookie': "veve=s%3ABBzqVcXCx-u7b2OnNrI2hQEwq14FXASo.C%2F5sObS5AunP8qIBZeqDEC3WnCnVsEdY9qMNQ%2FPGQK4"
-        },
+            'Csrf-Token': process.env.ALICE_CSRF_TOKEN,
+            'X-Auth-Version': '2',
+            'cookie': process.env.ALICE_COOKIE}, 
         body: JSON.stringify({
             query: Queries.getVevelatestCollectiblesQuery(),
         }),
@@ -28,7 +29,8 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
 
             const collectibleTypeList = latest_collectibles.data.collectibleTypeList.edges
             const nanoid = customAlphabet('1234567890abcdef', 5)
-
+            console.log(`[VEVE] - [GET LATEST COLLECTIBLES]: Grabbing ${collectibleTypeList.length} Collectibles`)
+            
             for (const collectible of collectibleTypeList) {
 
                 const slug = slugify(`${collectible.node.name} ${collectible.node.rarity} ${collectible.node.editionType} ${nanoid()}`,{ lower: true, strict: true })
@@ -103,7 +105,8 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
                             },
                         });
                     }
-
+                    // console.log(`[VEVE] - [GET LATEST COLLECTIBLES]: ${collectible.node.name} ${collectible.node.id} was upserted to prisma db - ${count} of ${collectibleTypeList.length}`)
+                    
                     await prisma.veve_collectibles.upsert({
                         where: {
                             collectible_id: collectible.node.id,
@@ -192,7 +195,7 @@ export const VEVE_GET_LATEST_COLLECTIBLES = async () => {
                 } catch (e) {
                     console.log(`[VEVE] - [GET LATEST COLLECTIBLES]: ${collectible.node.name} was not added to prisma db.`, e)
                 }
-
+                count += 1
             }
 
             // await checkDescriptions()
