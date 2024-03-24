@@ -1504,6 +1504,7 @@ model veve_comics {
   start_year                  Int?
   total_available             Int?
   total_issued                Int?
+  total_store_allocation      Int?
   image_direction             String?
   image_full_resolution_url   String?
   image_high_resolution_url   String?
