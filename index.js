@@ -35,8 +35,8 @@ async function main() {
         await initializeMongoose();
         await prisma.$connect();
         console.log('[CONNECTED] Prisma');
-        await scheduledHourlyJobs();
-        await scheduledFiveMinuteJobs()
+        // await scheduledHourlyJobs();
+        // await scheduledFiveMinuteJobs()
     } catch (error) {
         console.error('[ERROR] main.js:', error);
     }

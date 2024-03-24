@@ -1,8 +1,10 @@
+
+
 import { PrismaClient } from "@prisma/client";
 import fetch from "node-fetch";
 import moment from "moment";
-import { time, timeStamp } from "node:console";
-import { get } from "node:http";
+// import { time, timeStamp } from "node:console";
+// import { get } from "node:http";
 
 const prisma = new PrismaClient();
 
@@ -12,6 +14,7 @@ const BURN_WALLETS = [
 	"0x39e3816a8c549ec22cd1a34a8cf7034b3941d8b1",
 	"0x1400d3c5918187e0f1ac663c17c48acf0c6b12fc",
 ];
+//TODO: ADD CRAFTING WALLET but differentiate between crafting and burning. Don't count the crafting items in the crafting wallet as burned!
 const BASE_URL = "https://api.x.immutable.com/v1/";
 const PAGE_SIZE = "200";
 const ORDER_BY = "created_at";
@@ -48,18 +51,8 @@ const triggerMintsUpdate = async () => {
 	console.log(responseData);
 };
 
-const triggerMintsUpdate = async () => {
-    const response = await fetch("http://localhost:8001/graphql", { // TODO: Put gql url into env and switch between dev/prod
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: `mutation { triggerImxMint }` }),
-    });
-
-    const responseData = await response.json();
-    console.log(responseData);
-};
-
 export const GET_VEVE_TRANSACTIONS = async () => {
+    // Resetting veve_imx_status with the latest mint timestamp 
 	const last_mint_timestamp = await prisma.veve_mints.findFirst({
 		select: { timestamp: true },
 		orderBy: { timestamp: "desc" },
@@ -68,6 +61,7 @@ export const GET_VEVE_TRANSACTIONS = async () => {
 	const formatted_mint_dt = formatDateString(last_mint_timestamp.timestamp);
 	setVeveImxStatus("veve_mints", formatted_mint_dt);
 
+    // Resetting veve_imx_status with the latest transfer timestamp
 	const last_transfer_timestamp = await prisma.veve_transfers.findFirst({
 		select: { timestamp: true },
 		orderBy: { timestamp: "desc" },
@@ -100,7 +94,6 @@ export const GET_VEVE_TRANSACTIONS = async () => {
 
 const fetchFromIMX = async (endpoint, tableName) => {
 	let retryCount = 3;
-
 	while (retryCount > 0) {
 		try {
 			const { last_timestamp, next_cursor } =
@@ -110,19 +103,24 @@ const fetchFromIMX = async (endpoint, tableName) => {
 				});
 
 			let queryString = `status=${STATUS}&token_address=${VEVE_TOKEN_ADDRESS}&page_size=${PAGE_SIZE}&order_by=${ORDER_BY}&direction=${DIRECTION}`;
-
+            let queryStringTest = queryString;
+            // Using the last_timestamp for mints and transfers from the database to start off then using the cursor for subsequent requests
 			if (firstRun === true) {
 				queryString += `&min_timestamp=${last_timestamp}`;
 				// since mints runs first, we can set firstRun to false after the first run of transfers
 				if (tableName !== "veve_mints") {
 					firstRun = false;
 				}
+                queryStringTest = queryString;
 			} else {
 				queryString += `&cursor=${next_cursor}`;
+                queryStringTest = queryString;
 			}
 
 			const FULL_REQ_URL = `${BASE_URL}${endpoint}?${queryString}`;
 			console.log(`[INFO] Requesting ${tableName} data using ${FULL_REQ_URL}`);
+
+            log_request(tableName, queryStringTest);
 
 			const response = await fetch(FULL_REQ_URL, {
 				method: "GET",
@@ -134,7 +132,7 @@ const fetchFromIMX = async (endpoint, tableName) => {
 
 			if (response.status === 429) {
 				console.error("[ERROR] Rate limit reached. Pausing for 60 seconds.");
-				await new Promise((resolve) => setTimeout(resolve, 60000));
+				await sleep(60000);
 				retryCount--;
 				continue;
 			}
@@ -173,29 +171,30 @@ const fetchFromIMX = async (endpoint, tableName) => {
 
 const processVeveTxns = async (mints, transfers) => {
 	try {
+        // Getting the previous counts from imx_stats
 		const prevCounts = await prisma.imx_stats.findFirst({
 			select: {
 				mint_count: true,
 				transfer_count: true,
-				wallet_count: true,
-				token_count: true,
+				// wallet_count: true,
+				// token_count: true,
 			},
 		});
 
 		const allTransactions = [...mints.result, ...transfers.result];
-		const [imxMintsArr, imxTransArr, imxWalletsArr, imxTokensArr] = processTransactions(allTransactions);
+		const [imxMintsArr, imxTransArr] = processTransactions(allTransactions);//, imxWalletsArr, imxTokensArr] = processTransactions(allTransactions);
 		
         await performUpserts(
 			imxMintsArr,
 			imxTransArr,
-			imxWalletsArr,
-			imxTokensArr
+			// imxWalletsArr,
+			// imxTokensArr
 		);
 		await updateStats(
 			prevCounts.mint_count,
 			prevCounts.transfer_count,
-			prevCounts.wallet_count,
-			prevCounts.token_count
+			// prevCounts.wallet_count,
+			// prevCounts.token_count
 		);
 
 	} catch (e) {
@@ -206,8 +205,8 @@ const processVeveTxns = async (mints, transfers) => {
 const processTransactions = (allTransactions) => {
 	let imxMintsArr = [];
 	let imxTransArr = [];
-	let imxWalletsArr = [];
-	let imxTokensArr = [];
+	// let imxWalletsArr = [];
+	// let imxTokensArr = [];
 
 	allTransactions.forEach((transaction) => {
 		let timestamp = transaction.timestamp;
@@ -229,19 +228,19 @@ const processTransactions = (allTransactions) => {
 				is_burned: isBurned,
 			});
 
-			imxWalletsArr.push({
-				id: to_wallet,
-				timestamp: timestamp,
-				active: true,
-			});
+			// imxWalletsArr.push({
+			// 	id: to_wallet,
+			// 	timestamp: timestamp,
+			// 	active: true,
+			// });
 
-			imxTokensArr.push({
-				token_id: token_id,
-				wallet_id: to_wallet,
-				mint_date: timestamp,
-				to_process: true,
-				is_burned: isBurned,
-			});
+			// imxTokensArr.push({
+			// 	token_id: token_id,
+			// 	wallet_id: to_wallet,
+			// 	mint_date: timestamp,
+			// 	to_process: true,
+			// 	is_burned: isBurned,
+			// });
 
 			if (txn_id > lastMintTxnId || lastMintTxnId == null) {
 				lastMintTimestamp = formatDateString(timestamp);
@@ -265,18 +264,18 @@ const processTransactions = (allTransactions) => {
 				is_burned: isBurned,
 			});
 
-			imxWalletsArr.push({
-				id: from_wallet,
-				timestamp: timestamp,
-				active: true,
-				has_kyc: true,
-			});
+			// imxWalletsArr.push({
+			// 	id: from_wallet,
+			// 	timestamp: timestamp,
+			// 	active: true,
+			// 	has_kyc: true,
+			// });
 
-			imxWalletsArr.push({
-				id: to_wallet,
-				timestamp: timestamp,
-				active: true,
-			});
+			// imxWalletsArr.push({
+			// 	id: to_wallet,
+			// 	timestamp: timestamp,
+			// 	active: true,
+			// });
 
 			if (txn_id > lastTransferTxnId || lastTransferTxnId == null) {
 				lastTransferTimestamp = formatDateString(timestamp);
@@ -285,14 +284,15 @@ const processTransactions = (allTransactions) => {
 		}
 	});
 
-	return [imxMintsArr, imxTransArr, imxWalletsArr, imxTokensArr];ml
+	return [imxMintsArr, imxTransArr] //, imxWalletsArr, imxTokensArr];
+
 };
 
 const performUpserts = async (
 	imxMintsArr,
 	imxTransArr,
-	imxWalletsArr,
-	imxTokensArr
+	// imxWalletsArr,
+	// imxTokensArr
 ) => {
 	try {
 		console.log("\n[INFO] Updating veve_mints.");
@@ -301,13 +301,10 @@ const performUpserts = async (
 			skipDuplicates: true,
 		});
 
-		if (imxMintsArr.length > 0) await triggerMintsUpdate();
+		// if (imxMintsArr.length > 0) await triggerMintsUpdate();
 
 		await setVeveImxStatus("veve_mints", lastMintTimestamp, lastMintTxnId);
-		console.log(
-			"[INFO] Updated veve_imx_status with Last Mint Timestamp: ", lastMintTimestamp,
-			" and Last Mint Txn Id: ", lastMintTxnId
-		);
+		console.log("[INFO] Updated veve_imx_status with Last Mint Timestamp: ", lastMintTimestamp," and Last Mint Txn Id: ", lastMintTxnId);
 
 		console.log("\n[INFO] Updating veve_transfers.");
 		await prisma.veve_transfers.createMany({
@@ -315,60 +312,57 @@ const performUpserts = async (
 			skipDuplicates: true,
 		});
 
-		if (imxTransArr.length > 0) await triggerTransferUpdate();
+		// if (imxTransArr.length > 0) await triggerTransferUpdate();
 
 		await setVeveImxStatus("veve_transfers", lastTransferTimestamp,lastTransferTxnId);
-		console.log(
-			"[INFO] Updated veve_imx_status with Last Transfer Timestamp: ", lastTransferTimestamp,
-			" and Last Transfer Txn Id: ", lastTransferTxnId
-		);
+		console.log("[INFO] Updated veve_imx_status with Last Transfer Timestamp: ", lastTransferTimestamp," and Last Transfer Txn Id: ", lastTransferTxnId);
 
-		const sortedWalletsArr = imxWalletsArr.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+		// const sortedWalletsArr = imxWalletsArr.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-		console.log("\n[INFO] Updating veve_wallets.");
+		// console.log("\n[INFO] Updating veve_wallets.");
 
-		// Wallets needs to update before veve_tokens
-		for (const wallet of sortedWalletsArr) {
-			const existingWallet = await prisma.veve_wallets.findUnique({
-				where: { id: wallet.id },
-			});
+		// // Wallets needs to update before veve_tokens
+		// for (const wallet of sortedWalletsArr) {
+		// 	const existingWallet = await prisma.veve_wallets.findUnique({
+		// 		where: { id: wallet.id },
+		// 	});
 
-			await prisma.veve_wallets.upsert({
-				where: { id: wallet.id },
-				update: {
-					last_activity_date:
-						existingWallet &&
-						existingWallet.last_activity_date > wallet.timestamp
-							? existingWallet.last_activity_date
-							: wallet.timestamp,
-					first_activity_date: existingWallet
-						? existingWallet.first_activity_date
-						: wallet.timestamp,
-					active: wallet.active,
-					has_kyc: existingWallet
-						? existingWallet.has_kyc || wallet.has_kyc
-						: wallet.has_kyc,
-				},
-				create: {
-					id: wallet.id,
-					last_activity_date: wallet.timestamp,
-					first_activity_date: wallet.timestamp,
-					active: wallet.active,
-					has_kyc:
-						wallet.has_kyc !== undefined ? wallet.has_kyc : false, // Setting a default value if it doesn't exist
-				},
-			});
+		// 	await prisma.veve_wallets.upsert({
+		// 		where: { id: wallet.id },
+		// 		update: {
+		// 			last_activity_date:
+		// 				existingWallet &&
+		// 				existingWallet.last_activity_date > wallet.timestamp
+		// 					? existingWallet.last_activity_date
+		// 					: wallet.timestamp,
+		// 			first_activity_date: existingWallet
+		// 				? existingWallet.first_activity_date
+		// 				: wallet.timestamp,
+		// 			active: wallet.active,
+		// 			has_kyc: existingWallet
+		// 				? existingWallet.has_kyc || wallet.has_kyc
+		// 				: wallet.has_kyc,
+		// 		},
+		// 		create: {
+		// 			id: wallet.id,
+		// 			last_activity_date: wallet.timestamp,
+		// 			first_activity_date: wallet.timestamp,
+		// 			active: wallet.active,
+		// 			has_kyc:
+		// 				wallet.has_kyc !== undefined ? wallet.has_kyc : false, // Setting a default value if it doesn't exist
+		// 		},
+		// 	});
 
-			if (!existingWallet) {
-				console.log("\n[NEW WALLET] New veve_wallets added wallet id:", wallet.id, "with timestamp:",wallet.timestamp);
-			}
-		}
+		// 	if (!existingWallet) {
+		// 		console.log("\n[NEW WALLET] New veve_wallets added wallet id:", wallet.id, "with timestamp:",wallet.timestamp);
+		// 	}
+		// }
 
-		console.log("\n[INFO] Updating veve_tokens.");
-		await prisma.veve_tokens.createMany({
-			data: imxTokensArr,
-			skipDuplicates: true,
-		});
+		// console.log("\n[INFO] Updating veve_tokens.");
+		// await prisma.veve_tokens.createMany({
+		// 	data: imxTokensArr,
+		// 	skipDuplicates: true,
+		// });
 
 	} catch (e) {
 		console.error("[ERROR] Prisma Upsert Failed:", e);
@@ -378,27 +372,27 @@ const performUpserts = async (
 const updateStats = async (
 	previousMintCount,
 	previousTransferCount,
-	previousWalletCount,
-	previousTokenCount
+	// previousWalletCount,
+	// previousTokenCount
 ) => {
 	try {
 		const currentCounts = await prisma.imx_stats.findFirst({
 			select: {
 				mint_count: true,
 				transfer_count: true,
-				wallet_count: true,
-				token_count: true,
+				// wallet_count: true,
+				// token_count: true,
 			},
 			where: { project_id: VEVE_PROJECT_ID },
 		});
 
 		const newMints = currentCounts.mint_count - previousMintCount;
 		const newTransfers = currentCounts.transfer_count - previousTransferCount;
-		const newWallets = currentCounts.wallet_count - previousWalletCount;
-		const newTokens = currentCounts.token_count - previousTokenCount;
+		// const newWallets = currentCounts.wallet_count - previousWalletCount;
+		// const newTokens = currentCounts.token_count - previousTokenCount;
 
 		console.log(
-			`\n[COUNTS]\n${newMints} new mints\n${newTransfers} new transfers\n${newWallets} new wallets\n${newTokens} new tokens\n[COUNTS]`
+			`\n[COUNTS]\n${newMints} new mints\n${newTransfers} new transfers\n`//${newWallets} new wallets\n${newTokens} new tokens\n[COUNTS]`
 		);
 	} catch (e) {
 		console.error("[ERROR] Update Stats Failed:", e);
@@ -423,5 +417,16 @@ function formatDateString(input) {
 }
 
 function sleep(ms) {return new Promise((resolve) => setTimeout(resolve, ms));}
+
+async function log_request(table_name, request) {
+    await prisma.error_log.create({
+        data: {
+            type: "request",
+            missing_data: false,
+            table_name: table_name,
+            error_msg: request
+        },
+    });
+}
 
 GET_VEVE_TRANSACTIONS();

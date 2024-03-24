@@ -1,3 +1,6 @@
+# "C:/Program Files/Python38/python.exe" "C:/Users/XXXD/Desktop/OMI BURN DAILY/Mintalysis/mintalysis_services/services/_ENGINES/UPDATE_META_BOT_VEVE_API.py"
+
+
 import requests
 import mysql.connector
 import time
