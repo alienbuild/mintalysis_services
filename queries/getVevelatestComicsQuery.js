@@ -36,13 +36,6 @@ export const getVevelatestComicsQuery = () => {
                         startYear
                         comicNumber
                         pageCount
-                        comicSeries {
-                            id
-                            publisher {
-                                id
-                                marketFee
-                            }
-                        }
                         artists {
                             edges{
                                 node{
