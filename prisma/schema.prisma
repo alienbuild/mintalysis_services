@@ -454,6 +454,7 @@ model comics {
   translations              comics_translations[]
   createdAt                 DateTime              @default(now())
   updatedAt                 DateTime              @updatedAt
+  publisher                 publishers?           @relation(fields: [publisher_id], references: [id])
 }
 
 model comics_translations {
@@ -472,6 +473,15 @@ model comics_translations {
 
   @@id([language, id])
   @@index([language])
+}
+
+model comic_series {
+  id           String      @id @default(uuid())
+  name         String?
+  description  String?     @db.Text
+  slug         String?     @unique
+  publisher_id String?
+  publisher    publishers? @relation(fields: [publisher_id], references: [id])
 }
 
 //// schemas/community.prisma
@@ -2228,6 +2238,16 @@ model UserToProjects {
   valuation_with_fees Decimal? @db.Decimal(20, 2)
 
   @@id([userId, project_id])
+}
+
+model publishers {
+  id              String         @id
+  name            String?
+  description     String?        @db.Text
+  slug            String?        @unique
+  veve_market_fee Decimal?       @db.Decimal(10, 3)
+  comics          comics[]
+  comic_series    comic_series[]
 }
 
 model recent_search {
