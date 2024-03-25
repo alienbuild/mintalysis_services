@@ -45,7 +45,6 @@ async function main() {
 main().catch((e) => console.error('Server failed to start:', e));
 
 process.on('SIGINT', async () => {
-    console.log('Shutting down');
     await prisma.$disconnect();
     await mongoose.disconnect();
     process.exit(0);

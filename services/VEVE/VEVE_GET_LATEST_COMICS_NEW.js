@@ -58,98 +58,54 @@ const VEVE_GET_LATEST_COMICS_NEW = async (afterCursor = null) => {
                 })
             }))
 
-            await Promise.all(comic.covers.edges.map(async cover => {
-                try {
-                    let title_case_rarity
-                    let mcp_rarity_value
-                    switch (cover.node.rarity){
-                        case 'COMMON':
-                            mcp_rarity_value = .25
-                            title_case_rarity = 'Common'
-                            break
-                        case 'UNCOMMON':
-                            mcp_rarity_value = .5
-                            title_case_rarity = 'Uncommon'
-                            break
-                        case 'RARE':
-                            mcp_rarity_value = 2.0
-                            title_case_rarity = 'Rare'
-                            break
-                        case 'ULTRA_RARE':
-                            mcp_rarity_value = 3.0
-                            title_case_rarity = 'Ultra Rare'
-                            break
-                        case 'SECRET_RARE':
-                            mcp_rarity_value = 6.0
-                            title_case_rarity = 'Secret Rare'
-                            break
-                        default:
-                            mcp_rarity_value = null
-                            title_case_rarity = cover.node.rarity
+            const nanoid = customAlphabet('1234567890abcdef', 5)
+            const slug = slugify(`${comic.name} ${comic.comicNumber} ${cover.node.rarity} ${comic.startYear} ${nanoid()}`,{ lower: true, strict: true })
+
+            const payload = {
+                id: comic.id,
+                name: comic.name,
+                description: comic.description,
+                comic_number: Number(comic.comicNumber),
+                // comic_series_id: comic.comicSeries.id,
+                image_thumbnail: cover.node.image.thumbnailUrl,
+                image_low_resolution_url: cover.node.image.lowResolutionUrl,
+                image_med_resolution_url: cover.node.image.medResolutionUrl,
+                image_full_resolution_url: cover.node.image.fullResolutionUrl,
+                image_high_resolution_url: cover.node.image.highResolutionUrl,
+                image_direction: cover.node.image.direction,
+                start_year: comic.startYear,
+                page_count: comic.pageCount,
+                publisher_id: comic.comicSeries.publisher.id,
+                minimum_age: comic.minimumAge,
+                writers: {
+                    connectOrCreate: writersArr,
+                },
+                artists: {
+                    connectOrCreate: artistsArr,
+                },
+                characters: {
+                    connectOrCreate: charactersArr,
+                },
+                updatedAt: new Date(),
+                slug: slug
+            }
+
+            try {
+                await prisma.comics.upsert({
+                    where: {
+                        id: comic.id,
+                    },
+                    update: payload,
+                    create: {
+                        id: comic.id,
+                        ...payload
                     }
+                })
 
-                    const reComic = /comic_cover\.([a-f\d-]+)\./;
-                    const comicMatch = cover.node.image.fullResolutionUrl.match(reComic);
-                    const comic_image_url_id = comicMatch[1];
-                    const nanoid = customAlphabet('1234567890abcdef', 5)
-                    const slug = slugify(`${comic.name} ${comic.comicNumber} ${cover.node.rarity} ${comic.startYear} ${nanoid()}`,{ lower: true, strict: true })
-
-                    const payload = {
-                        comic_id: comic.id,
-                        mcp_rarity_value: mcp_rarity_value,
-                        comic_image_url_id: comic_image_url_id,
-                        name: comic.name,
-                        rarity: title_case_rarity,
-                        description: comic.description,
-                        comic_number: Number(comic.comicNumber),
-                        comic_series_id: comic.comicSeries.id,
-                        image_thumbnail: cover.node.image.thumbnailUrl,
-                        image_low_resolution_url: cover.node.image.lowResolutionUrl,
-                        image_med_resolution_url: cover.node.image.medResolutionUrl,
-                        image_full_resolution_url: cover.node.image.fullResolutionUrl,
-                        image_high_resolution_url: cover.node.image.highResolutionUrl,
-                        image_direction: cover.node.image.direction,
-                        drop_date: comic.dropDate,
-                        drop_method: comic.dropMethod,
-                        start_year: comic.startYear,
-                        page_count: comic.pageCount,
-                        store_price: comic.storePrice,
-                        publisher_id: comic.comicSeries.publisher.id,
-                        market_fee: comic.comicSeries.publisher.marketFee,
-                        total_store_allocation: cover.node.totalStoreAllocation,
-                        total_issued: comic.totalIssued,
-                        total_available: comic.totalAvailable,
-                        is_free: comic.isFree,
-                        is_unlimited: comic.isUnlimited,
-                        minimum_age: comic.minimumAge,
-                        writers: {
-                            connectOrCreate: writersArr,
-                        },
-                        artists: {
-                            connectOrCreate: artistsArr,
-                        },
-                        characters: {
-                            connectOrCreate: charactersArr,
-                        },
-                        updatedAt: new Date(),
-                        slug: slug
-                    }
-
-                    // await prisma.veve_comics.upsert({
-                    //     where: {
-                    //         unique_cover_id: cover.node.image.id,
-                    //     },
-                    //     update: payload,
-                    //     create: {
-                    //         unique_cover_id: cover.node.image.id,
-                    //         ...payload
-                    //     }
-                    // })
-
-                } catch (e) {
-                    console.log(`[VEVE] - [GET LATEST COMICS]: ${comic.node.comicType.name} Unique ID ${comic.node.image.id} was not added to prisma db.`, e)
-                }
-            }))
+                console.log(`Processed comic: ${comic.name}`);
+            } catch (e) {
+                console.log(`[COMICS] - [GET LATEST COMICS]: ${comic.name} was not added to prisma db.`, e)
+            }
 
         }
 
@@ -165,6 +121,5 @@ const VEVE_GET_LATEST_COMICS_NEW = async (afterCursor = null) => {
     }
 
 }
-
 
 VEVE_GET_LATEST_COMICS_NEW()

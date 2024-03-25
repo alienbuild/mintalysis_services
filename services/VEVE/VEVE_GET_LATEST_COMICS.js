@@ -157,4 +157,4 @@ export const VEVE_GET_LATEST_COMICS = async () => {
         .catch(err => console.log('[CRITICAL ERROR][VEVE] Unable to get latest comics. ', err))
 }
 
-VEVE_GET_LATEST_COMICS()
+// VEVE_GET_LATEST_COMICS()

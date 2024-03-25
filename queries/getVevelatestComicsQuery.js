@@ -73,7 +73,7 @@ export const getVevelatestComicsQuery = () => {
 
 export const getVeveLatestComicsQueryNew = () => {
     return `query getComics($after: String) {
-    comicList: comicTypeList(first: 2, after: $after){
+    comicList: comicTypeList(first: 50, after: $after){
         pageInfo {
             hasNextPage
             hasPreviousPage
