@@ -437,6 +437,7 @@ model comics {
   name                      String
   description               String?               @db.Text
   publisher_id              String?
+  series_id                 String?
   comic_number              Int?
   page_count                Int?
   start_year                Int?
@@ -455,6 +456,7 @@ model comics {
   createdAt                 DateTime              @default(now())
   updatedAt                 DateTime              @updatedAt
   publisher                 publishers?           @relation(fields: [publisher_id], references: [id])
+  series                    comic_series?         @relation(fields: [series_id], references: [id])
 }
 
 model comics_translations {
@@ -482,6 +484,7 @@ model comic_series {
   slug         String?     @unique
   publisher_id String?
   publisher    publishers? @relation(fields: [publisher_id], references: [id])
+  comics       comics[]
 }
 
 //// schemas/community.prisma
