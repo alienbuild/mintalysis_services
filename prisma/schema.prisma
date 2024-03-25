@@ -2672,10 +2672,10 @@ model transfers {
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
 model mints {
-  id        BigInt  @id
+  id        BigInt?
   user      String? @db.Text
   timestamp String? @db.Text
-  token_id  BigInt?
+  token_id  BigInt  @id
 }
 
 model temp_wallet_token_ownership {
