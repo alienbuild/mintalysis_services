@@ -138,10 +138,9 @@ model artists {
   image          String?
   createdAt      DateTime               @default(now())
   updatedAt      DateTime?              @updatedAt
-  comics         comics                 @relation("artistsTocomics", fields: [comicsId], references: [id])
+  comics         comics[]               @relation("artistsTocomics")
   veve_comics    veve_comics[]          @relation("artistsToveve_comics")
   translations   artists_translations[]
-  comicsId       Int
   artists_grails artists_grails[]
 }
 
