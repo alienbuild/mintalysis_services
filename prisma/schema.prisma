@@ -1485,21 +1485,21 @@ model veve_collectibles_listings {
 // Veve Comics
 
 model veve_comics {
-  unique_cover_id             String                     @id
+  unique_cover_id             String                       @id
   name                        String
   rarity                      String?
-  description                 String?                    @db.Text
+  description                 String?                      @db.Text
   comic_series_id             String?
   drop_date                   DateTime?
-  store_price                 Decimal?                   @db.Decimal(10, 2)
+  store_price                 Decimal?                     @db.Decimal(10, 2)
   publisher_id                String?
-  market_fee                  Decimal?                   @db.Decimal(10, 3)
-  createdAt                   DateTime                   @default(now())
+  market_fee                  Decimal?                     @db.Decimal(10, 3)
+  createdAt                   DateTime                     @default(now())
   updatedAt                   DateTime
   comic_number                Int?
   drop_method                 String?
-  is_free                     Boolean?                   @default(false)
-  is_unlimited                Boolean?                   @default(false)
+  is_free                     Boolean?                     @default(false)
+  is_unlimited                Boolean?                     @default(false)
   page_count                  Int?
   start_year                  Int?
   total_available             Int?
@@ -1512,31 +1512,32 @@ model veve_comics {
   image_med_resolution_url    String?
   image_thumbnail             String?
   minimum_age                 Int?
-  slug                        String?                    @unique
+  slug                        String?                      @unique
   comic_id                    String?
   unique_holders              BigInt?
   first_public_mint           Int?
   first_public_rarity_mint    Int?
   mcp_low_ed_limit            Int?
-  mcp_rarity_value            Decimal?                   @db.Decimal(10, 2)
-  comic_image_url_id          String?                    @unique @db.VarChar(50)
+  mcp_rarity_value            Decimal?                     @db.Decimal(10, 2)
+  comic_image_url_id          String?                      @unique @db.VarChar(50)
   total_burned                Int?
-  pre_imx_unique_name         Boolean?                   @default(false)
+  pre_imx_unique_name         Boolean?                     @default(false)
   veve_held_edition_count     Int?
   licensor_held_edition_count Int?
   mintalysis_note             String?
   translations                veve_comics_translations[]
   veve_watchlist              veve_watchlist[]
-  artists                     artists[]                  @relation("artistsToveve_comics")
-  characters                  characters[]               @relation("charactersToveve_comics")
-  writers                     writers[]                  @relation("veve_comicsTowriters")
+  artists                     artists[]                    @relation("artistsToveve_comics")
+  characters                  characters[]                 @relation("charactersToveve_comics")
+  writers                     writers[]                    @relation("veve_comicsTowriters")
   veveTokenComics             veveTokenComic[]
   project_id                  String?
-  project                     projects?                  @relation(fields: [project_id], references: [id])
+  project                     projects?                    @relation(fields: [project_id], references: [id])
   tags                        veve_comic_tags[]
   artists_grails              artists_grails[]
   characters_grails           characters_grails[]
   veve_comics_metrics         veve_comics_metrics[]
+  veve_comics_physical_sales  veve_comics_physical_sales[]
   writers_grails              writers_grails[]
 
   @@index([unique_cover_id], map: "unique_cover_id")
@@ -1590,6 +1591,14 @@ model veve_comic_tags {
   comic           veve_comics @relation(fields: [unique_cover_id], references: [unique_cover_id])
 
   @@index([unique_cover_id], name: "idx_comic_tags")
+}
+
+model veve_comics_physical_sales {
+  unique_cover_id String      @id
+  high            Float?      @default(0)
+  low             Float?      @default(0)
+  source          String?
+  comic           veve_comics @relation(fields: [unique_cover_id], references: [unique_cover_id])
 }
 
 // schemas/projects/veve/leaderboards.prisma
@@ -2590,24 +2599,21 @@ model tmp_veve_mints {
 }
 
 model transfers {
-  id        BigInt?
+  id        BigInt  @id
   from_user String? @db.Text
   to_user   String? @db.Text
   timestamp String? @db.Text
   token_id  BigInt?
 
   @@index([token_id], map: "token_id")
-  @@ignore
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
 model mints {
-  id        BigInt?
+  id        BigInt  @id
   user      String? @db.Text
   timestamp String? @db.Text
   token_id  BigInt?
-
-  @@ignore
 }
 
 model temp_wallet_token_ownership {
