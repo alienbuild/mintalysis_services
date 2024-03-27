@@ -1722,15 +1722,17 @@ model veve_x_tracker {
   id          Int          @id @default(autoincrement())
   wallet_id   String
   date        DateTime     @db.Date
-  sales       Int?
-  purchases   Int?
-  mints       Int?
+  sales       Int?         @default(0)
+  purchases   Int?         @default(0)
+  mints       Int?         @default(0)
   token_count Int?
   omi_change  Float?
   created_at  DateTime     @default(now())
   wallet      veve_wallets @relation(fields: [wallet_id], references: [id])
 
+  @@unique([wallet_id, date], name: "unique_wallet_date")
   @@index([wallet_id], map: "veve_x_tracker_wallet_id_fkey")
+  @@index([wallet_id, date], map: "veve_x_tracker_wallet_id_date_fkey")
 }
 
 // schemas/projects/veve/licensors.prisma
