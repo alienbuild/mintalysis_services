@@ -1257,7 +1257,7 @@ model veve_wallets {
   veve_tokens             veve_tokens[]
   veve_wallets_valuations veve_wallets_valuations[]
   veve_wallet_tags        veve_wallet_tags[]
-  veve_wallet_metrics     veve_wallet_metrics?
+  veve_wallet_metrics     veve_wallet_metrics[]
   veve_x_tracker          veve_x_tracker[]
   wallet_tags             wallet_tags?              @relation(fields: [wallet_tagsId], references: [id])
   wallet_tagsId           Int?
@@ -1298,6 +1298,7 @@ model veve_tokens {
   licensor_id           String?
   series_id             String?
   wallet_id             String?
+  wallet_last_update    DateTime?              @db.DateTime(6)
   element_id            String?
   comic_image_url_id    String?                @db.VarChar(50)
   mint_order            Int?
@@ -1309,6 +1310,7 @@ model veve_tokens {
   no_meta               Boolean?               @default(false)
   is_premint            Boolean?               @default(false)
   has_full_meta         Boolean?               @default(false)
+  transfer_count        Int?                   @default(0)
   mintalysis_note       String?
   tag                   String?
   veve_brands           brands?                @relation(fields: [brand_id], references: [brand_id])
@@ -1362,7 +1364,6 @@ model veve_transfers {
   entry_price_new Float?
   timestamp_dt    DateTime? @db.DateTime(6)
   txn_type        String?
-  is_burned       Boolean?  @default(false)
   mintalysis_note String?
 
   @@index([createdAt])
@@ -1383,24 +1384,11 @@ model veve_mints {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime? @updatedAt
   timestamp_dt    DateTime? @db.DateTime(6)
-  is_burned       Boolean?  @default(false)
   is_redemption   Boolean?  @default(false)
-  transfer_count  Int?      @default(0)
   mintalysis_note String?
 
   @@index([createdAt])
   @@index([timestamp_dt])
-  @@index([wallet_id, token_id])
-  @@index([token_id])
-  @@index([wallet_id])
-}
-
-model veve_token_owner {
-  token_id  Int       @id
-  wallet_id String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
-
   @@index([wallet_id, token_id])
   @@index([token_id])
   @@index([wallet_id])
@@ -1447,7 +1435,7 @@ model veve_collectibles {
   is_free                              Boolean?                         @default(false)
   total_store_allocation               Int?
   slug                                 String?                          @unique
-  unique_holders                       BigInt?
+  unique_holders                       Int?                             @default(0)
   first_public_mint                    Int?
   first_public_rarity_mint             Int?
   mcp_low_ed_limit                     Int?
@@ -1455,7 +1443,7 @@ model veve_collectibles {
   mcp_rarity_value                     Decimal?                         @db.Decimal(4, 2)
   mcp_total_value                      Decimal?                         @db.Decimal(5, 2)
   is_name_unique                       Boolean?                         @default(false)
-  total_burned                         Int?
+  total_burned                         Int?                             @default(0)
   mintalysis_note                      String?
   veve_held_edition_count              Int?
   licensor_held_edition_count          Int?
@@ -1574,13 +1562,13 @@ model veve_comics {
   minimum_age                 Int? // TODO: DELETE
   slug                        String?                    @unique
   comic_id                    String?
-  unique_holders              BigInt?
+  unique_holders              Int?                       @default(0)
   first_public_mint           Int?
   first_public_rarity_mint    Int?
   mcp_low_ed_limit            Int?
   mcp_rarity_value            Decimal?                   @db.Decimal(10, 2)
   comic_image_url_id          String?                    @unique @db.VarChar(50)
-  total_burned                Int?
+  total_burned                Int?                       @default(0)
   pre_imx_unique_name         Boolean?                   @default(false)
   veve_held_edition_count     Int?
   licensor_held_edition_count Int?
@@ -1671,34 +1659,30 @@ model veve_leaderboard {
 }
 
 model veve_wallet_metrics {
-  id                  Int          @id @default(autoincrement())
-  datetime            DateTime?    @db.DateTime(0)
-  rank                Int?         @unique
-  prev_rank           Int?         @unique
-  rank_change         Int?
-  wallet_id           String       @unique
-  mint_count          Int?
-  purchase_count      Int?
-  sale_count          Int?
-  net_accum           Int?
-  transfer_count      Int?
-  total_tokens        Int?
-  total_comics        Int?
-  total_collectibles  Int?
-  total_artist_proofs Int?
-  total_C             Int?
-  total_UC            Int?
-  total_R             Int?
-  total_UR            Int?
-  total_SR            Int?
-  comic_set_count     Int?
-  unique_comic_sets   Int?
-  coll_set_count      Int?
-  unique_coll_sets    Int?
-  total_burned        Int?
-  omi_balance         Float?
-  total_mcp_pts       Float?
-  daily_mcp_pts       Float?
+  wallet_id           String       @id
+  mint_count          Int?         @default(0)
+  purchase_count      Int?         @default(0)
+  sale_count          Int?         @default(0)
+  net_accum           Int?         @default(0)
+  transfer_count      Int?         @default(0)
+  total_tokens        Int?         @default(0)
+  total_comics        Int?         @default(0)
+  total_collectibles  Int?         @default(0)
+  total_artist_proofs Int?         @default(0)
+  total_C             Int?         @default(0)
+  total_UC            Int?         @default(0)
+  total_R             Int?         @default(0)
+  total_UR            Int?         @default(0)
+  total_SR            Int?         @default(0)
+  comic_set_count     Int?         @default(0)
+  unique_comic_sets   Int?         @default(0)
+  coll_set_count      Int?         @default(0)
+  unique_coll_sets    Int?         @default(0)
+  total_burned        Int?         @default(0)
+  omi_balance         Float?       @default(0)
+  total_mcp_pts       Float?       @default(0)
+  total_used_mcp_pts  Float?       @default(0)
+  daily_mcp_pts       Float?       @default(0)
   mcp_level           Int?
   mcp_rank            String?
   created_at          DateTime     @default(now())
@@ -1706,16 +1690,18 @@ model veve_wallet_metrics {
   wallet              veve_wallets @relation(fields: [wallet_id], references: [id])
 
   @@index([wallet_id], map: "veve_wallet_metrics_wallet_id_fkey")
+  @@index([total_tokens], map: "veve_wallet_metrics_total_tokens_fkey")
 }
 
 model veve_wallet_token_counts {
-  id              Int       @id @default(autoincrement())
-  wallet_id       String
-  collectible_id  String?
-  unique_cover_id String?
-  count           Int?
-  created_at      DateTime  @default(now())
-  updated_at      DateTime? @updatedAt
+  id                 Int       @id @default(autoincrement())
+  wallet_id          String
+  collectible_id     String?
+  unique_cover_id    String?
+  comic_image_url_id String?
+  count              Int?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime? @updatedAt
 }
 
 model veve_x_tracker {
