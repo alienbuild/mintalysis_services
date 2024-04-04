@@ -59,23 +59,21 @@ const VEVE_GET_LATEST_COMICS_NEW = async (afterCursor = null) => {
             }))
 
             const nanoid = customAlphabet('1234567890abcdef', 5)
-            const slug = slugify(`${comic.name} ${comic.comicNumber} ${cover.node.rarity} ${comic.startYear} ${nanoid()}`,{ lower: true, strict: true })
+            const slug = slugify(`${comic.name} ${comic.comicNumber} ${comic.startYear} ${nanoid()}`,{ lower: true, strict: true })
 
             const payload = {
                 id: comic.id,
                 name: comic.name,
                 description: comic.description,
                 comic_number: Number(comic.comicNumber),
-                // comic_series_id: comic.comicSeries.id,
-                image_thumbnail: cover.node.image.thumbnailUrl,
-                image_low_resolution_url: cover.node.image.lowResolutionUrl,
-                image_med_resolution_url: cover.node.image.medResolutionUrl,
-                image_full_resolution_url: cover.node.image.fullResolutionUrl,
-                image_high_resolution_url: cover.node.image.highResolutionUrl,
-                image_direction: cover.node.image.direction,
+                image_thumbnail: comic.cover.image.thumbnailUrl,
+                image_low_resolution_url: comic.cover.image.lowResolutionUrl,
+                image_med_resolution_url: comic.cover.image.medResolutionUrl,
+                image_full_resolution_url: comic.cover.image.fullResolutionUrl,
+                image_high_resolution_url: comic.cover.image.highResolutionUrl,
+                image_direction: comic.cover.image.direction,
                 start_year: comic.startYear,
                 page_count: comic.pageCount,
-                publisher_id: comic.comicSeries.publisher.id,
                 minimum_age: comic.minimumAge,
                 writers: {
                     connectOrCreate: writersArr,
@@ -86,9 +84,23 @@ const VEVE_GET_LATEST_COMICS_NEW = async (afterCursor = null) => {
                 characters: {
                     connectOrCreate: charactersArr,
                 },
+                publisher: {
+                    connectOrCreate: {
+                        where: { id: comic.comicSeries.publisher.id },
+                        create: { id: comic.comicSeries.publisher.id, name: comic.comicSeries.publisher.name, description: comic.comicSeries.publisher.description, veve_market_fee: comic.comicSeries.publisher.marketFee, slug: slugify(comic.comicSeries.publisher.name,{ lower: true, strict: true }) }
+                    }
+                },
+                series :{
+                    connectOrCreate: {
+                        where: { id: comic.comicSeries.id },
+                        create: { id: comic.comicSeries.id, name: comic.comicSeries.name, description: comic.comicSeries.description, slug: slugify(comic.comicSeries.name, { lower: true, strict: true })}
+                    }
+                },
                 updatedAt: new Date(),
                 slug: slug
             }
+
+            if (!comic.comicSeries.id) console.log(`[NO COMIC SERIES ID] for ${comic.name} - id: ${comic.id}`)
 
             try {
                 await prisma.comics.upsert({
@@ -102,7 +114,8 @@ const VEVE_GET_LATEST_COMICS_NEW = async (afterCursor = null) => {
                     }
                 })
 
-                console.log(`Processed comic: ${comic.name}`);
+                console.log(`[SUCCESS] - ${comic.name} was added to the prisma db `)
+
             } catch (e) {
                 console.log(`[COMICS] - [GET LATEST COMICS]: ${comic.name} was not added to prisma db.`, e)
             }

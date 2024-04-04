@@ -96,6 +96,22 @@ export const getVeveLatestComicsQueryNew = () => {
                 startYear
                 comicNumber
                 pageCount
+                cover {
+                    image {
+                        id
+                        url
+                        thumbnailUrl
+                        lowResolutionUrl
+                        medResolutionUrl
+                        fullResolutionUrl
+                        highResolutionUrl
+                        type
+                        direction
+                        name
+                        version
+                        updatedAt
+                    }
+                }
                 covers {
                     edges {
                       node {
@@ -123,6 +139,9 @@ export const getVeveLatestComicsQueryNew = () => {
                     description
                     publisher {
                         id
+                        name
+                        marketFee
+                        description
                         marketFee
                     }
                 }
