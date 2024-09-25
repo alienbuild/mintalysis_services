@@ -1641,6 +1641,207 @@ model veve_comic_tags {
   @@index([unique_cover_id], name: "idx_comic_tags")
 }
 
+// schemas/projects/veve/hasura.prisma
+// Hasura VeVe API
+
+model veve_hasura_media {
+  id                       String  @id // @default(uuid()) // The primary key is a UUID
+  direction                String? // Orientation: "portrait" or others
+  elementId                String? // ID associated with the element
+  fullResolutionUrl        String? // Full resolution image URL
+  highResolutionUrl        String? // High resolution image URL
+  lowResolutionUrl         String? // Low resolution image URL
+  medResolutionUrl         String? // Medium resolution image URL
+  name                     String? // Name field, nullable
+  thumbnailUrl             String? // Thumbnail URL
+  transparentBackgroundUrl String? // Transparent background image URL, nullable
+  type                     String? // Type of media, e.g., "entity_image"
+  url                      String? // The main URL of the image
+  webpUrl                  String? // WebP format URL
+
+  createdAt_veve DateTime?
+  updatedAt_veve DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  //   @@index([elementId])                                        // Index on elementId for fast lookups
+}
+
+model veve_hasura_collectible {
+  id                String    @id //@default(uuid())    // The primary key is a UUID
+  blockchainId      Int? // Blockchain ID (integer)
+  collectibleTypeId String? // ID related to the collectible type
+  issueNumber       Int? // Issue number of the collectible
+  ownerUpdatedAt    DateTime? // Timestamp for when the ownership was updated
+
+  createdAt_veve DateTime?
+  updatedAt_veve DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  //   @@index([collectibleTypeId])                         // Index on collectibleTypeId for fast lookups
+}
+
+model veve_hasura_comic {
+  id             String    @id //@default(uuid())     // The primary key is a UUID
+  blockchainId   Int? // Blockchain ID (integer)
+  comicCoverId   String? // ID related to the comic cover
+  comicTypeId    String? // ID related to the comic type
+  issueNumber    Int? // Issue number of the comic
+  ownerUpdatedAt DateTime? // Timestamp for when the ownership was updated
+  rarity         String? // Rarity of the comic (e.g., common, rare)
+
+  createdAt_veve DateTime?
+  updatedAt_veve DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  //   @@index([comicCoverId])                            // Index on comicCoverId for fast lookups
+  //   @@index([comicTypeId])                             // Index on comicTypeId for fast lookups
+}
+
+model veve_hasura_transaction {
+  id       String  @id //@default(uuid())    // The primary key is a UUID
+  buyerId  String? // ID of the buyer
+  sellerId String? // ID of the seller
+  status   String? // Transaction status (e.g., complete)
+  type     String? // Type of transaction (e.g., market_fixed)
+
+  createdAt_veve DateTime?
+  updatedAt_veve DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  //   @@index([buyerId])                           // Index on buyerId for fast lookups
+  //   @@index([sellerId])                          // Index on sellerId for fast lookups
+}
+
+model veve_hasura_comic_cover {
+  id             String  @id //@default(uuid())                // The primary key is a UUID
+  comicTypeId    String? // ID of the related comic type
+  digitalId      String? // Nullable digital ID
+  editionsBurnt  Int? // Number of editions burnt
+  name           String? // Nullable name of the comic
+  rarity         String? // Rarity of the comic (e.g., "common")
+  totalAvailable Int? // Total available copies
+  totalIssued    Int? // Total issued copies
+
+  createdAt_veve DateTime?
+  updatedAt_veve DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relation to the comic type
+  //   comicType       veve_comic_type? @relation(fields: [comicTypeId], references: [id])
+
+  // Embedded market value information
+  //   marketValue     MarketValue?                                   // Relation to the market value model (1-to-1)
+
+  //   @@index([comicTypeId])                                          // Index on comicTypeId for fast lookups
+}
+
+model veve_hasura_comic_type {
+  id                  String    @id //@default(uuid())             // The primary key is a UUID
+  name                String? // Name of the comic type
+  description         String? // Description of the comic type
+  dropDate            DateTime? // Drop date of the comic
+  dropMethod          String? // Method of the drop
+  eclPrice            Float? // Price in ECL
+  eclUpgradePrice     Float? // Upgrade price in ECL
+  comicNumber         String? // Comic number
+  minimumAge          Int? // Minimum age requirement
+  pageCount           Int? // Page count of the comic
+  startYear           Int? // Starting year of the comic
+  storeCurrencyType   String? // Store currency type (e.g., "gem")
+  storePrice          Float? // Price in store currency
+  totalAvailable      Int? // Total available copies
+  totalIssued         Int? // Total issued copies
+  originalPublishDate DateTime? // Nullable original publish date
+
+  createdAt_veve DateTime?
+  updatedAt_veve DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  comicSeriesId String? // ID related to the comic series
+  //   comicSeries         veve_comic_series? @relation(fields: [comicSeriesId], references: [id])
+
+  @@index([comicSeriesId]) // Index on comicSeriesId for fast lookups
+}
+
+model veve_hasura_comic_series {
+  id          String   @id //@default(uuid())                // The primary key is a UUID
+  name        String? // Name of the comic series
+  description String? // Description of the comic series
+  publisherId String? // ID of the publisher
+  isEcl       Boolean? // Whether it's ECL
+
+  floorPriceClose Float? // The closing floor price
+  valueGroup      String? // Value group (e.g., "comic_cover")
+  floorUpdatedAt  Float? // The opening floor price
+
+  createdAt_veve DateTime?
+  updatedAt_veve DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  //veve_hasura_comic_cover veve_hasura_comic_cover @relation(fields: [elementTypeId], references: [id], onDelete: Cascade)
+
+  //   @@index([elementTypeId])
+}
+
+model veve_hasura_market_listing {
+  id            String    @id // Primary key is a UUID
+  currency      String? // Currency type (e.g., "GEM")
+  elementId     String? // ID of the element being listed
+  elementTypeId String? // ID of the element type
+  endingAt      DateTime? // Nullable end time for the listing
+  listingType   String? // Listing type (e.g., "fixed")
+  market        String? // Market name (e.g., "VEVE")
+  sellerId      String? // ID of the seller
+  status        String? // Status of the listing (e.g., "closed")
+
+  createdAt_veve DateTime?
+  updatedAt_veve DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  //   @@index([elementId])
+  //   @@index([elementTypeId])
+  //   @@index([sellerId])
+}
+
+// model veve_hasura_transaction_collectibles_collectible {
+//   collectibleId  String
+//   transactionId  String
+
+//   createdAt      DateTime @default(now())
+//   updatedAt      DateTime @updatedAt
+
+//   // Define relations (assuming collectible and transaction models exist)
+//   //collectible    veve_hasura_collectible  @relation(fields: [collectibleId], references: [id], onDelete: Cascade)
+//   //transaction    veve_hasura_transaction  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+//   @@id([collectibleId, transactionId]) // Composite primary key
+// //   @@index([transactionId])
+// }
+
+// model veve_hasura_transaction_comics_comic {
+//   comicId        String
+//   transactionId  String
+
+//   createdAt      DateTime @default(now())
+//   updatedAt      DateTime @updatedAt
+
+//   // Define relations (assuming comic and transaction models exist)
+//   //comic          veve_hasura_comic      @relation(fields: [comicId], references: [id], onDelete: Cascade)
+//   //transaction    veve_hasura_transaction  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+//   @@id([comicId, transactionId])   // Composite primary key
+// //   @@index([comicId])
+// //   @@index([transactionId])
+// }
+
 // schemas/projects/veve/leaderboards.prisma
 // Veve Leaderboards
 
@@ -1774,6 +1975,31 @@ model veve_licensors_metrics {
 // Veve Listings
 
 model veve_listings {
+  id                 Int       @id @default(autoincrement())
+  listing_id         String    @unique
+  listing_type       String
+  seller_id          String
+  seller_name        String
+  wallet_id          String?
+  issue_number       Int
+  ending_at          String?
+  bid_count          Int?
+  price              String
+  user_bid_status    String?
+  collectible_id     String?
+  comic_image_url_id String?
+  token_id           Int?
+  name               String?
+  rarity             String?
+  edition_type       String?
+  expiry_date        DateTime?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime? @updatedAt
+  is_sold            Boolean   @default(false)
+  txn_id             String?
+}
+
+model veve_listings_history {
   id                 Int       @id @default(autoincrement())
   listing_id         String    @unique
   listing_type       String
